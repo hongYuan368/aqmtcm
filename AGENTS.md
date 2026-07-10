@@ -6,6 +6,8 @@ This repository holds materials for a CASTEP surface-adsorption assignment:
 
 - Chinese markdown translations / memos (when present on the branch)
 - `Assignment_template.ipynb` — bilingual fill-in scaffold for the student study
+- `Pt_CO_surface_study.ipynb` — working Pt(100)+CO study notebook with runnable jobs
+- `README_Pt_CO_study.md` — cluster run order for the working notebook
 - `LICENSE` and a Python-template `.gitignore`
 
 There is:
