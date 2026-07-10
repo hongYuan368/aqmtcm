@@ -23,8 +23,11 @@ uploaded `Assignment_template_revised (1).ipynb`:
 | Section | What it contains |
 |---|---|
 | Parts 0–2 | Fill-in code scaffold (bulk cutoff / k-points / a₀, slab layers / γ) |
-| Part 2.3 + Parts 3–6 | Structure, blanks, and summary table — student writes the jobs |
+| Part 2.3 + Parts 3–5 | Structure, blanks, and summary table — student writes the jobs |
+| Part 6 | All five extensions scaffolded (barrier, ZPE, EOS/B₀, (111)/2nd metal, coverage); score cap still +10 |
 | Submit | Checklist for `~/submission/surface_study/` |
+
+Default system on this branch: **Pt(100) + CO**.
 
 Prefer editing `Assignment_template.ipynb` (clean name). Do not paste answers
 into the `____` blanks when “organising” the template — blanks are intentional.
