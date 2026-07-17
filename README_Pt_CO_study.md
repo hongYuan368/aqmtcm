@@ -25,9 +25,9 @@
 | 8 | 量几何、填汇总表与讨论四题 | Part 5 |
 | 9 | 扩展：6.1 势垒 → 6.2 ZPE → 6.3 B₀ → 6.5 覆盖度 → 6.4 Pt(111) | `results_diffusion.txt` 等 |
 
-每个 `%%sbatch` 任务：墙时 4 h，分区 `aqmtcm`，Part 4 用 `-n 16`。几秒就结束 = 出错，看日志。
+Part 4：墙时 **1440 min**、`-n 16`，拆成 4 个独立作业（clean / on-top / bridge / hollow），**一次只交一个**。目录用 `part4_*`，避开旧的 `*_final_850eV` / `.bak`。
 
-Part 4 使用新目录 `part4_clean` / `part4_ontop` / `part4_bridge` / `part4_hollow`，避开旧的 `*_final_850eV` / `.bak` 残留。
+其它部分仍可用 `-t 240`；几秒就结束 = 出错，看日志。
 
 ## 满分纪律
 
