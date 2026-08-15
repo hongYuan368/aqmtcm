@@ -1,0 +1,671 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.35cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}[AutoFakeSlant=true]
+\setCJKsansfont{Noto Sans CJK SC}[AutoFakeSlant=true]
+\setCJKmonofont{Noto Sans CJK SC}
+\xeCJKsetup{PunctStyle=kaiming}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,decorations.markings}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!50!black
+}
+
+\definecolor{syblue}{RGB}{70,30,110}
+\definecolor{sysoft}{RGB}{242,236,250}
+\definecolor{warnbg}{RGB}{255,246,230}
+\definecolor{okbg}{RGB}{232,246,236}
+
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{example}{例子}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{proposition}{命题}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{注记}[section]
+
+\newtcolorbox{keybox}[1][]{
+  colback=sysoft,colframe=syblue,fonttitle=\bfseries,
+  title={核心要点},#1
+}
+\newtcolorbox{warnbox}[1][]{
+  colback=warnbg,colframe=orange!70!black,fonttitle=\bfseries,
+  title={容易混淆},#1
+}
+\newtcolorbox{hearbox}[1][]{
+  colback=okbg,colframe=green!40!black,fonttitle=\bfseries,
+  title={听课提示},#1
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{复旦粒子物理暑期学校 2026}
+\rhead{Generalized Symmetry / Daniel Brennan}
+\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{syblue}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries\color{syblue!80!black}}{\thesubsection}{0.7em}{}
+
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\Dd}{\mathrm{D}}
+\DeclareMathOperator{\tr}{tr}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries 广义对称性课前讲义}\\[0.45em]
+{\large 复旦粒子物理暑期学校 2026}\\[0.25em]
+{\large Generalized Symmetry \quad T.\ Daniel Brennan (University of Birmingham)}\\[0.8em]
+{\normalsize 课前预习稿　从普通对称性写起　推导写全　英文术语单列}\\[0.35em]
+{\small 依据 Indico 课表：8 月 17--19 日共四讲。本讲义非正式课堂讲义。}
+\end{center}
+
+\tableofcontents
+\newpage
+
+%======================================================================
+\section{如何使用本讲义}
+%======================================================================
+
+广义对称性（generalized global symmetry）把``对称性 = 群 $G$ 作用在粒子上''这句话拆开，改写成：
+
+\begin{quote}
+\textbf{对称性由拓扑算符实现。}算符的空间维数决定它作用在什么对象上。
+\end{quote}
+
+Daniel Brennan 本人有一份专为高能现象学读者写的综述：
+\emph{Introduction to Generalized Global Symmetries in QFT and Particle Physics}, arXiv:2306.00912。
+课堂大概率沿这条路线：连续高形式对称性 $\to$ 离散对称与中心对称 $\to$ 高群 $\to$ 非可逆对称性。本讲义把综述默认已经会的``普通 QFT 对称性''全部补上，并把 Maxwell 理论当作贯穿始终的例子。
+
+四讲课表（Asia/Shanghai）：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+日期 & 时间 & 内容 \\
+\midrule
+8 月 17 日（一） & 13:30--14:30 & Generalized Symmetry \\
+8 月 18 日（二） & 13:30--14:30 & Generalized Symmetry \\
+8 月 19 日（三） & 09:20--10:20, 10:40--11:40 & Generalized Symmetry \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{hearbox}
+Brennan 的综述明确\textbf{不用范畴论}。预习时不要先去抱着 fusion category 读。先会：Noether 流、Wilson 线、拓扑算符与 linking、Maxwell 的电/磁 1-形式对称性。范畴语言若出现，当作可选包装。
+\end{hearbox}
+
+%======================================================================
+\section{预备知识}
+\label{sec:prereq}
+%======================================================================
+
+\subsection{经典场论}
+
+时空 $d$ 维（粒子物理默认 $d=4$），场 $\phi(x)$，作用量
+\begin{equation}
+  S[\phi]=\int \dd^d x\,\mathcal{L}(\phi,\partial\phi).
+\end{equation}
+运动方程由 $\delta S=0$ 得到 Euler--Lagrange 方程
+\begin{equation}
+\label{eq:EL}
+  \frac{\partial\mathcal{L}}{\partial\phi}-\partial_\mu\frac{\partial\mathcal{L}}{\partial(\partial_\mu\phi)}=0.
+\end{equation}
+
+\subsection{微分形式（最小量）}
+
+$p$-形式是完全反对称的 $(0,p)$ 张量。外导数 $\dd$ 满足 $\dd^2=0$。Hodge 星 $*$ 把 $p$-形式映到 $(d-p)$-形式。对 1-形式流 $j=j_\mu\dd x^\mu$，
+\begin{equation}
+  \partial_\mu j^\mu=0 \quad\Longleftrightarrow\quad \dd{*}j=0.
+\end{equation}
+Maxwell 场强 $F=\dd A$ 是 2-形式；Bianchi 恒等式 $\dd F=0$ 就是 $\partial_{[\lambda}F_{\mu\nu]}=0$。
+
+积分：把 $p$-形式在 $p$ 维子流形上积分。Stokes 公式
+\begin{equation}
+  \int_\Sigma \dd\omega=\int_{\partial\Sigma}\omega.
+\end{equation}
+后面``把流在余维度 $1$ 的流形上积分得到荷''，靠的就是这句话。
+
+\subsection{群与表示}
+
+普通全局对称群 $G$ 作用在局域算符上：
+\begin{equation}
+  \mathcal{O}(x)\ \mapsto\ g\cdot\mathcal{O}(x),\qquad g\in G.
+\end{equation}
+$U(1)$ 的表示由整数电荷 $q$ 标记：$e^{i\alpha}\cdot\mathcal{O}=e^{iq\alpha}\mathcal{O}$。非阿贝尔群有换位子，高形式对称性（$p\ge 1$）却必须是阿贝尔的---后面会看到为什么。
+
+\subsection{QFT 中的算符}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{局域算符} $\mathcal{O}(x)$：插入在点上，激发粒子。
+  \item \textbf{线算符}（line operator）：插入在一维曲线上。Wilson 线是最重要的例子。
+  \item \textbf{表面算符}、更高维的缺陷（defect）。
+\end{itemize}
+关联函数
+\begin{equation}
+  \langle \mathcal{O}_1(x_1)\cdots\mathcal{O}_n(x_n)\rangle
+  =\frac{1}{Z}\int \mathcal{D}\phi\, e^{-S[\phi]}\,\mathcal{O}_1\cdots\mathcal{O}_n
+\end{equation}
+（欧氏记号）。对称性最干净的定义，是这些算符如何变换，以及哪些算符的插入不依赖于连续形变。
+
+%======================================================================
+\section{普通对称性与 Noether 定理}
+\label{sec:noether}
+%======================================================================
+
+\subsection{有限变换与无穷小变换}
+
+设连续对称群 $G$ 的无穷小参数为常值 $\alpha$，场变分
+\begin{equation}
+  \phi(x)\ \mapsto\ \phi(x)+\alpha\,\delta\phi(x).
+\end{equation}
+``是对称性''意味着：当 $\alpha$ 为常数时 $\delta S=0$（或只差一个边界项）。
+
+\subsection{完整推导：位置相关的参数}
+
+把 $\alpha$ 提升为 $\alpha(x)$。此时作用量一般不再不变，但变分只能靠 $\partial\alpha$，因为 $\alpha$ 为常数时变分为零。于是必然有
+\begin{equation}
+\label{eq:noether-var}
+  \delta S=\int \dd^d x\,(\partial_\mu\alpha)\, j^\mu
+  =-\int \dd^d x\,\alpha\,\partial_\mu j^\mu
+  \quad\text{（丢弃边界项）}.
+\end{equation}
+在运动方程上 $\delta S=0$ 对任意 $\alpha(x)$ 成立，故
+\begin{equation}
+\label{eq:cons}
+  \partial_\mu j^\mu=0.
+\end{equation}
+这就是 Noether 定理：连续整体对称性 $\Rightarrow$ 守恒流。
+
+\begin{example}[复标量的 $U(1)$]
+$\mathcal{L}=\partial_\mu\phi^\dagger\partial^\mu\phi-V(\phi^\dagger\phi)$，$\phi\mapsto e^{i\alpha}\phi$。无穷小 $\delta\phi=i\phi$，$\delta\phi^\dagger=-i\phi^\dagger$。标准计算给出
+\begin{equation}
+  j^\mu=i\bigl(\phi^\dagger\partial^\mu\phi-\phi\,\partial^\mu\phi^\dagger\bigr),\qquad
+  Q=\int \dd^{d-1}x\, j^0.
+\end{equation}
+$Q$ 计的是粒子数减去反粒子数。
+\end{example}
+
+\begin{example}[时空平移]
+$\delta\phi=-\alpha^\nu\partial_\nu\phi$ 给出能量动量张量 $T^{\mu\nu}$，$\partial_\mu T^{\mu\nu}=0$。能量是 $0$-形式对称性对应的荷，对象仍是局域算符（粒子）。
+\end{example}
+
+\subsection{荷作为算符}
+
+量子理论中，
+\begin{equation}
+  Q=\int_{\Sigma_{d-1}} {*j},
+\end{equation}
+$\Sigma_{d-1}$ 是一个类空切片。守恒性 $\dd{*}j=0$ 加上 Stokes，使得只要把 $\Sigma$ 连续形变且不碰到带电算符，$Q$ 不变。于是
+\begin{equation}
+  U(g)=e^{i\alpha Q}
+\end{equation}
+满足
+\begin{equation}
+\label{eq:action0}
+  U(g)\,\mathcal{O}(x)\,U(g)^{-1}=g\cdot\mathcal{O}(x).
+\end{equation}
+若 $\mathcal{O}$ 电荷为 $q$，则 $U(e^{i\alpha})\mathcal{O}U^{-1}=e^{iq\alpha}\mathcal{O}$。
+
+\subsection{Ward 恒等式}
+
+把~\eqref{eq:noether-var} 放到路径积分里，得到插入守恒流的关联函数恒等式。对 $U(1)$，
+\begin{equation}
+  \partial_\mu\langle j^\mu(x)\,\mathcal{O}_1(x_1)\cdots\rangle
+  =\sum_i q_i\,\delta^{(d)}(x-x_i)\,\langle \mathcal{O}_1\cdots\rangle.
+\end{equation}
+这是``对称性作用在局域算符上''的关联函数版。
+
+%======================================================================
+\section{规范对称还是全局对称}
+\label{sec:gauge-vs-global}
+%======================================================================
+
+\begin{definition}[全局 vs.\ 规范]
+全局对称的参数 $\alpha$ 是时空上的常数（或至少在无穷远处不能任意规范掉）。规范``对称''的参数 $\alpha(x)$ 是局域的冗余：两个场位形若只差一个规范变换，代表同一物理态。
+\end{definition}
+
+\begin{keybox}
+现代观点：\textbf{规范对称不是物理对称，而是描述的冗余}。真正能把态分类、能给出选择定则、能自发破缺的，是\textbf{全局对称}。广义对称性讨论的全部是全局对称；尽管它们常常用规范场的拓扑对象（Wilson 线、't~Hooft 线）来探测。
+\end{keybox}
+
+把全局 $U(1)$ 耦合到\textbf{背景}规范场 $A_\mu$（不积分 $A$，只把它当作探针）：
+\begin{equation}
+  S\ \supset\ \int A_\mu j^\mu.
+\end{equation}
+背景场规范变换 $A\mapsto A+\dd\lambda$ 下，作用量不变当且仅当 $\dd{*}j=0$。若不变性失败，失败项就是 't~Hooft 反常。Brennan 会反复使用``打开背景规范场''这一手法。
+
+%======================================================================
+\section{拓扑算符：对称性的现代定义}
+\label{sec:topo}
+%======================================================================
+
+\subsection{从切片上的荷到任意封闭流形}
+
+普通荷 $Q$ 定义在类空切片上。但 $\dd{*}j=0$ 允许把积分流形换成任意封闭的 $(d-1)$ 维流形 $M_{d-1}$：
+\begin{equation}
+\label{eq:sdo}
+  U_g(M_{d-1})=\exp\Bigl(i\alpha\int_{M_{d-1}}{*j}\Bigr),\qquad g=e^{i\alpha}\in U(1).
+\end{equation}
+$U_g(M_{d-1})$ 称为\textbf{对称性缺陷算符}（symmetry defect operator, SDO）。
+
+\subsection{为什么叫``拓扑''}
+
+若 $M$ 连续形变成 $M'$，且形变扫过的区域里没有带电算符，则 Stokes 加流守恒给出
+\begin{equation}
+  U_g(M)=U_g(M').
+\end{equation}
+关联函数只依赖于 $M$ 的拓扑类（以及它与带电算符的 linking），不依赖于具体几何形状。这样的算符叫做拓扑算符。
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=1.05]
+  \draw[thick] (0,0) circle (1.3);
+  \fill (0,0) circle (2pt) node[below right] {$\mathcal{O}_q$};
+  \node at (0,1.55) {$U_g(S^{d-1})$};
+  \draw[-{Stealth},thick] (3.2,0) -- (4.3,0);
+  \draw[thick] (7.1,0.15) ellipse (1.5 and 1.05);
+  \fill (7.1,0.15) circle (2pt) node[below right] {$\mathcal{O}_q$};
+  \node at (7.1,1.45) {$U_g(M')$};
+  \node[font=\small] at (2.15,-1.7) {连续形变不改变关联函数};
+\end{tikzpicture}
+\caption{$U_g$ 包围带电局域算符。把它捏成任意形状，只要仍链绕一次，相位 $g^q$ 不变。}
+\end{figure}
+
+\subsection{作用 = linking}
+
+把 $U_g(S^{d-1})$ 从无穷远处收缩，直到它包住 $\mathcal{O}_q(x)$。由~\eqref{eq:action0}，
+\begin{equation}
+\label{eq:link0}
+  U_g(S^{d-1})\ \mathcal{O}_q(x)\ =\ g^{q}\ \mathcal{O}_q(x).
+\end{equation}
+更拓扑的说法：对称性缺陷与带电算符的 linking 数决定相位。
+
+\begin{definition}[0-形式全局对称性]
+$d$ 维 QFT 的 0-形式对称群 $G$ 由一族拓扑算符 $\{U_g(M_{d-1})\}_{g\in G}$ 给出，它们：
+\begin{enumerate}[leftmargin=1.6em]
+  \item 支持在余维度 $1$ 的封闭流形上；
+  \item 融合规则为 $U_{g_1}U_{g_2}=U_{g_1g_2}$；
+  \item 作用在局域（0 维）算符上，如~\eqref{eq:link0}。
+\end{enumerate}
+\end{definition}
+
+连续对称只是特例：拓扑算符可由守恒流积分构造。离散对称没有 Noether 流，但仍然可以有拓扑算符。这一点是走向``广义''的关键---\textbf{流不是本质，拓扑算符才是}。
+
+%======================================================================
+\section{从 0-形式到 $p$-形式}
+\label{sec:pform}
+%======================================================================
+
+普通对称性作用在粒子（局域算符）上。若荷的载体不是粒子而是弦、膜呢？
+
+\begin{definition}[$p$-形式全局对称性]
+$d$ 维 QFT 具有群 $G$ 的 $p$-形式全局对称，若存在拓扑算符 $U_g(M_{d-p-1})$，支持在余维度 $p+1$ 的封闭流形上，融合服从群乘法，并作用在 $p$ 维带电算符 $W(C_p)$ 上：
+\begin{equation}
+\label{eq:linkp}
+  U_g(M_{d-p-1})\,W(C_p)= g^{q[C]}\,W(C_p),
+\end{equation}
+其中 $q[C]$ 由 linking 数给出。
+\end{definition}
+
+对照表：
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+$p$ & 带电对象 & 对称性缺陷的余维 & 连续情形的流 \\
+\midrule
+$0$ & 局域算符 / 粒子 & $1$（面） & 1-形式流 $j_1$，$\dd{*}j_1=0$ \\
+$1$ & 线算符 / 弦 & $2$ & 2-形式流 $j_2$，$\dd{*}j_2=0$ \\
+$p$ & $p$ 维算符 & $p+1$ & $(p+1)$-形式流，$\dd{*}j_{p+1}=0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+连续 $p$-形式对称的 Noether 流是 $(p+1)$-形式 $j_{p+1}$，守恒
+\begin{equation}
+  \dd{*}j_{p+1}=0,
+\end{equation}
+背景场是 $(p+1)$-形式 $A_{p+1}$，耦合 $\int A_{p+1}\wedge{*}j_{p+1}$。背景规范变换
+\begin{equation}
+  A_{p+1}\mapsto A_{p+1}+\dd\lambda_p.
+\end{equation}
+
+\subsection{为什么 $p\ge 1$ 必须阿贝尔}
+
+两个余维度 $\ge 2$ 的缺陷可以互相绕过对方而不相交。因此 $U_{g}U_{h}$ 与 $U_{h}U_{g}$ 可以通过形变互换，故 $G$ 必须交换。$0$-形式缺陷是余维度 $1$ 的``墙''，不能随便穿过，所以 $0$-形式群可以非阿贝尔。
+
+\begin{warnbox}
+``$p$-形式''中的 $p$ 是\textbf{带电算符的维数}，不是流的形式次数。流是 $(p+1)$-形式。课堂若写 $G^{(p)}$，括号里的 $p$ 也是带电对象的维数。
+\end{warnbox}
+
+%======================================================================
+\section{典型例子：Maxwell 理论}
+\label{sec:maxwell}
+%======================================================================
+
+这是整门课最重要的例子，必须能独立复述。
+
+\subsection{作用量与方程}
+
+无物质的 $U(1)$ 规范理论（欧氏或闵氏，这里用形式语言）
+\begin{equation}
+  S=-\frac{1}{2e^2}\int F\wedge{*}F,\qquad F=\dd A.
+\end{equation}
+运动方程
+\begin{equation}
+\label{eq:eom}
+  \dd{*}F=0,
+\end{equation}
+Bianchi 恒等式
+\begin{equation}
+\label{eq:bianchi}
+  \dd F=0.
+\end{equation}
+
+\subsection{电 1-形式对称性}
+
+\eqref{eq:eom} 正是 $\dd{*}j_e=0$，其中电 2-形式流
+\begin{equation}
+  j_e=\frac{1}{e^2}F\qquad\text{（约定可差常数）}.
+\end{equation}
+因此存在连续 $U(1)^{(1)}_e$ 电 1-形式对称。对称性缺陷是在封闭 2-面 $\Sigma_2$ 上积分 $*F$：
+\begin{equation}
+  U_e^{(\alpha)}(\Sigma_2)=\exp\Bigl(\frac{i\alpha}{e^2}\int_{\Sigma_2}{*F}\Bigr).
+\end{equation}
+它作用的带电对象是 Wilson 线
+\begin{equation}
+  W_q(C)=\exp\Bigl(iq\int_C A\Bigr).
+\end{equation}
+物理图像：Wilson 线是一条无穷重的探针电荷的世界线。把一张面 $\Sigma_2$ 链绕 $C$ 一次，Gauss 定律给出相位 $e^{iq\alpha}$。
+
+\subsection{磁 1-形式对称性}
+
+Bianchi 恒等式~\eqref{eq:bianchi} 本身也是守恒律：磁流 $j_m={*}F$ 的对偶说法是 $\dd F=0$。缺陷
+\begin{equation}
+  U_m^{(\beta)}(\Sigma_2)=\exp\Bigl(i\beta\int_{\Sigma_2} F\Bigr)
+\end{equation}
+作用在 't~Hooft 线 $T(C')$ 上。't~Hooft 线对应磁单极探针。电、磁 1-形式对称在自由 Maxwell 中同时存在。
+
+\subsection{选择定则}
+
+$U(1)^{(1)}_e$ 禁止 Wilson 线``断掉''：电荷线必须延伸到无穷远或形成闭合圈。这就是普通电荷守恒的 1-形式版---守恒的不是粒子数，而是通量线。
+
+\begin{example}[紧致标量 / 2d 光子]
+$d=2$ 的紧致标量等价于 2d 光子。$0$-形式与 $1$-形式对称互换角色。课堂可能用这个低维例子先建立直觉，再回到 4d Maxwell。
+\end{example}
+
+%======================================================================
+\section{Higgsing、禁闭与 Landau 范式的扩充}
+\label{sec:phases}
+%======================================================================
+
+Landau 范式：用全局对称是否自发破缺来标记相。高形式对称把这句话扩展到规范理论的相。
+
+\subsection{Higgs 相：电 1-形式破缺}
+
+加入电荷为 $1$ 的物质场后，Wilson 线可以在物质上终止，电 1-形式对称被显式破坏（或被 Higgs 机制破缺）。Wilson 线服从周长律（perimeter law）：其期望值随长度指数衰减，但不是面积律。直观上，通量管被电荷屏蔽。
+
+\subsection{禁闭相：电 1-形式未破缺}
+
+纯 Yang--Mills 的禁闭相中，Wilson 圈服从面积律
+\begin{equation}
+  \langle W(C)\rangle\sim e^{-\sigma\cdot\mathrm{Area}(C)}.
+\end{equation}
+这表示有一张物理的色通量弦张在回路上。电 1-形式（更精确地：中心 1-形式）\textbf{未破缺}：弦不能断。't~Hooft 线则被破缺。
+
+\subsection{库仑相}
+
+自由光子：Wilson 与 't~Hooft 都是周长律，电、磁 1-形式都未破缺（连续对称；注意 Coleman--Mermin--Wagner 对高形式对称的修正，见下）。
+
+\begin{keybox}
+\textbf{禁闭 = 电 1-形式对称未破缺；Higgs = 电 1-形式破缺。}这是广义对称性对现象学最直接的礼物：禁闭不再只是``说不清楚的非微扰现象''，而有一个对称性判据。
+\end{keybox}
+
+\subsection{高形式的 Coleman--Mermin--Wagner}
+
+连续 $p$-形式对称在时空维数 $d\le p+2$ 时不能自发破缺。普通 $p=0$ 的情形就是 $d\le 2$ 不能破缺连续全局对称。所以 3d 光子的连续电 1-形式不会以普通 Goldstone 方式破缺。听课时若出现这句话，把它对照普通 CMW 即可。
+
+%======================================================================
+\section{离散对称、中心对称与 BF 理论}
+\label{sec:discrete}
+%======================================================================
+
+Brennan 综述的第 3 节会相当技术化。预习只需抓住物理结论。
+
+\subsection{没有 Noether 流也能有拓扑算符}
+
+$Z_N$ 对称没有连续参数，不能靠 $\partial_\mu j^\mu=0$ 定义。但仍可存在满足
+\begin{equation}
+  U_g^N=1,\qquad U_g U_h=U_{gh}
+\end{equation}
+的拓扑算符。构造方法之一：先写一个连续 $U(1)$，再用电荷为 $N$ 的物质把它破到 $Z_N$；或直接用 BF 理论。
+
+\subsection{BF 理论（直观）}
+
+4d 中 BF 作用量粗略为
+\begin{equation}
+  S=\frac{iN}{2\pi}\int B_2\wedge \dd A_1.
+\end{equation}
+它是 $Z_N$ 规范理论的一种拓扑场论描述，并携带离散 0-形式与 1-形式全局对称。不必会算全部谱；要记住：\textbf{离散高形式对称的局域有效描述常常是 BF 型拓扑项}。
+
+\subsection{Yang--Mills 的中心对称}
+
+$SU(N)$ 纯规范理论有 $Z_N$ 中心 1-形式对称。原因：Wilson 线的表示可以相差中心元 $e^{2\pi i k/N}\mathbf{1}$，而胶子（伴随表示）看不见中心。于是有一套 $Z_N$ 的拓扑面算符，作用在基本表示 Wilson 线上。
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 禁闭相：中心 1-形式未破缺，基本 Wilson 圈面积律。
+  \item Higgs / 退禁闭：中心对称破缺。
+\end{itemize}
+若加入基本表示夸克，Wilson 线可被夸克断开，中心对称被破坏。这就是``为什么 QCD 有夸克时中心对称不是严格对称''。
+
+\begin{example}[$SU(2)$ vs.\ $SO(3)$]
+规范群是 $SU(2)$ 还是 $SO(3)=SU(2)/Z_2$，局域动力学看起来相似，但线算符谱与 1-形式对称不同。课堂很可能用这个例子强调：\textbf{广义对称性能区分局域拉氏量看不出的全局结构}。
+\end{example}
+
+%======================================================================
+\section{'t Hooft 反常（预习级）}
+\label{sec:anomaly}
+%======================================================================
+
+'t~Hooft 反常：全局对称即使不规范，也不能被任何短距动力学破坏；它必须在 RG 流的两端匹配。操作定义：打开背景规范场后，配分函数不是背景规范不变的，
+\begin{equation}
+  Z[A+\dd\lambda]=e^{i\mathcal{A}[A,\lambda]}Z[A].
+\end{equation}
+相位 $\mathcal{A}$ 就是反常。
+
+高形式对称同样可以有反常，包括：
+\begin{itemize}[leftmargin=1.4em]
+  \item 同一 $p$-形式对称自己的反常；
+  \item $0$-形式与 $1$-形式之间的混合反常。
+\end{itemize}
+混合反常会约束 IR：例如某些相不能同时保持两个对称。Yang--Mills 中时间反演与中心对称的混合反常，是 Brennan 综述里的旗舰例子之一。
+
+\begin{hearbox}
+听到 anomaly matching 时，把它想成``IR 不能偷偷丢掉一个带反常的对称，除非它同时出现相应的 IR 自由度（Goldstone、TQFT、或其他对称破缺）''。不必在课前学会下降（inflow）的全部微分几何。
+\end{hearbox}
+
+%======================================================================
+\section{高群与非可逆对称性（听课预备）}
+\label{sec:beyond}
+%======================================================================
+
+\subsection{2-群}
+
+有时 $0$-形式对称与 $1$-形式对称不能分开写，背景场变换混在一起：
+\begin{equation}
+  A_1\mapsto A_1+\dd\lambda_0+\cdots,\qquad
+  B_2\mapsto B_2+\dd\lambda_1+\frac{\kappa}{2\pi}\lambda_0\,F_{A}+\cdots.
+\end{equation}
+这种结构叫 2-群（2-group）。QED 里光子与带电费米子的某些整体结构会出现它。物理后果：RG 流上，相关对称必须``整组''出现或整组消失，不能只保留其中一半。
+
+\subsection{非可逆对称性}
+
+普通群元有逆：$g^{-1}g=1$。非可逆对称的拓扑算符融合不再是群乘法，而可能是
+\begin{equation}
+  D\times D=\sum_i D_i
+\end{equation}
+这种``多通道''规则。4d 中，Abel 手征反常可以把连续 $U(1)$ 手征对称变成非可逆对称：经典上有 $U(1)$，量子上瞬时子破坏了它，但仍留下一套非可逆缺陷。轴子电动力学里也有类似结构。
+
+\begin{keybox}
+预习到这里即可。若课堂冲到非可逆对称，抓住一句：\textbf{拓扑算符仍然在，只是融合不再可逆}。不要卡在范畴记号上。
+\end{keybox}
+
+%======================================================================
+\section{课堂可能出现的公式与术语}
+\label{sec:classroom}
+%======================================================================
+
+\begin{align}
+  \delta S&=\int (\partial_\mu\alpha)\,j^\mu
+  && \text{Noether}\\
+  \dd{*}j_{p+1}&=0
+  && \text{$p$-形式守恒}\\
+  U_g(M_{d-p-1})
+  &&& \text{对称性缺陷}\\
+  U_g\,W&=g^q\,W
+  && \text{linking / 电荷}\\
+  \dd{*}F&=0,\quad \dd F=0
+  && \text{Maxwell 电/磁守恒}\\
+  W(C)&=\exp\bigl(iq\textstyle\int_C A\bigr)
+  && \text{Wilson 线}\\
+  \langle W(C)\rangle&\sim e^{-\sigma\mathrm{Area}}
+  && \text{面积律 = 禁闭}
+\end{align}
+
+高频词：
+\textit{Noether current, topological operator, symmetry defect, linking, $p$-form symmetry, Wilson line, 't Hooft line, center symmetry, BF theory, Higgsing, confinement, 't Hooft anomaly, 2-group, non-invertible symmetry.}
+
+%======================================================================
+\section{常见困惑}
+\label{sec:faq}
+%======================================================================
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{把规范对称当成全局对称。}\\
+  规范变换是冗余。Wilson 线的电荷来自\textbf{全局} 1-形式对称，不是来自``规范群是 $U(1)$''这句话本身。
+
+  \item \textbf{$p$-形式的 $p$ 搞反。}\\
+  $p$ = 带电算符维数。缺陷余维 = $p+1$。流是 $(p+1)$-形式。
+
+  \item \textbf{``没有 Noether 流就没有对称性。''}\\
+  离散对称没有流，仍有拓扑算符。广义对称性的定义以算符为准。
+
+  \item \textbf{Wilson 线就是传播子。}\\
+  Wilson 线是插入在路径上的算符（探针电荷历史），不是粒子传播子。它的真空期望值诊断相。
+
+  \item \textbf{禁闭没有对称性语言。}\\
+  纯规范理论中，禁闭对应中心 1-形式未破缺。有基本物质时该对称被破坏，禁闭的判据要改口。
+
+  \item \textbf{高形式对称可以非阿贝尔。}\\
+  $p\ge 1$ 时拓扑缺陷可交换，群必须阿贝尔。非阿贝尔结构出现在 $0$-形式，或在更高的范畴/高群数据里。
+
+  \item \textbf{反常 = 对称性不存在。}\\
+  't~Hooft 反常是``不能被规范、但作为全局对称仍然在，且 IR 必须匹配''。规范反常才是必须消掉的一致性条件。
+
+  \item \textbf{非可逆 = 没有对称性。}\\
+  仍然给出选择定则与 RG 约束，只是缺陷没有群意义下的逆。
+\end{enumerate}
+
+%======================================================================
+\section{听课重点}
+\label{sec:listen}
+%======================================================================
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{第一讲（17 日下午）}：老师如何从普通 $0$-形式过渡到拓扑算符。对照本讲义第~\ref{sec:topo}--\ref{sec:pform}~节。Maxwell 例子出现时，自己默写 $\dd{*}F=0$ 与 $\dd F=0$。
+  \item \textbf{第二讲（18 日下午）}：1-形式对称的 SSB、Higgs vs.\ 禁闭、可能进入离散对称。
+  \item \textbf{第三、四讲（19 日上午）}：中心对称、$SU(N)$ vs.\ $SU(N)/Z_k$、反常、高群或非可逆。现象学例子（轴子、QED、Yang--Mills 相）优先记结论。
+  \item 每出现一个对称，填表：\\
+  \emph{$p=$？群是连续还是离散？带电算符是什么？破缺意味着哪个相？有没有反常？}
+  \item 讨论时段优先问与粒子物理直接相关的：QCD 有夸克后还剩什么 1-形式结构？轴子模型里的非可逆对称有何唯象后果？
+\end{enumerate}
+
+\begin{hearbox}
+若老师在黑板上画一个圈（Wilson）和一张链绕它的面（缺陷），那就是整门课的几何内核。把 linking 相位 $e^{iq\alpha}$ 写在图上。后面所有推广只是把圈换成更高维的膜、把 $U(1)$ 换成 $Z_N$ 或非可逆缺陷。
+\end{hearbox}
+
+%======================================================================
+\section{进一步学习路线}
+\label{sec:next}
+%======================================================================
+
+\subsection{课前}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 从任何一本 QFT 教材复习 Noether 定理与 Ward 恒等式（Peskin--Schroeder 第 2、9 章量级）。
+  \item 默写 Maxwell 方程的微分形式版，解释为何有两个 $U(1)^{(1)}$。
+  \item 浏览 Brennan \& Hong, arXiv:2306.00912 的第 1--2 节（不必一次读完离散部分）。
+\end{enumerate}
+
+\subsection{课堂同步}
+
+Gaiotto, Kapustin, Seiberg, Willett, \emph{Generalized Global Symmetries}, JHEP 2015（开山之作，可读引言与 Maxwell 节）。
+
+\subsection{课后}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 完整读完 arXiv:2306.00912 第 3--5 节：离散、高群、非可逆。
+  \item 补充：C\'ordova, Dumitrescu, Intriligator 等 TASI / 综述；Jena lectures arXiv:2407.20815（更偏应用、少范畴）。
+  \item 若对 QCD 相结构感兴趣：中心对称与 Polyakov 圈的格点故事。
+\end{itemize}
+
+%======================================================================
+\section{英文术语表}
+\label{sec:glossary}
+%======================================================================
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.48\textwidth} p{0.44\textwidth}}
+\toprule
+\textbf{English} & \textbf{中文} \\
+\midrule
+global / gauge symmetry & 全局 / 规范对称 \\
+Noether's theorem; conserved current & 诺特定理；守恒流 \\
+Ward identity & 沃德恒等式 \\
+local / line / surface operator & 局域 / 线 / 面算符 \\
+topological operator & 拓扑算符 \\
+symmetry defect operator (SDO) & 对称性缺陷算符 \\
+linking number & 链绕数 \\
+charged operator & 带电算符 \\
+$p$-form (generalized) global symmetry & $p$-形式（广义）全局对称 \\
+background gauge field & 背景规范场 \\
+Wilson line; 't Hooft line & 威尔逊线；特霍夫特线 \\
+electric / magnetic one-form symmetry & 电 / 磁 1-形式对称 \\
+center symmetry & 中心对称 \\
+spontaneous symmetry breaking (SSB) & 自发对称破缺 \\
+Goldstone mode & 戈德斯通模 \\
+Higgsing; confinement & Higgs 化；禁闭 \\
+area law / perimeter law & 面积律 / 周长律 \\
+Coleman--Mermin--Wagner theorem & CMW 定理 \\
+'t Hooft anomaly; anomaly matching & 特霍夫特反常；反常匹配 \\
+BF theory & BF 理论 \\
+higher-group (2-group, 3-group) symmetry & 高群对称 \\
+non-invertible symmetry & 非可逆对称 \\
+fusion rule & 融合规则 \\
+selection rule & 选择定则 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1.2em}
+\noindent\textit{声明：}本讲义为课前预习材料，不是 Brennan 教授的正式讲义。记号尽量靠近 arXiv:2306.00912，课堂若不同，以课堂为准。
+
+\end{document}

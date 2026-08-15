@@ -1,0 +1,662 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.35cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}[AutoFakeSlant=true]
+\setCJKsansfont{Noto Sans CJK SC}[AutoFakeSlant=true]
+\setCJKmonofont{Noto Sans CJK SC}
+\xeCJKsetup{PunctStyle=kaiming}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!50!black
+}
+
+\definecolor{scblue}{RGB}{10,90,90}
+\definecolor{scsoft}{RGB}{230,246,246}
+\definecolor{warnbg}{RGB}{255,246,230}
+\definecolor{okbg}{RGB}{232,246,236}
+
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{example}{例子}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{proposition}{命题}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{注记}[section]
+
+\newtcolorbox{keybox}[1][]{
+  colback=scsoft,colframe=scblue,fonttitle=\bfseries,
+  title={核心要点},#1
+}
+\newtcolorbox{warnbox}[1][]{
+  colback=warnbg,colframe=orange!70!black,fonttitle=\bfseries,
+  title={容易混淆},#1
+}
+\newtcolorbox{hearbox}[1][]{
+  colback=okbg,colframe=green!40!black,fonttitle=\bfseries,
+  title={听课提示},#1
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{复旦粒子物理暑期学校 2026}
+\rhead{SCET / Matthias Neubert}
+\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{scblue}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries\color{scblue!80!black}}{\thesubsection}{0.7em}{}
+
+\usepackage{slashed}
+\newcommand{\nbar}{\bar n}
+\newcommand{\slashn}{\slashed{n}}
+\newcommand{\slashnb}{\slashed{\bar n}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\order}{\mathcal{O}}
+\newcommand{\scet}{\mathrm{SCET}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries 软共线有效理论课前讲义}\\[0.45em]
+{\large 复旦粒子物理暑期学校 2026}\\[0.25em]
+{\large SCET / Soft-Collinear Effective Theory \quad Matthias Neubert (Mainz)}\\[0.8em]
+{\normalsize 课前预习稿　从运动学与 EFT 写起　推导写全　英文术语单列}\\[0.35em]
+{\small 依据 Indico 课表：8 月 17--21 日共五讲。本讲义非正式课堂讲义。}
+\end{center}
+
+\tableofcontents
+\newpage
+
+%======================================================================
+\section{如何使用本讲义}
+%======================================================================
+
+SCET 解决的问题可以一句话概括：
+
+\begin{quote}
+QCD 过程里同时出现几个相距很远的能量尺度时，普通微扰论会被大对数毁掉。SCET 把\textbf{硬、共线、软}自由度写成不同场，用幂次计数做展开，再用重整化群把大对数求和回来。
+\end{quote}
+
+Matthias Neubert 是这一语言的主要建设者之一。他的课通常从 Sudakov 问题与有效场论讲起，而不是一上来写完整拉氏量。本讲义按他常见的逻辑铺路：散射运动学 $\to$ 尺度分离 $\to$ EFT $\to$ 软/共线极限 $\to$ 光锥坐标 $\to$ 幂次计数 $\to$ SCET 的基本结构 $\to$ 因子化与重求和。
+
+五讲课表（Asia/Shanghai）：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+日期 & 时间 & 内容 \\
+\midrule
+8 月 17 日（一） & 14:50--15:50 & SCET \\
+8 月 18 日（二） & 14:50--15:50 & SCET \\
+8 月 19 日（三） & 16:10--17:10 & SCET \\
+8 月 20 日（四） & 14:50--15:50 & SCET \\
+8 月 21 日（五） & 14:50--15:50 & SCET \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{hearbox}
+Neubert 的板书会很快进入 $n^\mu,\bar n^\mu$ 与 $\lambda$ 计数。课前务必自己算一遍：一个沿 $z$ 轴超相对论运动的粒子，其 $p^+=n\cdot p$ 与 $p^-=\bar n\cdot p$ 哪个大、哪个小。把这件小事搞反，后面所有幂次都会错。
+\end{hearbox}
+
+%======================================================================
+\section{预备知识：QFT 与散射运动学}
+\label{sec:prereq}
+%======================================================================
+
+\subsection{需要已经会的}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 费曼规则、重整化、$\overline{\mathrm{MS}}$ 跑动耦合 $\alpha_s(\mu)$。
+  \item 树图与一圈图的数量级：每个圈带 $\alpha_s$，还可能带对数。
+  \item Dirac 旋量：$\gamma$ 矩阵、Dirac 方程 $(\slashed{p}-m)u=0$。质量可以先当作比硬标度小的量。
+\end{itemize}
+
+本讲义在欧氏/闵氏之间切换时会说明；QCD 振幅默认闵氏度规 $(+,-,-,-)$。
+
+\subsection{两体与喷射运动学}
+
+考虑 $e^+e^-\to$ 强子，质心能量 $Q$。一个两喷射事件里，每个喷射的不变质量 $M_J$ 满足
+\begin{equation}
+  M_J^2\ll Q^2.
+\end{equation}
+若再要求喷射很窄，内部还有更软的辐射。于是出现至少三个尺度：
+\begin{equation}
+\label{eq:scales}
+  Q\ \gg\ M_J\ \gg\ \Lambda_{\mathrm{QCD}}
+  \qquad\text{或更细地}\qquad
+  Q\ \gg\ p_\perp\ \gg\ p_\perp^2/Q.
+\end{equation}
+末式正是 Sudakov 问题的标准层次：硬标度、共线标度、软标度。
+
+对撞机过程 $pp\to Z+j$ 等同样如此：部分子动量分数、$p_T$、喷射半径 $R$、软辐射能量可以差好几个数量级。
+
+\subsection{为什么``只算到固定阶''会失败}
+
+典型截面在微扰论中长成
+\begin{equation}
+\label{eq:sudakov-series}
+  \sigma\sim \sigma_0\sum_{n}\sum_{m\le 2n}
+  c_{nm}\,\alpha_s^n\log^m\Bigl(\frac{Q^2}{M^2}\Bigr).
+\end{equation}
+对数来自软、共线相空间的积分。当 $\alpha_s\log^2(Q^2/M^2)\sim 1$ 时，后面的项并不比前面小，固定阶展开崩溃。必须对大对数做\textbf{重求和}（resummation）。SCET 的工程目标之一，就是把这件事变成解 RG 方程。
+
+\begin{example}[Sudakov 形状因子]
+一个带电粒子在硬动量转移 $Q$ 下几乎不辐射地保持其方向，振幅被指数抑制：
+\begin{equation}
+  F(Q^2,\mu^2)\sim \exp\Bigl[-\frac{\alpha_s C_F}{4\pi}\log^2\frac{Q^2}{\mu^2}+\cdots\Bigr].
+\end{equation}
+双对数 $\log^2$ 是软与共线叠加的指纹。Neubert 几乎一定从类似对象切入。
+\end{example}
+
+%======================================================================
+\section{有效场论的基本思想}
+\label{sec:eft}
+%======================================================================
+
+\subsection{积分掉重模式}
+
+设理论有重标度 $M$ 与轻标度 $m$，且我们只问能量 $\sim m$ 的过程。把重场（或硬圈动量）积掉，得到
+\begin{equation}
+  \mathcal{L}_{\mathrm{EFT}}=\mathcal{L}_{\mathrm{light}}+\sum_i \frac{C_i(\mu)}{M^{\Delta_i-d}}\,\mathcal{O}_i,
+\end{equation}
+其中 Wilson 系数 $C_i$ 吸收短距物理，$\mathcal{O}_i$ 由轻场组成。
+
+匹配（matching）：在能同时用全理论与 EFT 算的尺度上，让物理量相等，定 $C_i$。其后用 EFT 的 RG 把 $C_i$ 演化到低标度。
+
+\subsection{EFT 能做什么}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{幂次展开}：按 $m/M$ 系统展开，误差可估计。
+  \item \textbf{尺度分离}：每个函数只依赖一个标度，对数不再混在一起。
+  \item \textbf{对称性}：EFT 拉氏量必须实现全理论在低能仍存在的对称（规范、手征、重夸克自旋对称等）。
+\end{enumerate}
+
+HQET、ChPT、Fermi 理论都是这一套路。SCET 的特殊处在于：低能自由度不是``一种轻粒子''，而是\textbf{按方向与虚度分类的多种模式}。
+
+\begin{keybox}
+普通 EFT：重 vs.\ 轻。\\
+SCET：硬 vs.\ 沿某个方向的共线 vs.\ 软（以及超软）。\\
+同一个夸克场，在全 QCD 里只有一个；在 SCET 里被拆成 $\xi_n+\xi_{\bar n}+q_{us}+\cdots$。
+\end{keybox}
+
+%======================================================================
+\section{软极限与共线极限}
+\label{sec:limits}
+%======================================================================
+
+\subsection{共线}
+
+一个质量为 $0$ 的部分子动量 $p^\mu$，若它几乎平行于某个类光方向 $n^\mu$，则
+\begin{equation}
+  p^2\to 0,\qquad \text{且}\quad \vec p\text{ 与 }\vec n\text{ 夹角很小}.
+\end{equation}
+共线胶子的发射在 QCD 中给出 $\int \dd\theta^2/\theta^2$ 型发散（在无质量理论中）。物理上，共线辐射被吸进部分子分布函数或喷射函数，不能用硬振幅单独描述。
+
+\subsection{软}
+
+软胶子四动量的所有分量都小：
+\begin{equation}
+  k^\mu\to 0.
+\end{equation}
+eikonal 近似下，发射软胶子的振幅因子化为
+\begin{equation}
+\label{eq:eikonal}
+  \mathcal{M}(p;k)\approx g_s T^a\frac{p\cdot\varepsilon^a}{p\cdot k}\,\mathcal{M}(p).
+\end{equation}
+分母 $p\cdot k$ 在 $k$ 平行于 $p$ 时也小，所以软与共线相空间有重叠。这正是双对数的来源，也是 SCET 里 Wilson 线出现的原因：eikonal 因子是 Wilson 线的展开。
+
+\subsection{硬}
+
+硬模式的动量所有分量都 $\sim Q$，虚度 $p^2\sim Q^2$。它们不能在末态以实粒子出现（除非被积分进 Wilson 系数），在 EFT 里被积掉。
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.95]
+  \draw[-{Stealth},thick] (-0.2,0) -- (6.4,0) node[right] {$k^-$};
+  \draw[-{Stealth},thick] (0,-0.2) -- (0,4.2) node[above] {$k^+$};
+  \draw[thick,scblue,fill=scblue!15] (0.15,3.1) rectangle (1.35,3.9);
+  \node[font=\small] at (0.75,3.5) {$\bar n$-共线};
+  \draw[thick,scblue,fill=scblue!15] (3.3,0.15) rectangle (5.5,0.85);
+  \node[font=\small] at (4.4,0.5) {$n$-共线};
+  \draw[thick,orange,fill=orange!20] (0.15,0.15) rectangle (1.15,1.0);
+  \node[font=\small] at (0.65,0.55) {超软};
+  \draw[thick,purple,fill=purple!12] (2.0,1.6) rectangle (3.4,2.7);
+  \node[font=\small] at (2.7,2.15) {硬};
+  \node[font=\small,align=left] at (8.1,2.2) {示意：\\光锥平面上的\\模式分区};
+\end{tikzpicture}
+\caption{$n$-共线模式大分量是 $k^-$，$+$ 分量很小；超软两个光锥分量都小；硬模式活在中间。真正的分区还依赖你用 SCET$_{\mathrm I}$ 还是 SCET$_{\mathrm{II}}$。}
+\end{figure}
+
+%======================================================================
+\section{光锥坐标}
+\label{sec:lc}
+%======================================================================
+
+\subsection{参考向量}
+
+取两个类光向量
+\begin{equation}
+\label{eq:nnbar}
+  n^2=0,\qquad \bar n^2=0,\qquad n\cdot\bar n=2.
+\end{equation}
+标准选择：粒子沿 $+z$ 运动时
+\begin{equation}
+  n^\mu=(1,0,0,1),\qquad \bar n^\mu=(1,0,0,-1).
+\end{equation}
+任意四矢量分解为
+\begin{equation}
+\label{eq:decomp}
+  p^\mu=\frac{\bar n\cdot p}{2}\,n^\mu+\frac{n\cdot p}{2}\,\bar n^\mu+p_\perp^\mu
+  \equiv p_-^\mu+p_+^\mu+p_\perp^\mu.
+\end{equation}
+记号
+\begin{equation}
+  p^+\equiv n\cdot p,\qquad p^-\equiv \bar n\cdot p,
+\end{equation}
+于是（度规 $(+,-,-,-)$）
+\begin{equation}
+\label{eq:p2}
+  p^2=p^+ p^--p_\perp^2.
+\end{equation}
+常把分量写成
+\begin{equation}
+  p^\mu=(p^+,p^-,p_\perp).
+\end{equation}
+
+\subsection{哪个分量大？请算一次}
+
+沿 $+z$ 的超相对论粒子：$p^\mu\approx(E,0,0,E)$，$E\sim Q$。则
+\begin{equation}
+  n\cdot p=E-E=0,\qquad \bar n\cdot p=E+E=2E\sim Q.
+\end{equation}
+所以 \textbf{$n$-共线粒子的大分量是 $p^-=\bar n\cdot p\sim Q$，小分量是 $p^+=n\cdot p$}。若喷射有小质量 $M_J$，则 $p^+\sim M_J^2/Q$。
+
+\begin{warnbox}
+文献里 $p^+$ 有时定义为 $\bar n\cdot p$。本讲义固定：$p^+=n\cdot p$。听课第一件事是看老师的 $n^\mu$ 指向哪、大分量叫 $+$ 还是 $-$。对上记号之前不要抄幂次。
+\end{warnbox}
+
+\subsection{Dirac 结构：共线投影}
+
+对 $n$-共线无质量费米子，$\slashed{p}\,u=0$ 意味着旋量几乎满足
+\begin{equation}
+  \frac{\slashn\slashnb}{4}u=u.
+\end{equation}
+定义投影算符
+\begin{equation}
+\label{eq:proj}
+  P_n=\frac{\slashn\slashnb}{4},\qquad P_{\bar n}=\frac{\slashnb\slashn}{4},\qquad
+  P_n+P_{\bar n}=1,\quad P_n^2=P_n.
+\end{equation}
+共线夸克场是
+\begin{equation}
+  \xi_n=P_n\psi.
+\end{equation}
+另一半 $P_{\bar n}\psi$ 是重的（或称小分量），会被运动方程消掉，类似于 HQET 里的小分量。这是 SCET 拉氏量看起来像二维 Dirac 理论的原因。
+
+%======================================================================
+\section{幂次计数}
+\label{sec:power}
+%======================================================================
+
+引入小参数 $\lambda\ll 1$。不同物理量按 $\lambda$ 的多少次方标度，称为 power counting。SCET 有两套常用方案。
+
+\subsection{SCET$_{\mathrm I}$（超软--共线）}
+
+适用于存在中间共线标度、且软标度是其平方再除以 $Q$ 的过程，例如：推力（thrust）、$B\to X_s\gamma$ 的光子能谱、喷射质量。
+\begin{equation}
+  \lambda^2\sim \frac{M_J^2}{Q^2}\sim \frac{p_c^2}{Q^2}.
+\end{equation}
+模式标度（写成 $(p^+,p^-,p_\perp)$，相对 $Q$）：
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+模式 & 标度 \\
+\midrule
+硬 (hard) & $(1,1,1)Q$ \\
+$n$-共线 (collinear) & $(\lambda^2,1,\lambda)Q$ \\
+超软 (ultrasoft) & $(\lambda^2,\lambda^2,\lambda^2)Q$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+共线虚度 $p_c^2\sim \lambda^2 Q^2$，超软虚度 $p_{us}^2\sim \lambda^4 Q^2$。共线与超软的 $p^+$ 同阶，因此它们之间的相互作用必须小心展开（multipole 展开）。
+
+\subsection{SCET$_{\mathrm{II}}$（软--共线）}
+
+适用于 TMD、排他衰变 $B\to D\pi$ 等：软与共线的横动量同阶。
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+模式 & 标度 \\
+\midrule
+$n$-共线 & $(\lambda^2,1,\lambda)Q$ \\
+软 (soft) & $(\lambda,\lambda,\lambda)Q$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+此时软与共线虚度同为 $\lambda^2 Q^2$，但不能用同一个动能项描述，需要额外的快速度（rapidity）重整化。
+
+\begin{keybox}
+课前只需记住：\\
+\textbf{共线} = 一个光锥分量大、一个小、横动量中等；\\
+\textbf{超软} = 所有分量都 $\sim\lambda^2 Q$；\\
+\textbf{软} = 所有分量都 $\sim\lambda Q$。\\
+老师说 SCET$_{\mathrm I}$ 还是 ${}_{\mathrm{II}}$，就是在选第二行还是第三行。
+\end{keybox}
+
+\subsection{场的幂次}
+
+场的标度由传播子（两点函数）定。粗略地，$n$-共线夸克 $\xi_n\sim\lambda$，共线胶子的横分量 $A_{n\perp}\sim\lambda Q$，超软夸克 $\sim\lambda^3$，超软胶子 $A_{us}\sim\lambda^2 Q$。不必背全表，但要理解：\textbf{拉氏量每一项都有确定的 $\lambda$ 次数}，leading-power 拉氏量只保留最低次项。
+
+\begin{example}[共线动量如何满足 $p^2\sim\lambda^2 Q^2$]
+$p\sim(\lambda^2,1,\lambda)Q$，则 $p^+p^-\sim\lambda^2 Q^2$，$p_\perp^2\sim\lambda^2 Q^2$，两者同阶，故 $p^2$ 可以是 $\lambda^2 Q^2$ 而不是更小。这保证共线粒子可以轻微离壳，正好描述喷射质量。
+\end{example}
+
+%======================================================================
+\section{SCET 的基本结构}
+\label{sec:structure}
+%======================================================================
+
+\subsection{把 QCD 场拆开}
+
+形式上
+\begin{equation}
+  \psi=\sum_{n\in\text{方向}}\xi_n+q_{us}\quad\text{（或再加软夸克）},\qquad
+  A^\mu=\sum_n A_n^\mu+A_{us}^\mu.
+\end{equation}
+每个共线方向 $n$ 有自己的一套场。两个对向喷射需要 $\xi_n$ 与 $\xi_{\bar n}$。硬场不出现：它们的效应进入 Wilson 系数。
+
+\subsection{共线夸克拉氏量（直观推导）}
+
+从 QCD 的 $\bar\psi i\slashed{D}\psi$ 出发，只保留 $n$-共线夸克，并作投影 $\xi_n=P_n\psi$。用运动方程消去小分量后，leading-power 结果具有结构
+\begin{equation}
+\label{eq:Lxi}
+  \mathcal{L}_{\xi_n}=\bar\xi_n\Bigl(in\cdot D_n+i\slashed{D}_{n\perp}\frac{1}{i\bar n\cdot D_n}i\slashed{D}_{n\perp}\Bigr)\frac{\slashnb}{2}\xi_n.
+\end{equation}
+解读：
+\begin{itemize}[leftmargin=1.4em]
+  \item $n\cdot D_n$ 是大方向上的协变导数，量级 $\lambda^2 Q$；
+  \item $\slashed{D}_{n\perp}$ 是横导数，量级 $\lambda Q$；
+  \item $1/(i\bar n\cdot D_n)$ 来自消去小分量，量级 $1/Q$。
+\end{itemize}
+两项同为 $\lambda^2$，属于 leading power。这与 HQET 消去小分量得到 $iv\cdot D$ 是同一类计算。
+
+\subsection{Wilson 线：规范不变的灵魂}
+
+共线夸克单独携带共线规范变换，不构成规范不变量。必须用 Wilson 线把规范相位拖到无穷远。沿 $\bar n$ 方向的共线 Wilson 线
+\begin{equation}
+\label{eq:Wn}
+  W_n(x)=\mathrm{P}\exp\Bigl(ig_s\int_{-\infty}^{0}\dd s\,\bar n\cdot A_n(x+s\bar n)\Bigr)
+\end{equation}
+把 $\xi_n$ 组成
+\begin{equation}
+  \chi_n=W_n^\dagger\xi_n,
+\end{equation}
+$\chi_n$ 在共线规范变换下中性（仍可带超软/软规范变换）。超软相互作用则由超软 Wilson 线
+\begin{equation}
+  Y_n(x)=\mathrm{P}\exp\Bigl(ig_s\int_{-\infty}^{0}\dd s\,n\cdot A_{us}(x+sn)\Bigr)
+\end{equation}
+生成。eikonal 发射公式~\eqref{eq:eikonal} 正是 $Y_n$ 的微扰展开。
+
+\begin{keybox}
+看到 $W_n$ 与 $Y_n$ 不要慌。它们只做一件事：\textbf{让带颜色的共线/软场重新变成规范不变量}。因子化定理里，软函数几乎总是 Wilson 线的关联函数。
+\end{keybox}
+
+\subsection{硬--共线流与匹配}
+
+QCD 中的电磁流 $\bar\psi\gamma^\mu\psi$，在 SCET 里匹配成
+\begin{equation}
+\label{eq:current}
+  \bar\psi\gamma^\mu\psi
+  = \int\dd\omega\,\dd\omega'\,C(\omega,\omega',\mu)\,
+  \bar\chi_{\bar n}(\omega')\gamma^\mu_\perp\chi_n(\omega)+\cdots.
+\end{equation}
+$C$ 是硬 Wilson 系数，阶 $\alpha_s$ 的匹配从 QCD 与 SCET 的单圈图相减得到。$\cdots$ 是更高幂次算符。\textbf{因子化的硬函数来自 $|C|^2$。}
+
+\subsection{两种常用形式语言}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{标签形式}（label formalism, Bauer--Stewart 等）：把共线大动量标成标签 $p^-$，位置只描述剩余小动量。
+  \item \textbf{位置空间形式}（Neubert、Becher 等常用）：不引入标签，用投影与 multipole 展开。
+\end{itemize}
+物理相同。Neubert 的课更常走位置空间。若幻灯片出现 $\mathcal{P}$ 或标签导数，那是第一套语言。
+
+%======================================================================
+\section{因子化定理的物理图像}
+\label{sec:fact}
+%======================================================================
+
+\subsection{一句话}
+
+在 leading power，许多截面（或衰减谱）写成
+\begin{equation}
+\label{eq:fact}
+  \sigma=H\otimes J\otimes S
+  \quad\text{（再卷积 PDF 等）}.
+\end{equation}
+\begin{itemize}[leftmargin=1.4em]
+  \item $H$：硬函数，尺度 $Q$，无红外发散；
+  \item $J$：喷射/共线函数，尺度 $M_J$ 或 $p_\perp$；
+  \item $S$：软函数，尺度 $M_J^2/Q$ 或 $p_\perp^2/Q$。
+\end{itemize}
+每个函数只含一类模式，因而只含一种对数。卷积 $\otimes$ 来自共线与软之间共享的光锥动量分数或位置变量。
+
+\subsection{为什么因子化``应该''成立}
+
+SCET 拉氏量在 leading power 下，超软场只通过 $n\cdot A_{us}$ 进入，且可用场重定义把超软 Wilson 线从共线拉氏量里拆到流算符上。于是共线与超软在动力学上解耦：
+\begin{equation}
+  \mathcal{L}=\mathcal{L}_n+\mathcal{L}_{\bar n}+\mathcal{L}_{us}+\cdots,
+\end{equation}
+关联函数裂成硬系数乘共线矩阵元乘软矩阵元。这就是因子化定理的 EFT``证明提纲''。真正的证明还要处理快速度发散、 Glauber 模式、测量算符是否红外安全等；课前知道提纲即可。
+
+\begin{example}[推力]
+$e^+e^-$ 的推力 $T$ 接近 $1$ 时，$\tau=1-T\sim\lambda^2$。截面因子化为
+\begin{equation}
+  \frac{\dd\sigma}{\dd\tau}=H(Q,\mu)\int\dd s_n\,\dd s_{\bar n}\,\dd k\,
+  J(s_n,\mu)J(s_{\bar n},\mu)S(k,\mu)\,\delta(\tau-(s_n+s_{\bar n}+k)/Q^2).
+\end{equation}
+三个函数分别吃硬、两个喷射、软辐射。这是 SCET$_{\mathrm I}$ 的展示橱窗。
+\end{example}
+
+\subsection{重整化群与 Sudakov 重求和}
+
+每个函数满足 RG 方程。硬函数的典型形式含\textbf{cusp 反常}：
+\begin{equation}
+\label{eq:rge}
+  \mu\frac{\dd}{\dd\mu}H(Q,\mu)=\Bigl[\Gamma_{\mathrm{cusp}}(\alpha_s)\log\frac{Q^2}{\mu^2}+\gamma_H(\alpha_s)\Bigr]H.
+\end{equation}
+$\Gamma_{\mathrm{cusp}}$ 来自 Wilson 线尖角的紫外发散，是双对数的源头。解这方程，等于把 $\alpha_s^n\log^{2n}$ 全部吃进指数（Sudakov 因子）。
+
+操作步骤：
+\begin{enumerate}[leftmargin=1.6em]
+  \item 在各自的自然尺度算 $H,J,S$（那里对数小，固定阶可靠）；
+  \item 用 RG 把它们演化到同一个 $\mu$；
+  \item 卷积得到物理截面。
+\end{enumerate}
+
+\begin{hearbox}
+Neubert 会强调：\textbf{重求和 = 解 RG}，不是另发明一套技巧。cusp 反常 $\Gamma_{\mathrm{cusp}}$ 是关键词。看到 $\log(Q^2/\mu^2)$ 乘在反常里，就知道双对数从哪里来。
+\end{hearbox}
+
+%======================================================================
+\section{典型应用地图}
+\label{sec:apps}
+%======================================================================
+
+五讲不可能覆盖全部应用，但下面几块最常出现。
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{重味}：$B\to X_s\gamma$、$B\to X_u\ell\nu$ 的端点谱。HQET 处理重夸克，SCET 处理衰变产物的共线与软胶子。
+  \item \textbf{$e^+e^-$ 事件形状}：thrust、重喷射质量。精确 QCD 与 $\alpha_s$ 提取。
+  \item \textbf{对撞机喷射}：喷射质量、$p_T$ 谱、窄喷射的因子化。与本暑期学校 Ian Moult 的能量关联器课程相邻。
+  \item \textbf{TMD / SCET$_{\mathrm{II}}$}：横动量依赖 PDF，Drell--Yan 的 $q_T$ 谱。
+  \item \textbf{次领头幂次}（power corrections）：leading-power 因子化之外的 $\lambda$ 修正，是近年热点。
+\end{enumerate}
+
+若课堂偏向重味，你会看到 $v^\mu$（重夸克速度）与 $n^\mu$ 同时出现；若偏向对撞机，会看到束流方向的共线 PDF。
+
+%======================================================================
+\section{课堂可能出现的公式与术语}
+\label{sec:classroom}
+%======================================================================
+
+\begin{align}
+  n^2&=\bar n^2=0,\quad n\cdot\bar n=2
+  && \text{光锥基}\\
+  p^\mu&=\tfrac{n\cdot p}{2}\bar n^\mu+\tfrac{\bar n\cdot p}{2}n^\mu+p_\perp^\mu
+  && \text{分解}\\
+  p_n&\sim Q(\lambda^2,1,\lambda)
+  && \text{$n$-共线}\\
+  p_{us}&\sim Q(\lambda^2,\lambda^2,\lambda^2)
+  && \text{超软}\\
+  \xi_n&=\frac{\slashn\slashnb}{4}\psi
+  && \text{共线夸克}\\
+  W_n&=\mathrm{P}\exp\bigl(ig\int \bar n\cdot A_n\bigr)
+  && \text{共线 Wilson 线}\\
+  \sigma&=H\otimes J\otimes S
+  && \text{因子化}\\
+  \mu\partial_\mu H&=\bigl[\Gamma_{\mathrm{cusp}}\log\tfrac{Q^2}{\mu^2}+\gamma\bigr]H
+  && \text{硬函数 RG}
+\end{align}
+
+高频词：
+\textit{scale separation, matching, Wilson coefficient, collinear / soft / ultrasoft, light-cone coordinates, power counting, leading power, Wilson line, eikonal, factorization, jet function, soft function, cusp anomalous dimension, Sudakov resummation, SCET$_{\mathrm I}$ / SCET$_{\mathrm{II}}$, rapidity divergence.}
+
+%======================================================================
+\section{常见困惑}
+\label{sec:faq}
+%======================================================================
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{$n$ 与 $\bar n$ 搞反，进而把 $p^\pm$ 搞反。}\\
+  用一个具体四动量 $(E,0,0,E)$ 代入 $n\cdot p$ 与 $\bar n\cdot p$，立刻能检查。
+
+  \item \textbf{软与超软当同义词。}\\
+  在 SCET 里它们标度不同，对应 SCET$_{\mathrm{II}}$ 与 SCET$_{\mathrm I}$。口语里有人混用，看幂次表。
+
+  \item \textbf{以为 SCET 是``另一种 QCD 微扰论''。}\\
+  它是有效理论：硬模式被积掉，展开参数是 $\lambda$ 不是只靠 $\alpha_s$。$\alpha_s$ 仍在每个区里做圈图。
+
+  \item \textbf{因子化 = 截面变成三个数相乘。}\\
+  通常是卷积，不是普通乘法。自变量是质量、光锥分数或冲击参数。
+
+  \item \textbf{Wilson 线是可选项。}\\
+  没有它，共线场的规范不变性不完整，软辐射的 eikonal 结构也无法系统写出。
+
+  \item \textbf{leading power 已经精确。}\\
+  它是 $\lambda$ 的领头项。对数可以全部重求，但幂次修正（$M_J/Q$ 等）是另一层。
+
+  \item \textbf{SCET 自动处理所有红外安全问题。}\\
+  Glauber 胶子、非全局对数、非红外安全测量，都可能破坏最简单的因子化。课堂若提到，记下``假设条件''即可。
+
+  \item \textbf{把 HQET 与 SCET 当成互斥。}\\
+  重夸克用 HQET 场 $h_v$，轻衰变产物用 SCET 场。许多 $B$ 物理公式两者同时出现。
+\end{enumerate}
+
+%======================================================================
+\section{听课重点}
+\label{sec:listen}
+%======================================================================
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{第一讲}：问题从哪来？Sudakov 双对数？事件形状？记下尺度层次~\eqref{eq:scales}。
+  \item \textbf{第二讲}：光锥分解与 $\lambda$ 计数。对照本讲义第~\ref{sec:lc}--\ref{sec:power}~节，抄老师的表，不要抄本讲义的表（记号可能不同）。
+  \item \textbf{第三讲}：拉氏量、投影、Wilson 线。问自己：没有 $W_n$ 哪一项不规范不变？
+  \item \textbf{第四、五讲}：匹配、因子化、RG。把~\eqref{eq:fact} 与~\eqref{eq:rge} 对上具体过程。
+  \item 讨论时段优先问：本课用 SCET$_{\mathrm I}$ 还是 ${}_{\mathrm{II}}$？次领头幂次是否讲？与能量关联器课程如何衔接？
+\end{enumerate}
+
+\begin{hearbox}
+五讲的最小闭环：\\
+\emph{尺度层次} $\to$ \emph{模式} $\to$ \emph{$\lambda$ 计数} $\to$ \emph{Wilson 线} $\to$ \emph{$H\otimes J\otimes S$} $\to$ \emph{cusp RG}。\\
+能用自己的话把这六块串起来，预习就成功了。细节公式课堂上再填。
+\end{hearbox}
+
+%======================================================================
+\section{进一步学习路线}
+\label{sec:next}
+%======================================================================
+
+\subsection{课前（强烈建议做的两道小题）}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 取 $p^\mu=(E,0,0,E-\Delta)$，$\Delta\ll E$，按~\eqref{eq:nnbar} 计算 $p^\pm,p_\perp,p^2$，并与 $(\lambda^2,1,\lambda)Q$ 对照，读出 $\lambda^2\sim\Delta/E$。
+  \item 从 eikonal 顶点 $p\cdot\varepsilon/(p\cdot k)$ 看出它是 Wilson 线展开的第一项（只求感性认识）。
+\end{enumerate}
+
+\subsection{课堂同步}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Becher, Broggio, Ferroglia, \emph{Introduction to Soft-Collinear Effective Theory}（Springer Lecture Notes, arXiv:1410.1892）--- 最贴近 Neubert 风格的系统教材。
+  \item Bauer, Stewart 的 MIT OCW 8.851 SCET 讲义（标签形式）。
+  \item Becher, Les Houches lectures, arXiv:1803.04310。
+\end{itemize}
+
+\subsection{课后}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 原始文献：Bauer, Fleming, Pirjol, Stewart 系列；Neubert 与合作者关于 SCET 位置空间与 $B$ 物理的论文。
+  \item 应用：thrust 因子化、喷射质量、TMD。
+  \item 若听了 Moult 的能量关联器课：用 SCET 语言重读能量关联器的共线极限。
+\end{itemize}
+
+%======================================================================
+\section{英文术语表}
+\label{sec:glossary}
+%======================================================================
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.50\textwidth} p{0.42\textwidth}}
+\toprule
+\textbf{English} & \textbf{中文} \\
+\midrule
+soft-collinear effective theory (SCET) & 软共线有效理论 \\
+effective field theory (EFT) & 有效场论 \\
+scale separation & 尺度分离 \\
+matching; Wilson coefficient & 匹配；威尔逊系数 \\
+operator product expansion (OPE) & 算符乘积展开 \\
+hard / collinear / soft / ultrasoft mode & 硬 / 共线 / 软 / 超软模式 \\
+light-cone coordinates & 光锥坐标 \\
+light-like vector & 类光矢量 \\
+transverse momentum & 横动量 \\
+power counting; leading power & 幂次计数；领头幂次 \\
+Sudakov form factor / logarithm & 苏达科夫形状因子 / 对数 \\
+resummation & 重求和 \\
+eikonal approximation & 几何光学（eikonal）近似 \\
+Wilson line; path ordering & 威尔逊线；路径排序 \\
+collinear projection & 共线投影 \\
+label formalism vs.\ position-space SCET & 标签形式 vs.\ 位置空间 SCET \\
+factorization theorem & 因子化定理 \\
+hard / jet / soft function & 硬 / 喷射 / 软函数 \\
+cusp anomalous dimension & 尖角反常维数 \\
+renormalization-group equation (RGE) & 重整化群方程 \\
+rapidity divergence & 快速度发散 \\
+SCET$_{\mathrm I}$ / SCET$_{\mathrm{II}}$ & 两套模式方案 \\
+thrust; event shape & 推力；事件形状 \\
+jet mass; PDF; TMD & 喷射质量；部分子分布；TMD \\
+power correction & 幂次修正 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1.2em}
+\noindent\textit{声明：}本讲义为课前预习材料，不是 Neubert 教授的正式讲义。光锥记号在文献中不统一，一律以课堂当场定义为准。
+
+\end{document}
