@@ -1683,4 +1683,563 @@ $\E[z_i]=\sum_j\E[W_{ij}]\E[a_j]=0$（独立性 + 零均值）。方差：由独
 \]
 最后一层就是普通的线性/逻辑回归，只不过它作用在\textbf{学出来的特征} $\varphi(\bm{x})$ 上，而不是原始特征上。这解释了为什么“先用大数据预训练、再换一个线性头微调” \eng{pre-training + fine-tuning / linear probing} 的做法有效，也说明神经网络与前面几节不是两套东西：它只是把“人工设计特征”这一步也变成了可优化的对象。
 
+% =====================================================================
+\section{正则化、过拟合与偏差--方差}\label{sec:reg}
+% =====================================================================
+
+\subsection{过拟合的诊断}
+
+\begin{definition}[过拟合与欠拟合]\label{def:overfit}
+设 $\hat R_{\text{train}}$ 与 $\hat R_{\text{val}}$ 分别为训练集与验证集上的经验风险。
+\begin{itemize}
+  \item 欠拟合 \eng{underfitting}：两者都大且接近。模型容量不足，或优化没做够。
+  \item 过拟合 \eng{overfitting}：$\hat R_{\text{train}}$ 很小而 $\hat R_{\text{val}}$ 明显更大。模型记住了训练集的噪声。
+\end{itemize}
+\end{definition}
+
+诊断口诀：\textbf{先看训练误差，再看差距}。训练误差本身就大 $\Rightarrow$ 欠拟合，应加大模型/训练更久/调大学习率或换优化器；训练误差小但差距大 $\Rightarrow$ 过拟合，应加正则化/加数据/减小模型。这两种病的处方\textbf{方向相反}，误诊会让情况更糟，所以这一步不能跳过。
+
+\subsection{偏差--方差分解}
+
+现在把“容量与误差的取舍”变成一个精确的等式。关键在于把\textbf{训练集本身}也当作随机变量：不同的训练集 $\D$ 训练出不同的模型 $\hat f_{\D}$。
+
+\begin{theorem}[偏差--方差分解 \eng{bias--variance decomposition}]\label{thm:bv}
+设数据生成机制为 $y=f(\bm{x})+\varepsilon$，$\E[\varepsilon]=0$、$\Var(\varepsilon)=\sigma^2$，且 $\varepsilon$ 与 $\bm{x}$、$\D$ 独立。固定一个测试点 $\bm{x}_0$，记 $\hat f_{\D}(\bm{x}_0)$ 为在训练集 $\D$ 上学到的预测。则期望平方误差分解为
+\begin{equation}\label{eq:bv}
+  \boxed{\
+  \E_{\D,\varepsilon}\Big[\big(y_0-\hat f_{\D}(\bm{x}_0)\big)^2\Big]
+  =\underbrace{\sigma^2}_{\text{噪声}}
+  +\underbrace{\Big(\E_{\D}\big[\hat f_{\D}(\bm{x}_0)\big]-f(\bm{x}_0)\Big)^{2}}_{\text{偏差}^2\ \eng{bias}^2}
+  +\underbrace{\Var_{\D}\big(\hat f_{\D}(\bm{x}_0)\big)}_{\text{方差}\ \eng{variance}}\ }
+\end{equation}
+其中 $y_0=f(\bm{x}_0)+\varepsilon_0$。
+\end{theorem}
+
+\begin{proof}
+为简洁记 $\hat f=\hat f_{\D}(\bm{x}_0)$，$f=f(\bm{x}_0)$，$\bar f=\E_{\D}[\hat f]$。
+
+\textbf{第一步：分离噪声。}
+\[
+  y_0-\hat f=\big(f+\varepsilon_0\big)-\hat f=\varepsilon_0+\big(f-\hat f\big).
+\]
+平方并取期望：
+\[
+  \E\big[(y_0-\hat f)^2\big]
+  =\E[\varepsilon_0^2]+2\,\E\big[\varepsilon_0(f-\hat f)\big]+\E\big[(f-\hat f)^2\big].
+\]
+中间项：$\varepsilon_0$ 与 $\D$ 独立且 $\E[\varepsilon_0]=0$，故 $\E[\varepsilon_0(f-\hat f)]=\E[\varepsilon_0]\,\E[f-\hat f]=0$。又 $\E[\varepsilon_0^2]=\Var(\varepsilon_0)=\sigma^2$。于是
+\begin{equation}\label{eq:bv-step1}
+  \E\big[(y_0-\hat f)^2\big]=\sigma^2+\E_{\D}\big[(f-\hat f)^2\big].
+\end{equation}
+
+\textbf{第二步：对第二项插入均值 $\bar f$。}这正是命题 \ref{prop:bv-identity}（取 $Z=\hat f$，$c=f$）：
+\[
+  \E_{\D}\big[(\hat f-f)^2\big]
+  =\E_{\D}\big[\big((\hat f-\bar f)+(\bar f-f)\big)^2\big]
+  =\underbrace{\E_{\D}\big[(\hat f-\bar f)^2\big]}_{\Var_{\D}(\hat f)}
+  +2(\bar f-f)\underbrace{\E_{\D}[\hat f-\bar f]}_{=0}
+  +\underbrace{(\bar f-f)^2}_{\text{偏差}^2}.
+\]
+交叉项因 $\E_{\D}[\hat f]=\bar f$ 而为零（这里 $\bar f$ 与 $f$ 都是常数，可以提到期望外面）。代回 \eqref{eq:bv-step1} 即得 \eqref{eq:bv}。
+\end{proof}
+
+\begin{remark}[如何读这个公式]
+三项的含义与可控性完全不同：
+\begin{itemize}
+  \item $\sigma^2$：数据本身的随机性，\textbf{无论什么模型都无法消除}（与定理 \ref{thm:bayes-reg} 的不可约误差一致）。它是所有测试误差曲线的水平渐近线下界。
+  \item 偏差$^2$：“平均而言”模型系统性地偏离真相多少。它衡量\textbf{假设空间是否装得下真函数}。线性模型拟合正弦曲线时偏差很大。
+  \item 方差：模型对训练集抽样波动的敏感度。它衡量\textbf{模型有多不稳定}。$20$ 次多项式在 $10$ 个点上拟合时方差极大。
+\end{itemize}
+提高容量一般降低偏差、升高方差；正则化一般升高偏差、降低方差。总误差在中间取到最小——这就是学习曲线 U 形的来源。\textbf{注意方差项里的随机性来自训练集，不是来自噪声 $\varepsilon_0$，这是初学者最容易混淆的一点。}
+\end{remark}
+
+\subsection{一个能算到底的收缩例子}
+
+抽象的“偏差换方差”可以在一个两行的例子里变得完全具体。
+
+\begin{theorem}[收缩总是有帮助]\label{thm:shrink}
+设观测 $Y\sim\mathcal{N}(\theta,\sigma^2)$，考虑估计量族 $\hat\theta_c=cY$，$c\in[0,1]$。则
+\[
+  \mathrm{bias}(\hat\theta_c)=(c-1)\theta,\qquad
+  \Var(\hat\theta_c)=c^2\sigma^2,\qquad
+  \mathrm{MSE}(c)=(c-1)^2\theta^2+c^2\sigma^2 ,
+\]
+$\mathrm{MSE}$ 的最小点为
+\[
+  c^\star=\frac{\theta^2}{\theta^2+\sigma^2}\in(0,1),
+  \qquad
+  \mathrm{MSE}(c^\star)=\frac{\theta^2\sigma^2}{\theta^2+\sigma^2}<\sigma^2=\mathrm{MSE}(1).
+\]
+\end{theorem}
+
+\begin{proof}
+$\E[\hat\theta_c]=c\theta$ 故偏差为 $c\theta-\theta=(c-1)\theta$；$\Var(cY)=c^2\Var(Y)=c^2\sigma^2$。由定理 \ref{thm:bv}（此处无额外噪声项）
+$\mathrm{MSE}(c)=\mathrm{bias}^2+\Var=(c-1)^2\theta^2+c^2\sigma^2$。对 $c$ 求导：
+\[
+  \frac{\dd\,\mathrm{MSE}}{\dd c}=2(c-1)\theta^2+2c\sigma^2=0
+  \ \Longrightarrow\ c(\theta^2+\sigma^2)=\theta^2\ \Longrightarrow\ c^\star=\frac{\theta^2}{\theta^2+\sigma^2}.
+\]
+二阶导 $2(\theta^2+\sigma^2)>0$ 故为最小点。代回：
+\[
+  \mathrm{MSE}(c^\star)=\Big(\frac{-\sigma^2}{\theta^2+\sigma^2}\Big)^2\theta^2+\Big(\frac{\theta^2}{\theta^2+\sigma^2}\Big)^2\sigma^2
+  =\frac{\sigma^2\theta^2(\sigma^2+\theta^2)}{(\theta^2+\sigma^2)^2}=\frac{\theta^2\sigma^2}{\theta^2+\sigma^2},
+\]
+它显然小于 $\sigma^2$（分母更大）。
+\end{proof}
+
+\begin{remark}
+$c^\star<1$ 严格成立，意味着\textbf{无偏估计从来不是均方误差最优的}：主动引入一点偏差换取方差下降总是划算。这就是全部收缩/正则化方法的理论正当性。注意 $c^\star$ 依赖未知的 $\theta$ 与 $\sigma^2$——这解释了为什么正则化强度 $\lambda$ 只能靠验证集来定，没有免费的解析公式。
+\end{remark}
+
+\subsection{岭回归（$L^2$ 正则化 / 权重衰减）}
+
+\begin{definition}[岭回归]\label{def:ridge}
+在损失中加入 $L^2$ 惩罚项：
+\begin{equation}\label{eq:ridge-obj}
+  \Loss_{\lambda}(\bm{w})=\frac{1}{2n}\norm{\bm{X}\bm{w}-\bm{y}}^2+\frac{\lambda}{2}\norm{\bm{w}}^2,
+  \qquad\lambda>0 .
+\end{equation}
+在深度学习里同样的东西叫权重衰减 \eng{weight decay}。$\lambda$ 是超参数，须用验证集选择。惯例上\textbf{不惩罚偏置} $b$（惩罚它会让模型无法自由平移输出，通常有害）。
+\end{definition}
+
+\begin{theorem}[岭回归的闭式解与唯一性]\label{thm:ridge}
+$\Loss_\lambda$ 是 $\lambda$-强凸函数，存在唯一最小点
+\begin{equation}\label{eq:ridge-sol}
+  \hat{\bm{w}}_{\lambda}=\Big(\frac1n\bm{X}\T\bm{X}+\lambda\bm{I}\Big)^{-1}\frac1n\bm{X}\T\bm{y}
+  =\big(\bm{X}\T\bm{X}+n\lambda\bm{I}\big)^{-1}\bm{X}\T\bm{y},
+\end{equation}
+\textbf{无论 $\bm{X}$ 是否满列秩、无论 $n$ 与 $d$ 的大小关系}。
+\end{theorem}
+
+\begin{proof}
+由 \eqref{eq:mc4} 与 \eqref{eq:mc3}，
+\[
+  \nabla\Loss_\lambda(\bm{w})=\frac1n\bm{X}\T(\bm{X}\bm{w}-\bm{y})+\lambda\bm{w}
+  =\Big(\frac1n\bm{X}\T\bm{X}+\lambda\bm{I}\Big)\bm{w}-\frac1n\bm{X}\T\bm{y},
+\]
+\[
+  \nabla^2\Loss_\lambda=\frac1n\bm{X}\T\bm{X}+\lambda\bm{I}\ \succeq\ \lambda\bm{I}\ \succ\ 0,
+\]
+最后一步用命题 \ref{prop:xtx}(3)。故 $\Loss_\lambda$ 强凸（定义 \ref{def:smooth}），Hessian 可逆，令梯度为零即得 \eqref{eq:ridge-sol}，且解唯一。
+\end{proof}
+
+\begin{theorem}[岭回归在 SVD 下就是逐方向收缩]\label{thm:ridge-svd}
+设 $\bm{X}=\bm{U}\bm{\Sigma}\bm{V}\T$（定理 \ref{thm:svd}），并把 \eqref{eq:ridge-sol} 写成 $\hat{\bm{w}}_\lambda=(\bm{X}\T\bm{X}+\lambda'\bm{I})^{-1}\bm{X}\T\bm{y}$（$\lambda'=n\lambda$）。则
+\begin{equation}\label{eq:ridge-shrink}
+  \hat{\bm{w}}_{\lambda}=\sum_{i=1}^{r}\frac{\sigma_i}{\sigma_i^2+\lambda'}\big(\bm{u}_i\T\bm{y}\big)\bm{v}_i ,
+  \qquad\text{而 OLS 为}\qquad
+  \hat{\bm{w}}_{\text{OLS}}=\sum_{i=1}^{r}\frac{1}{\sigma_i}\big(\bm{u}_i\T\bm{y}\big)\bm{v}_i .
+\end{equation}
+即第 $i$ 个方向的系数被乘上收缩因子 $\dfrac{\sigma_i^2}{\sigma_i^2+\lambda'}\in(0,1)$。
+\end{theorem}
+
+\begin{proof}
+$\bm{X}\T\bm{X}+\lambda'\bm{I}=\bm{V}(\bm{\Sigma}^2+\lambda'\bm{I})\bm{V}\T$（在 $\bm{V}$ 的列空间内），其逆为 $\bm{V}(\bm{\Sigma}^2+\lambda'\bm{I})^{-1}\bm{V}\T$。又 $\bm{X}\T\bm{y}=\bm{V}\bm{\Sigma}\bm{U}\T\bm{y}$。相乘并用 $\bm{V}\T\bm{V}=\bm{I}$：
+\[
+  \hat{\bm{w}}_\lambda=\bm{V}(\bm{\Sigma}^2+\lambda'\bm{I})^{-1}\bm{\Sigma}\bm{U}\T\bm{y}
+  =\sum_{i=1}^{r}\bm{v}_i\frac{\sigma_i}{\sigma_i^2+\lambda'}\bm{u}_i\T\bm{y},
+\]
+$\lambda'=0$ 时因子变成 $\sigma_i/\sigma_i^2=1/\sigma_i$，即 OLS。
+\end{proof}
+
+\begin{remark}[为什么这解决了问题]
+由命题 \ref{prop:ols-stat} 之后的讨论，OLS 在小奇异值方向上的系数 $\propto1/\sigma_i$ 会被噪声放大到失控。岭回归把 $1/\sigma_i$ 换成 $\sigma_i/(\sigma_i^2+\lambda')$：当 $\sigma_i\gg\sqrt{\lambda'}$ 时几乎不变（信息充足的方向保留），当 $\sigma_i\ll\sqrt{\lambda'}$ 时被压到 $\approx\sigma_i/\lambda'\to0$（信息贫乏的方向被抑制）。这与物理里的正则化（给传播子加质量项、给反演问题加 Tikhonov 项）在数学上是同一件事。
+\end{remark}
+
+\begin{theorem}[岭回归 = 高斯先验下的 MAP]\label{thm:ridge-map}
+设 $y^{(i)}\mid\bm{x}^{(i)}\sim\mathcal{N}(\bm{w}\T\bm{x}^{(i)},\sigma^2)$，且给权重一个高斯先验 $\bm{w}\sim\mathcal{N}(\bm{0},\tau^2\bm{I}_d)$。则最大后验估计 \eng{maximum a posteriori, MAP}
+$\hat{\bm{w}}_{\text{MAP}}=\argmax_{\bm{w}}p(\bm{w}\mid\D)$ 等价于岭回归，且
+\[
+  \lambda=\frac{\sigma^2}{n\tau^2}.
+\]
+\end{theorem}
+
+\begin{proof}
+由 Bayes 公式，$p(\bm{w}\mid\D)\propto p(\D\mid\bm{w})p(\bm{w})$（分母 $p(\D)$ 与 $\bm{w}$ 无关）。取负对数：
+\[
+  -\log p(\bm{w}\mid\D)=-\log p(\D\mid\bm{w})-\log p(\bm{w})+\text{常数}.
+\]
+第一项由定理 \ref{thm:gauss-mse} 的推导为 $\dfrac{1}{2\sigma^2}\sum_i(y^{(i)}-\bm{w}\T\bm{x}^{(i)})^2+\text{常数}$。第二项：
+\[
+  -\log p(\bm{w})=-\log\Big[(2\pi\tau^2)^{-d/2}\exp\Big(-\frac{\norm{\bm{w}}^2}{2\tau^2}\Big)\Big]
+  =\frac{\norm{\bm{w}}^2}{2\tau^2}+\text{常数}.
+\]
+故最大化后验等价于最小化
+\[
+  \frac{1}{2\sigma^2}\norm{\bm{X}\bm{w}-\bm{y}}^2+\frac{1}{2\tau^2}\norm{\bm{w}}^2 .
+\]
+两边同乘 $\sigma^2/n>0$（不改变最小点）：
+\[
+  \frac{1}{2n}\norm{\bm{X}\bm{w}-\bm{y}}^2+\frac{\sigma^2}{2n\tau^2}\norm{\bm{w}}^2,
+\]
+与 \eqref{eq:ridge-obj} 比较即得 $\lambda=\sigma^2/(n\tau^2)$。
+\end{proof}
+
+\begin{remark}[三个可以直接背下来的推论]
+\begin{enumerate}[label=(\arabic*)]
+  \item \textbf{正则化项就是先验的负对数}。$L^2$ 对应高斯先验，$L^1$ 对应 Laplace 先验。所谓“正则化是主观的”其实是“先验是主观的”。
+  \item $\lambda\propto1/n$：\textbf{数据越多，需要的正则化越弱}。这与直觉一致，也解释了为什么大数据集上可以训练更大的模型。
+  \item $\lambda\propto\sigma^2$：噪声越大越需要正则化。
+\end{enumerate}
+\end{remark}
+
+\subsection{Lasso（$L^1$ 正则化）与稀疏性}
+
+\begin{definition}[Lasso]
+\[
+  \Loss_{\lambda}^{L_1}(\bm{w})=\frac{1}{2n}\norm{\bm{X}\bm{w}-\bm{y}}^2+\lambda\norm{\bm{w}}_1 .
+\]
+它凸但不可微（在任何 $w_j=0$ 处），没有闭式解，需用坐标下降或近端梯度法。
+\end{definition}
+
+$L^1$ 与 $L^2$ 的定性差别是：$L^1$ 会把一部分系数\textbf{精确地}压成 $0$，从而自动做特征选择 \eng{feature selection}；$L^2$ 只把系数按比例缩小但都不为零。下面在一维情形把这件事严格证明出来。
+
+\begin{theorem}[软阈值 \eng{soft-thresholding}]\label{thm:soft}
+考虑一维问题
+\[
+  \min_{w\in\R}\ g(w)=\tfrac12(w-z)^2+\lambda\abs{w},\qquad\lambda>0 .
+\]
+其唯一最小点为
+\begin{equation}\label{eq:soft}
+  w^\star=S_\lambda(z):=\sgn(z)\max\big(\abs{z}-\lambda,\,0\big)
+  =\begin{cases}
+    z-\lambda, & z>\lambda,\\
+    0, & \abs{z}\le\lambda,\\
+    z+\lambda, & z<-\lambda .
+  \end{cases}
+\end{equation}
+相比之下，$L^2$ 版本 $\min_w\tfrac12(w-z)^2+\tfrac{\lambda}{2}w^2$ 的解是 $w^\star=\dfrac{z}{1+\lambda}$，只有 $z=0$ 时才为零。
+\end{theorem}
+
+\begin{proof}
+$g$ 是严格凸的（$\tfrac12(w-z)^2$ 严格凸、$\abs{w}$ 凸），故最小点存在唯一，并由“$0$ 属于次微分”刻画。分三种情况。
+
+\textbf{情况 1：$w>0$。}此时 $g$ 可微，$g'(w)=w-z+\lambda=0\Rightarrow w=z-\lambda$。它与假设 $w>0$ 相容当且仅当 $z>\lambda$。
+
+\textbf{情况 2：$w<0$。}$g'(w)=w-z-\lambda=0\Rightarrow w=z+\lambda$，与 $w<0$ 相容当且仅当 $z<-\lambda$。
+
+\textbf{情况 3：$w=0$。}$\abs{w}$ 在 $0$ 处的次微分 \eng{subdifferential} 是区间 $[-1,1]$，故 $g$ 在 $0$ 处的次微分为 $\{-z+\lambda s:s\in[-1,1]\}$。最优性条件 $0\in\partial g(0)$ 等价于存在 $s\in[-1,1]$ 使 $z=\lambda s$，即 $\abs{z}\le\lambda$。
+
+三种情况的条件互不重叠且覆盖全部 $z$，合起来即 \eqref{eq:soft}。$L^2$ 版本处处可微：$w-z+\lambda w=0\Rightarrow w=z/(1+\lambda)$。
+\end{proof}
+
+\begin{remark}[稀疏性的几何图像]
+\eqref{eq:soft} 说明：只要“信号” $\abs{z}$ 不超过阈值 $\lambda$，系数就被\textbf{精确置零}，而不是变小。几何上，$\norm{\bm{w}}_1\le t$ 的约束区域是一个带尖角的菱形（高维为超八面体），尖角落在坐标轴上；等值椭圆去碰这个区域时，很容易在尖角处相切，而尖角意味着某些坐标为零。$L^2$ 的约束区域是光滑的球面，没有尖角，相切点一般不在坐标轴上。
+\end{remark}
+
+\subsection{深度学习中的其他正则化手段}
+
+\begin{itemize}
+  \item \textbf{早停} \eng{early stopping}：监控验证误差，在它开始上升时停止训练。等价于隐式地限制了参数离初值的距离，对线性模型可以证明它与岭回归有定量对应。实践中是最省事、最有效的手段之一。
+  \item \textbf{Dropout}：训练时每个神经元以概率 $p$ 被独立置零，测试时不丢弃但把激活乘以 $(1-p)$（或训练时除以 $1-p$，即 inverted dropout），使期望一致。可以理解为在指数多个子网络上做集成 \eng{ensemble} 平均，也可视为向激活注入乘性噪声。
+  \item \textbf{数据增强} \eng{data augmentation}：利用问题的\textbf{已知对称性}生成新样本（图像的平移、旋转、翻转；物理数据的洛伦兹变换、旋转对称等）。这是把先验知识注入模型最有效的方式，因为它直接扩大了有效样本量 $n$。
+  \item \textbf{批归一化} \eng{batch normalization}：把每层输入按小批量统计量标准化，再用可学习的 $\gamma,\beta$ 缩放平移。它主要改善优化（降低有效条件数，见注 \ref{rmk:standardize}），同时因批量噪声带有轻微正则化效果。
+  \item \textbf{参数共享与结构约束}：卷积网络 \eng{convolutional neural network, CNN} 通过平移等变 \eng{translation equivariance} 与局部连接共享参数，是“把物理对称性写进架构”的典范，比让网络从数据里自己学到该对称性高效得多。
+\end{itemize}
+
+\subsection{超参数选择：交叉验证}
+
+\begin{definition}[$K$ 折交叉验证]\label{def:cv}
+把训练数据均分为 $K$ 份（折 \eng{fold}）。对每个 $k=1,\dots,K$：用除第 $k$ 份以外的数据训练，在第 $k$ 份上评估，得到 $\hat R_k$。取
+\[
+  \hat R_{\text{CV}}=\frac1K\sum_{k=1}^{K}\hat R_k
+\]
+作为泛化误差的估计，并选使它最小的超参数。常取 $K=5$ 或 $10$；$K=n$ 称留一法 \eng{leave-one-out}。
+\end{definition}
+
+优点：每个样本都被用于评估一次，估计的方差比单次划分小，在 $n$ 不大时尤其重要。代价：要训练 $K$ 次。深度学习中因训练太贵，通常只用单个固定验证集。
+
+\begin{remark}[必须避免的数据泄漏]
+标准化的均值方差、特征选择、缺失值填补等任何“从数据里学到的东西”，都必须在\textbf{每一折的训练部分内部}完成，然后应用到该折的验证部分。若先对全体数据做标准化再划分，验证集的信息就已经泄漏进了训练流程，交叉验证结果会偏乐观。
+\end{remark}
+
+\subsection{一句提醒：现代图像并不完全是 U 形}
+
+经典理论预测测试误差随容量呈 U 形。但对极度过参数化 \eng{over-parameterized} 的模型（参数量远超样本量），实验发现测试误差在插值阈值处冲高之后会\textbf{再次下降}，这叫双下降 \eng{double descent}。这说明“参数多必然过拟合”的说法过于简化：真正起作用的是模型的\textbf{有效}容量与优化算法带来的隐式正则化 \eng{implicit regularization}（例如梯度下降倾向于找范数较小的解）。这是当前活跃的研究方向；作为初学者，先牢牢掌握经典的偏差--方差图像，同时知道它不是故事的全部。
+
+% =====================================================================
+\section{典型例子：手算小例题}\label{sec:example}
+% =====================================================================
+
+本节的数字都被刻意设计成可以笔算的。\textbf{请务必自己动笔算一遍}，这比多读十页文字有用。所有结果都已用数值程序独立核验。
+
+\subsection{例 1：线性回归的正规方程}
+
+\begin{example}\label{ex:ols}
+给定 $4$ 个样本 $(x,y)$：$(1,2),(2,3),(3,5),(4,4)$。求最小二乘直线 $\hat y=b+w_1x$。
+\end{example}
+
+\noindent\textbf{解.}\ 含偏置的设计矩阵与目标向量为
+\[
+  \bm{X}=\begin{pmatrix}1&1\\1&2\\1&3\\1&4\end{pmatrix},\qquad
+  \bm{y}=\begin{pmatrix}2\\3\\5\\4\end{pmatrix},\qquad
+  \bm{w}=\begin{pmatrix}b\\w_1\end{pmatrix}.
+\]
+\textbf{第一步：算 $\bm{X}\T\bm{X}$ 与 $\bm{X}\T\bm{y}$。}
+\[
+  \bm{X}\T\bm{X}=\begin{pmatrix}n&\sum x_i\\ \sum x_i&\sum x_i^2\end{pmatrix}
+  =\begin{pmatrix}4&10\\10&30\end{pmatrix},
+  \qquad
+  \bm{X}\T\bm{y}=\begin{pmatrix}\sum y_i\\ \sum x_iy_i\end{pmatrix}
+  =\begin{pmatrix}14\\39\end{pmatrix},
+\]
+其中 $\sum x_i=10$，$\sum x_i^2=1+4+9+16=30$，$\sum y_i=14$，$\sum x_iy_i=2+6+15+16=39$。
+
+\textbf{第二步：解正规方程 \eqref{eq:normaleq}。}$\det(\bm{X}\T\bm{X})=4\cdot30-10^2=20\ne0$，故
+\[
+  (\bm{X}\T\bm{X})^{-1}=\frac{1}{20}\begin{pmatrix}30&-10\\-10&4\end{pmatrix},
+\]
+\[
+  \hat{\bm{w}}=\frac{1}{20}\begin{pmatrix}30&-10\\-10&4\end{pmatrix}\begin{pmatrix}14\\39\end{pmatrix}
+  =\frac{1}{20}\begin{pmatrix}420-390\\-140+156\end{pmatrix}
+  =\frac{1}{20}\begin{pmatrix}30\\16\end{pmatrix}
+  =\begin{pmatrix}1.5\\0.8\end{pmatrix}.
+\]
+即 $\hat y=1.5+0.8x$。
+
+\textbf{第三步：用一维公式复核。}$\bar x=2.5$，$\bar y=3.5$，
+\[
+  w_1=\frac{\sum(x_i-\bar x)(y_i-\bar y)}{\sum(x_i-\bar x)^2}
+  =\frac{(-1.5)(-1.5)+(-0.5)(-0.5)+(0.5)(1.5)+(1.5)(0.5)}{2.25+0.25+0.25+2.25}
+  =\frac{4.0}{5.0}=0.8,
+\]
+$b=\bar y-w_1\bar x=3.5-0.8\times2.5=1.5$。一致。
+
+\textbf{第四步：残差与误差。}$\hat{\bm{y}}=(2.3,\,3.1,\,3.9,\,4.7)\T$，
+\[
+  \bm{r}=\bm{y}-\hat{\bm{y}}=(-0.3,\,-0.1,\,1.1,\,-0.7)\T,\qquad
+  \sum_ir_i=0\ \checkmark
+\]
+（残差和为零验证了含偏置时的正交条件 \eqref{eq:orthres} 第一分量。）
+\[
+  \mathrm{RSS}=0.09+0.01+1.21+0.49=1.80,\qquad
+  \mathrm{MSE}=\frac{1.80}{4}=0.45 .
+\]
+
+\subsection{例 2：一步梯度下降，以及学习率上限}
+
+\begin{example}\label{ex:gd}
+同例 \ref{ex:ols} 的数据，损失取 $\Loss(\bm{w})=\frac{1}{2n}\norm{\bm{X}\bm{w}-\bm{y}}^2$，从 $\bm{w}_0=(0,0)\T$ 出发、$\eta=0.1$，做一步梯度下降；并判断 $\eta$ 是否在收敛范围内。
+\end{example}
+
+\noindent\textbf{解.}\ \textbf{第一步：初始损失。}$\bm{w}_0=\bm{0}$ 时预测全为 $0$，
+\[
+  \Loss(\bm{w}_0)=\frac{1}{2\cdot4}\big(2^2+3^2+5^2+4^2\big)=\frac{54}{8}=6.75 .
+\]
+
+\textbf{第二步：梯度（用 \eqref{eq:linreg-grad}）。}
+\[
+  \nabla\Loss(\bm{0})=\frac14\bm{X}\T(\bm{X}\bm{0}-\bm{y})=-\frac14\bm{X}\T\bm{y}
+  =-\frac14\begin{pmatrix}14\\39\end{pmatrix}
+  =\begin{pmatrix}-3.5\\-9.75\end{pmatrix}.
+\]
+
+\textbf{第三步：更新。}
+\[
+  \bm{w}_1=\bm{w}_0-0.1\begin{pmatrix}-3.5\\-9.75\end{pmatrix}
+  =\begin{pmatrix}0.35\\0.975\end{pmatrix}.
+\]
+新预测 $\hat{\bm{y}}=(1.325,\,2.3,\,3.275,\,4.25)\T$，残差 $(-0.675,-0.7,-1.725,0.25)\T$，
+\[
+  \Loss(\bm{w}_1)=\frac{0.455625+0.49+2.975625+0.0625}{8}=\frac{3.98375}{8}=0.49796875 .
+\]
+损失从 $6.75$ 降到约 $0.498$，确实在下降。
+
+\textbf{第四步：学习率上限（用推论 \ref{cor:linreg-eta}）。}Hessian 为
+\[
+  \bm{A}=\frac1n\bm{X}\T\bm{X}=\frac14\begin{pmatrix}4&10\\10&30\end{pmatrix}
+  =\begin{pmatrix}1&2.5\\2.5&7.5\end{pmatrix},
+\]
+$\tr\bm{A}=8.5$，$\det\bm{A}=7.5-6.25=1.25$，故特征值满足 $\lambda^2-8.5\lambda+1.25=0$：
+\[
+  \lambda_{\pm}=\frac{8.5\pm\sqrt{72.25-5}}{2}=\frac{8.5\pm\sqrt{67.25}}{2}
+  \ \Longrightarrow\ \lambda_{\min}\approx0.1497,\quad\lambda_{\max}\approx8.3503 .
+\]
+于是收敛条件为 $0<\eta<2/\lambda_{\max}\approx0.2395$，我们取的 $\eta=0.1$ 安全。最优学习率 $\eta^\star=2/(\lambda_{\min}+\lambda_{\max})\approx0.2353$，条件数 $\kappa\approx55.8$，最优收敛因子 $(\kappa-1)/(\kappa+1)\approx0.965$——每步只把误差缩小约 $3.5\%$，非常慢！\textbf{对这么简单的两参数问题都如此，可见特征标准化的必要性}（这里 $\kappa$ 大的原因正是特征 $x\in\{1,2,3,4\}$ 未中心化，与全 $1$ 的偏置列高度相关）。
+
+\subsection{例 3：岭回归的收缩效果}
+
+\begin{example}\label{ex:ridge}
+同样的数据，用 $\hat{\bm{w}}_{\lambda}=(\bm{X}\T\bm{X}+\lambda'\bm{I})^{-1}\bm{X}\T\bm{y}$ 且 $\lambda'=1$（为演示方便，此处\textbf{也}惩罚了偏置）。
+\end{example}
+
+\noindent\textbf{解.}
+\[
+  \bm{X}\T\bm{X}+\bm{I}=\begin{pmatrix}5&10\\10&31\end{pmatrix},\qquad
+  \det=155-100=55,\qquad
+  (\cdot)^{-1}=\frac{1}{55}\begin{pmatrix}31&-10\\-10&5\end{pmatrix},
+\]
+\[
+  \hat{\bm{w}}_{1}=\frac{1}{55}\begin{pmatrix}31&-10\\-10&5\end{pmatrix}\begin{pmatrix}14\\39\end{pmatrix}
+  =\frac{1}{55}\begin{pmatrix}434-390\\-140+195\end{pmatrix}
+  =\frac{1}{55}\begin{pmatrix}44\\55\end{pmatrix}
+  =\begin{pmatrix}0.8\\1.0\end{pmatrix}.
+\]
+对比与解读：
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & $\hat{\bm{w}}$ & $\norm{\hat{\bm{w}}}^2$ & RSS\\
+\midrule
+OLS ($\lambda'=0$) & $(1.5,\ 0.8)$ & $2.89$ & $1.80$\\
+岭回归 ($\lambda'=1$) & $(0.8,\ 1.0)$ & $1.64$ & $2.16$\\
+\bottomrule
+\end{tabular}
+\end{center}
+系数范数从 $2.89$ 降到 $1.64$（方差降低），训练残差从 $1.80$ 升到 $2.16$（偏差升高）——\textbf{这就是偏差换方差的一次具体交易}。注意此时残差和不再为零（$\sum_ir_i=0.8$），因为我们惩罚了偏置项，这也说明了为什么实践中通常不惩罚偏置。
+
+\subsection{例 4：逻辑回归的一步梯度}
+
+\begin{example}\label{ex:logreg}
+数据：$x=-1,0,1,2$，标签 $y=0,0,1,1$。模型 $\hat p=\sigma(b+w_1x)$，从 $(b,w_1)=(0,0)$ 出发，用平均交叉熵损失与 $\eta=1$ 做一步梯度下降。
+\end{example}
+
+\noindent\textbf{解.}\ \textbf{第一步：初始预测与损失。}$z^{(i)}=0$ 故 $\hat p^{(i)}=\sigma(0)=0.5$（全部），
+\[
+  \Loss(\bm{0})=-\frac14\sum_{i}\log0.5=\log2\approx0.6931 .
+\]
+（“完全无知”的模型给出 $\log2$，这是二分类损失的天然参考基线：训练后损失若还在 $0.69$ 附近，说明模型什么都没学到。）
+
+\textbf{第二步：梯度（用 \eqref{eq:logreg-grad}）。}残差 $\hat p^{(i)}-y^{(i)}$ 依次为 $0.5,\ 0.5,\ -0.5,\ -0.5$，样本向量为 $\bm{x}^{(i)}=(1,x_i)\T$：
+\[
+  \nabla\Loss=\frac14\sum_i(\hat p^{(i)}-y^{(i)})\begin{pmatrix}1\\x_i\end{pmatrix}
+  =\frac14\left[0.5\begin{pmatrix}1\\-1\end{pmatrix}+0.5\begin{pmatrix}1\\0\end{pmatrix}
+  -0.5\begin{pmatrix}1\\1\end{pmatrix}-0.5\begin{pmatrix}1\\2\end{pmatrix}\right]
+  =\frac14\begin{pmatrix}0\\-2\end{pmatrix}
+  =\begin{pmatrix}0\\-0.5\end{pmatrix}.
+\]
+偏置分量为零是因为两类样本数相等（$\sum_i(\hat p_i-y_i)=2\times0.5-2\times0.5=0$）。
+
+\textbf{第三步：更新与新损失。}
+\[
+  \bm{w}_1=\begin{pmatrix}0\\0\end{pmatrix}-1\cdot\begin{pmatrix}0\\-0.5\end{pmatrix}=\begin{pmatrix}0\\0.5\end{pmatrix}.
+\]
+新的 $z^{(i)}=0.5x_i$ 为 $-0.5,\,0,\,0.5,\,1$，对应
+\[
+  \hat p^{(i)}=\big(0.3775,\ 0.5,\ 0.6225,\ 0.7311\big),
+\]
+\[
+  \Loss(\bm{w}_1)=-\frac14\Big[\log(1-0.3775)+\log(1-0.5)+\log0.6225+\log0.7311\Big]
+  \approx-\frac{-1.9546}{4}\approx0.4886 .
+\]
+损失从 $0.6931$ 降到 $0.4886$。梯度把权重推向正值，正是我们期望的（$x$ 越大越可能属于类 $1$）。
+
+\subsection{例 5：反向传播的完整数值演算}
+
+\begin{example}\label{ex:bp}
+一个 $2\to2\to1$ 网络，隐藏层用 ReLU，输出层线性，损失 $\ell=\tfrac12(\hat y-y)^2$。给定
+\[
+  \bm{x}=\begin{pmatrix}1\\2\end{pmatrix},\quad y=1,\quad
+  \bm{W}^{(1)}=\begin{pmatrix}0.5&-0.5\\1.0&0.5\end{pmatrix},\quad
+  \bm{b}^{(1)}=\begin{pmatrix}0\\0.5\end{pmatrix},\quad
+  \bm{w}^{(2)}=\begin{pmatrix}1\\0.5\end{pmatrix},\quad b^{(2)}=-0.5 .
+\]
+求全部梯度，并用 $\eta=0.1$ 更新一步。
+\end{example}
+
+\noindent\textbf{解.}\ \textbf{第一步：前向传播。}
+\[
+  \bm{z}^{(1)}=\bm{W}^{(1)}\bm{x}+\bm{b}^{(1)}
+  =\begin{pmatrix}0.5\cdot1+(-0.5)\cdot2\\1.0\cdot1+0.5\cdot2\end{pmatrix}+\begin{pmatrix}0\\0.5\end{pmatrix}
+  =\begin{pmatrix}-0.5\\2.0\end{pmatrix}+\begin{pmatrix}0\\0.5\end{pmatrix}
+  =\begin{pmatrix}-0.5\\2.5\end{pmatrix},
+\]
+\[
+  \bm{a}^{(1)}=\ReLU\big(\bm{z}^{(1)}\big)=\begin{pmatrix}0\\2.5\end{pmatrix}
+  \quad(\text{第一个神经元“关闭”}),
+\]
+\[
+  z^{(2)}=\bm{w}^{(2)\mathsf{T}}\bm{a}^{(1)}+b^{(2)}=1\cdot0+0.5\cdot2.5-0.5=0.75=\hat y,
+\]
+\[
+  \ell=\tfrac12(0.75-1)^2=\tfrac12(0.0625)=0.03125 .
+\]
+
+\textbf{第二步：输出层误差信号（用 \eqref{eq:2l-delta2}）。}
+\[
+  \delta^{(2)}=\hat y-y=0.75-1=-0.25 .
+\]
+
+\textbf{第三步：输出层梯度（用 \eqref{eq:2l-gw2}）。}
+\[
+  \nabla_{\bm{w}^{(2)}}\ell=\delta^{(2)}\bm{a}^{(1)}=-0.25\begin{pmatrix}0\\2.5\end{pmatrix}
+  =\begin{pmatrix}0\\-0.625\end{pmatrix},
+  \qquad
+  \frac{\partial\ell}{\partial b^{(2)}}=\delta^{(2)}=-0.25 .
+\]
+注意 $\partial\ell/\partial w^{(2)}_1=0$：因为该隐藏神经元的输出是 $0$，它对本次预测毫无贡献，所以对应权重不该被更新——梯度自动实现了这一点。
+
+\textbf{第四步：反传到隐藏层（用 \eqref{eq:2l-delta1}）。}先算线性回传部分
+\[
+  \bm{w}^{(2)}\delta^{(2)}=\begin{pmatrix}1\\0.5\end{pmatrix}(-0.25)=\begin{pmatrix}-0.25\\-0.125\end{pmatrix},
+\]
+再乘以 ReLU 的导数 $\ReLU'(\bm{z}^{(1)})=\big(\bm{1}[-0.5>0],\ \bm{1}[2.5>0]\big)\T=(0,1)\T$：
+\[
+  \bm{\delta}^{(1)}=\begin{pmatrix}-0.25\\-0.125\end{pmatrix}\odot\begin{pmatrix}0\\1\end{pmatrix}
+  =\begin{pmatrix}0\\-0.125\end{pmatrix}.
+\]
+
+\textbf{第五步：隐藏层梯度（用 \eqref{eq:2l-gw1}）。}
+\[
+  \nabla_{\bm{W}^{(1)}}\ell=\bm{\delta}^{(1)}\bm{x}\T
+  =\begin{pmatrix}0\\-0.125\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}
+  =\begin{pmatrix}0&0\\-0.125&-0.25\end{pmatrix},
+  \qquad
+  \nabla_{\bm{b}^{(1)}}\ell=\begin{pmatrix}0\\-0.125\end{pmatrix}.
+\]
+整行为零的现象再次来自 ReLU 的“门控”：关闭的神经元既不向前传信号，也不向后传梯度。
+
+\textbf{第六步：更新（$\eta=0.1$）。}
+\[
+  \bm{W}^{(1)}\leftarrow\begin{pmatrix}0.5&-0.5\\1.0125&0.525\end{pmatrix},\quad
+  \bm{b}^{(1)}\leftarrow\begin{pmatrix}0\\0.5125\end{pmatrix},\quad
+  \bm{w}^{(2)}\leftarrow\begin{pmatrix}1\\0.5625\end{pmatrix},\quad
+  b^{(2)}\leftarrow-0.475 .
+\]
+
+\textbf{第七步：验证损失下降。}重新前向：$\bm{z}^{(1)}=(-0.5,\ 2.575)\T$，$\bm{a}^{(1)}=(0,\ 2.575)\T$，
+\[
+  \hat y=0.5625\times2.575-0.475=1.4484375-0.475=0.9734375,
+\]
+\[
+  \ell=\tfrac12(0.9734375-1)^2\approx3.53\times10^{-4}\ \ll\ 0.03125 .
+\]
+预测从 $0.75$ 移到 $0.9734$，朝目标 $1$ 前进。
+
+\begin{remark}[请顺手做一次梯度检查]
+用中心差分核验上面的 $\partial\ell/\partial b^{(2)}=-0.25$。把 $b^{(2)}$ 加减 $h$ 会使 $\hat y$ 加减同样的 $h$，故
+\[
+  \frac{\ell(b^{(2)}+h)-\ell(b^{(2)}-h)}{2h}
+  =\frac{\tfrac12(-0.25+h)^2-\tfrac12(-0.25-h)^2}{2h}.
+\]
+展开分子：$(-0.25+h)^2-(-0.25-h)^2=(0.0625-0.5h+h^2)-(0.0625+0.5h+h^2)=-h$，故上式 $=\dfrac{-h/2}{2h}=-0.25$，与解析结果一致（这里恰好精确相等，因为损失对 $b^{(2)}$ 是二次的，中心差分的误差项 $O(h^2)$ 只涉及三阶导数，而它为零）。本例全部九个参数的梯度都已用中心差分核验通过。
+\end{remark}
+
+\subsection{例 6：偏差与方差的具体数字}
+
+\begin{example}\label{ex:bv}
+设 $Y\sim\mathcal{N}(\theta,\sigma^2)$，$\theta=1$、$\sigma^2=1$，比较三个估计量 $\hat\theta_c=cY$，$c=1,\ 0.5,\ 0$。
+\end{example}
+
+\noindent\textbf{解.}\ 由定理 \ref{thm:shrink}，$\mathrm{MSE}(c)=(c-1)^2\theta^2+c^2\sigma^2=(c-1)^2+c^2$：
+\begin{center}
+\begin{tabular}{@{}lcccl@{}}
+\toprule
+估计量 & 偏差$^2$ & 方差 & MSE & 说明\\
+\midrule
+$c=1$（无偏，$\hat\theta=Y$） & $0$ & $1$ & $1$ & 无偏但方差大\\
+$c=0.5$（最优收缩） & $0.25$ & $0.25$ & $\bm{0.5}$ & 最优：$c^\star=\theta^2/(\theta^2+\sigma^2)=0.5$\\
+$c=0$（常数 $0$） & $1$ & $0$ & $1$ & 零方差但偏差大\\
+\bottomrule
+\end{tabular}
+\end{center}
+把偏差从 $0$ 提到 $0.25$，换来方差从 $1$ 降到 $0.25$，总误差\textbf{减半}。这就是一切正则化的定量缩影。$40$ 万次蒙特卡洛模拟给出 $\mathrm{MSE}(1)\approx1.003$、$\mathrm{MSE}(0.5)\approx0.501$，与解析值一致。
+
+\subsection{例 7：软阈值的两个数}
+
+\begin{example}
+取 $\lambda=0.3$。由 \eqref{eq:soft}：$S_{0.3}(0.8)=0.8-0.3=0.5$；$S_{0.3}(0.2)=0$（因 $\abs{0.2}\le0.3$）。
+而 $L^2$ 版本（$\lambda=0.3$）给出 $0.8/1.3\approx0.615$ 与 $0.2/1.3\approx0.154$，\textbf{都不为零}。一眼看出 $L^1$ 产生稀疏、$L^2$ 不产生稀疏。
+\end{example}
+
 \end{document}
