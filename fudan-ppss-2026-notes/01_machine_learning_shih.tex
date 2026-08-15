@@ -1,0 +1,955 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.35cm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}[AutoFakeSlant=true]
+\setCJKsansfont{Noto Sans CJK SC}[AutoFakeSlant=true]
+\setCJKmonofont{Noto Sans CJK SC}
+\xeCJKsetup{PunctStyle=kaiming}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!50!black
+}
+
+\definecolor{mlblue}{RGB}{20,70,130}
+\definecolor{mlsoft}{RGB}{235,243,250}
+\definecolor{warnbg}{RGB}{255,246,230}
+\definecolor{okbg}{RGB}{232,246,236}
+
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{example}{例子}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{proposition}{命题}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{注记}[section]
+
+\newtcolorbox{keybox}[1][]{
+  colback=mlsoft,colframe=mlblue,fonttitle=\bfseries,
+  title={核心要点},#1
+}
+\newtcolorbox{warnbox}[1][]{
+  colback=warnbg,colframe=orange!70!black,fonttitle=\bfseries,
+  title={容易混淆},#1
+}
+\newtcolorbox{hearbox}[1][]{
+  colback=okbg,colframe=green!40!black,fonttitle=\bfseries,
+  title={听课提示},#1
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{复旦粒子物理暑期学校 2026}
+\rhead{Machine Learning / David Shih}
+\cfoot{\thepage}
+\titleformat{\section}{\Large\bfseries\color{mlblue}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries\color{mlblue!80!black}}{\thesubsection}{0.7em}{}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\sigm}{\sigma}
+\newcommand{\loss}{\mathcal{L}}
+\newcommand{\data}{\mathcal{D}}
+\newcommand{\htheta}{\hat{\theta}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries 机器学习课前讲义}\\[0.45em]
+{\large 复旦粒子物理暑期学校 2026}\\[0.25em]
+{\large Machine Learning \quad David Shih (Rutgers University)}\\[0.8em]
+{\normalsize 课前预习稿　从基础建立　推导写全　英文术语单列}\\[0.35em]
+{\small 依据 Indico 课表：8 月 17--18 日上午共四讲。本讲义非正式课堂讲义。}
+\end{center}
+
+\tableofcontents
+\newpage
+
+%======================================================================
+\section{如何使用本讲义}
+%======================================================================
+
+本讲义的目标不是替老师讲完四小时课，而是让你在走进教室之前，已经具备下列能力：
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 能把``训练一个模型''写成明确的数学问题：数据、假设类、损失函数、优化算法。
+  \item 能独立推导线性回归的正规方程、逻辑回归的梯度、以及一层神经网络的反向传播。
+  \item 能用 Neyman--Pearson 引理理解：粒子物理里``信号/本底分类''的最优解是什么。
+  \item 听到 \emph{loss}、\emph{overfitting}、\emph{likelihood ratio}、\emph{density estimation}、
+        \emph{weak supervision}、\emph{anomaly detection} 时，知道它们各自在说哪一层问题。
+\end{enumerate}
+
+David Shih 在高能物理机器学习中的代表性工作，集中在\textbf{分类器}、\textbf{密度估计/生成模型}以及\textbf{与模型无关的异常探测}（如 ANODE、CWoLa hunting、CATHODE）。四讲通常会从神经网络与分类器讲起，再进入生成模型与异常探测。因此本讲义把前半写成``必须会的基础''，后半写成``课堂上大概率会用到的物理应用预备''。
+
+\begin{hearbox}
+课堂几乎一定用英文讲。正文用中文讲清楚，\textbf{第~\ref{sec:glossary}~节}把英文术语集中列出。听课时优先抓：问题设定（监督/弱监督/无监督）、损失函数、以及``这个方法在逼近哪个似然比''。
+\end{hearbox}
+
+课表（Asia/Shanghai）：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+日期 & 时间 & 内容 \\
+\midrule
+8 月 17 日（一） & 09:30--10:30, 10:50--11:50 & Machine Learning \\
+8 月 18 日（二） & 09:20--10:20, 10:40--11:40 & Machine Learning \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%======================================================================
+\section{预备知识}
+\label{sec:prereq}
+%======================================================================
+
+\subsection{线性代数}
+
+把 $n$ 条样本、每条 $d$ 维特征排成矩阵
+\begin{equation}
+  X=\begin{pmatrix}
+  \text{---}\, \mathbf{x}_1^\top \,\text{---}\\
+  \vdots\\
+  \text{---}\, \mathbf{x}_n^\top \,\text{---}
+  \end{pmatrix}\in\R^{n\times d},\qquad
+  \mathbf{y}=\begin{pmatrix}y_1\\ \vdots\\ y_n\end{pmatrix}\in\R^{n}.
+\end{equation}
+后面线性回归的正规方程就是对 $X^\top X$ 求逆。你需要熟悉：矩阵乘法、转置、正定、梯度对向量/矩阵的求导。
+
+对标量函数 $f(\mathbf{w})$，梯度 $\nabla_{\mathbf{w}}f$ 满足
+\begin{equation}
+  f(\mathbf{w}+\boldsymbol{\epsilon})=f(\mathbf{w})+\boldsymbol{\epsilon}^\top\nabla_{\mathbf{w}}f+\mathcal{O}(\|\boldsymbol{\epsilon}\|^2).
+\end{equation}
+常用公式（请自己核对一次）：
+\begin{align}
+  \nabla_{\mathbf{w}}(\mathbf{w}^\top\mathbf{a})&=\mathbf{a},\\
+  \nabla_{\mathbf{w}}\|X\mathbf{w}-\mathbf{y}\|^2&=2X^\top(X\mathbf{w}-\mathbf{y}).
+\end{align}
+
+\subsection{概率}
+
+一条数据 $(\mathbf{x},y)$ 被看成从未知联合分布 $p_{\mathrm{data}}(\mathbf{x},y)$ 抽出来的样本。机器学习的``学习''，本质上是用有限样本去逼近这个分布里对我们有用的部分：条件期望、条件概率、或密度本身。
+
+需要的最小工具：
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{期望}：$\E[f(\mathbf{x})]=\int f(\mathbf{x})\,p(\mathbf{x})\,d\mathbf{x}$；离散情形改成求和。
+  \item \textbf{条件分布}：$p(y\mid\mathbf{x})=p(\mathbf{x},y)/p(\mathbf{x})$。
+  \item \textbf{贝叶斯}：$p(\theta\mid\mathrm{data})\propto p(\mathrm{data}\mid\theta)\,p(\theta)$。
+  \item \textbf{独立同分布}（i.i.d.）：训练样本 $(\mathbf{x}_i,y_i)$ 被假定为独立、来自同一分布。这是绝大多数损失函数能写成``样本平均''的理由。
+\end{itemize}
+
+\begin{example}[伯努利与高斯]
+若 $y\in\{0,1\}$ 且 $P(y=1\mid\mathbf{x})=\sigm(\mathbf{w}^\top\mathbf{x})$，则 $y\mid\mathbf{x}$ 是伯努利分布，对应逻辑回归。若 $y\mid\mathbf{x}\sim\mathcal{N}(\mathbf{w}^\top\mathbf{x},\sigma^2)$，对应带高斯噪声的线性回归。\textbf{损失函数往往就是负对数似然。}
+\end{example}
+
+\subsection{微积分与链式法则}
+
+神经网络训练的全部技术含量，有很大一部分就是反复使用
+\begin{equation}
+  \frac{\partial f}{\partial x}=\frac{\partial f}{\partial u}\frac{\partial u}{\partial x}.
+\end{equation}
+多层网络只是把 $u$ 换成中间层激活。第~\ref{sec:backprop}~节会把这一点写到分量。
+
+\subsection{粒子物理侧需要的最低常识}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 对撞机事件是高维的：四动量、喷射（jet）子结构、缺失能量等构成特征向量 $\mathbf{x}$。
+  \item 多数搜索是两类问题：信号（signal）对本底（background）。
+  \item 本底往往能用模拟或边带数据估计；真正的新物理信号可能极弱，且理论模型不一定对。
+  \item 因此除了``用蒙特卡罗训练监督分类器''，还需要弱监督、无监督、异常探测。
+\end{itemize}
+
+%======================================================================
+\section{机器学习问题的数学表述}
+\label{sec:formulation}
+%======================================================================
+
+\begin{definition}[监督学习的标准设定]
+给定训练集
+\begin{equation}
+  \data=\{(\mathbf{x}_i,y_i)\}_{i=1}^{n},\qquad \mathbf{x}_i\in\mathcal{X}\subset\R^{d},\quad y_i\in\mathcal{Y},
+\end{equation}
+要在假设类 $\mathcal{H}=\{h_\theta:\mathcal{X}\to\hat{\mathcal{Y}}\}$ 中选一个函数 $h_\theta$，使得在\textbf{新的}、来自同一分布的样本上误差尽可能小。
+\end{definition}
+
+三个必须分开的对象：
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{模型} $h_\theta$：线性函数、逻辑回归、神经网络、提升树等。$\theta$ 是参数。
+  \item \textbf{损失} $\ell(h_\theta(\mathbf{x}),y)$：衡量``这一对预测与真值有多糟''。
+  \item \textbf{优化}：用梯度下降、牛顿法、Adam 等去近似
+  \begin{equation}
+    \theta^\star\in\arg\min_\theta \frac{1}{n}\sum_{i=1}^n \ell\bigl(h_\theta(\mathbf{x}_i),y_i\bigr)+\Omega(\theta).
+  \end{equation}
+\end{enumerate}
+
+真正关心的是\textbf{期望风险}（expected risk）
+\begin{equation}
+  R(\theta)=\E_{(\mathbf{x},y)\sim p_{\mathrm{data}}}\bigl[\ell(h_\theta(\mathbf{x}),y)\bigr],
+\end{equation}
+但 $p_{\mathrm{data}}$ 未知，于是用\textbf{经验风险}（empirical risk）
+\begin{equation}
+  \hat R_n(\theta)=\frac{1}{n}\sum_{i=1}^n \ell\bigl(h_\theta(\mathbf{x}_i),y_i\bigr)
+\end{equation}
+代替。这就是经验风险最小化（ERM, empirical risk minimization）。
+
+\begin{keybox}
+机器学习不是``让训练误差为零''。训练误差为零很容易：把模型取得足够复杂即可。目标是\textbf{泛化}（generalization）：在没见过的数据上仍然好。过拟合就是 $\hat R_n$ 很小但 $R$ 仍然大。
+\end{keybox}
+
+按标签 $y$ 是否存在，问题分成：
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{监督}（supervised）：每条样本都有 $y$。分类、回归。
+  \item \textbf{无监督}（unsupervised）：只有 $\mathbf{x}$。聚类、密度估计、生成模型。
+  \item \textbf{弱监督}（weakly supervised）：标签有噪声、或不完整。CWoLa 属于这一类。
+\end{itemize}
+
+%======================================================================
+\section{监督学习}
+\label{sec:supervised}
+%======================================================================
+
+\subsection{回归与分类}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 回归：$\mathcal{Y}=\R$ 或 $\R^{k}$。例：用喷射观测量回归顶夸克质量。
+  \item 二分类：$\mathcal{Y}=\{0,1\}$ 或 $\{+1,-1\}$。例：希格斯信号 vs.\ 本底。
+  \item 多分类：$\mathcal{Y}=\{1,\ldots,K\}$。例：喷射标记为 $q/g/c/b/t$。
+\end{itemize}
+
+分类器常常不直接输出 $0/1$，而输出分数 $s(\mathbf{x})\in\R$ 或概率 $p(y=1\mid\mathbf{x})$。最终用阈值 $t$ 做决策：
+\begin{equation}
+  \hat y(\mathbf{x})=\ind\bigl[s(\mathbf{x})\ge t\bigr].
+\end{equation}
+阈值 $t$ 由工作点（working point）决定：例如固定本底误判率 $\varepsilon_b=10^{-3}$，再看信号效率 $\varepsilon_s$。
+
+\subsection{最优分类器：Neyman--Pearson}
+
+这是连接统计与机器学习、也是 Shih 讲异常探测时反复回到的定理。
+
+\begin{theorem}[Neyman--Pearson]
+在两类假设 $H_1$（信号+本底）与 $H_0$（只有本底）之间，固定第一类错误率（本底被当成信号的概率）时，使检验力（信号效率）最大的判决，等价于对似然比设阈值：
+\begin{equation}
+  \Lambda(\mathbf{x})=\frac{p(\mathbf{x}\mid H_1)}{p(\mathbf{x}\mid H_0)}\ \gtrless\ t.
+\end{equation}
+\end{theorem}
+
+若把 $H_1$ 想成``来自信号类 $S$''、$H_0$ 想成``来自本底类 $B$''，则最优分数就是
+\begin{equation}
+  s^\star(\mathbf{x})=\frac{p_S(\mathbf{x})}{p_B(\mathbf{x})}\qquad\text{或等价地}\qquad
+  p(y=1\mid\mathbf{x})=\frac{p_S(\mathbf{x})}{p_S(\mathbf{x})+p_B(\mathbf{x})},
+\end{equation}
+最后一式在两类先验相等时成立；先验不等只是把阈值平移。
+
+\begin{hearbox}
+课堂若出现``classifier is approximating the likelihood ratio''，指的就是：一个训练好的分类器 $s(\mathbf{x})$ 在理想情况下是 $p_S/p_B$ 的单调函数。后面 CATHODE、CWoLa 的全部聪明之处，都是在\textbf{不直接拥有纯信号样本}时，仍然去逼近某个有用的似然比。
+\end{hearbox}
+
+\subsection{偏差--方差分解（回归）}
+
+对平方损失，把预测记为 $\hat y=h(\mathbf{x})$，真值条件期望 $\bar y(\mathbf{x})=\E[y\mid\mathbf{x}]$，则
+\begin{equation}
+  \E\bigl[(y-\hat y)^2\bigr]
+  =\underbrace{\E\bigl[(y-\bar y)^2\bigr]}_{\text{噪声}}
+  +\underbrace{\bigl(\E[\hat y]-\bar y\bigr)^2}_{\text{偏差}^2}
+  +\underbrace{\E\bigl[(\hat y-\E[\hat y])^2\bigr]}_{\text{方差}}.
+\end{equation}
+模型太简单：偏差大。模型太复杂、数据太少：方差大。正则化是在两者之间折中。
+
+%======================================================================
+\section{损失函数}
+\label{sec:loss}
+%======================================================================
+
+损失函数 $\ell$ 决定``什么叫好''。它不是装饰，而是统计假设的压缩表达。
+
+\subsection{从极大似然到损失}
+
+假设样本 i.i.d.，模型给出 $p_\theta(y\mid\mathbf{x})$。对数似然为
+\begin{equation}
+  \log p(\data\mid\theta)=\sum_{i=1}^n \log p_\theta(y_i\mid\mathbf{x}_i).
+\end{equation}
+极大似然估计（MLE）等价于最小化平均负对数似然
+\begin{equation}
+  \loss(\theta)=-\frac{1}{n}\sum_{i=1}^n \log p_\theta(y_i\mid\mathbf{x}_i).
+\end{equation}
+所以：\textbf{许多常见损失 = 某种概率模型的 NLL}。
+
+\subsection{平方损失}
+
+若 $y\mid\mathbf{x}\sim\mathcal{N}(h_\theta(\mathbf{x}),\sigma^2)$，则
+\begin{equation}
+  -\log p(y\mid\mathbf{x})=\frac{1}{2\sigma^2}\bigl(y-h_\theta(\mathbf{x})\bigr)^2+\text{const},
+\end{equation}
+即均方误差（MSE）
+\begin{equation}
+  \loss_{\mathrm{MSE}}(\theta)=\frac{1}{n}\sum_{i=1}^n \bigl(y_i-h_\theta(\mathbf{x}_i)\bigr)^2.
+\end{equation}
+平方损失对离群点敏感；物理里若分布有长尾，有时改用 Huber 损失或分位数损失。
+
+\subsection{二元交叉熵}
+
+若 $y\in\{0,1\}$，$p_\theta(y=1\mid\mathbf{x})=\hat p_\theta(\mathbf{x})\in(0,1)$，则
+\begin{equation}
+  p_\theta(y\mid\mathbf{x})=\hat p^{\,y}(1-\hat p)^{1-y},
+\end{equation}
+从而
+\begin{equation}
+\label{eq:bce}
+  \loss_{\mathrm{BCE}}(\theta)=-\frac{1}{n}\sum_{i=1}^n \Bigl[
+    y_i\log\hat p_\theta(\mathbf{x}_i)+(1-y_i)\log\bigl(1-\hat p_\theta(\mathbf{x}_i)\bigr)
+  \Bigr].
+\end{equation}
+这就是二元交叉熵（binary cross-entropy）。逻辑回归、二分类神经网络默认用它。
+
+\subsection{多类交叉熵与 softmax}
+
+$K$ 类时，网络输出 logits $\mathbf{z}\in\R^K$，
+\begin{equation}
+\label{eq:softmax}
+  \hat p_k=\frac{e^{z_k}}{\sum_{j=1}^K e^{z_j}},\qquad
+  \loss_{\mathrm{CE}}=-\frac{1}{n}\sum_{i=1}^n \log \hat p_{y_i}(\mathbf{x}_i).
+\end{equation}
+
+\subsection{为什么分类不用 MSE？}
+
+可以把 $y\in\{0,1\}$ 硬套平方损失。但若末层是 sigmoid，MSE 的梯度在饱和区（$\hat p\to 0$ 或 $1$）会消失，而交叉熵在错误且自信的预测上梯度仍然大。交叉熵还与似然比估计有直接关系，见第~\ref{sec:lr}~节。
+
+\begin{proposition}[分类器与似然比]
+\label{sec:lr}
+设两类样本按先验 $\pi_S,\pi_B$ 混合，标签 $y=1$ 表示信号。则最小化交叉熵的最优解满足
+\begin{equation}
+  \hat p^\star(\mathbf{x})=P(y=1\mid\mathbf{x})=\frac{\pi_S p_S(\mathbf{x})}{\pi_S p_S(\mathbf{x})+\pi_B p_B(\mathbf{x})},
+\end{equation}
+因而
+\begin{equation}
+  \frac{\hat p^\star}{1-\hat p^\star}=\frac{\pi_S}{\pi_B}\frac{p_S}{p_B}.
+\end{equation}
+\end{proposition}
+证明：交叉熵的总体风险是 $\E[-\,y\log\hat p-(1-y)\log(1-\hat p)]$。对固定 $\mathbf{x}$，记 $p=P(y=1\mid\mathbf{x})$，对 $\hat p$ 求导得极值点 $\hat p=p$。证毕。
+
+这就是``训练分类器 $\approx$ 估计似然比''的精确含义。
+
+%======================================================================
+\section{梯度下降与优化}
+\label{sec:gd}
+%======================================================================
+
+\subsection{批量梯度下降}
+
+目标 $\loss(\theta)$ 可微时，最简单的更新是
+\begin{equation}
+\label{eq:gd}
+  \theta_{t+1}=\theta_t-\eta\,\nabla_\theta\loss(\theta_t).
+\end{equation}
+$\eta>0$ 是学习率（learning rate）。一维图像：若 $\loss'(\theta)>0$，则 $\theta$ 应减小；故前面有负号。
+
+对凸函数（如线性回归的 MSE、逻辑回归的 BCE），适当 $\eta$ 下会收敛到全局极小。对深度网络，$\loss$ 非凸，梯度下降只保证到临界点；实践中这已经非常有用。
+
+\subsection{随机梯度下降（SGD）}
+
+全数据梯度
+\begin{equation}
+  \nabla\loss(\theta)=\frac{1}{n}\sum_{i=1}^n \nabla\ell_i(\theta)
+\end{equation}
+在 $n$ 很大时太贵。SGD 每次用一个样本或一个小批量 $\mathcal{B}$：
+\begin{equation}
+  \theta\leftarrow\theta-\eta\cdot\frac{1}{|\mathcal{B}|}\sum_{i\in\mathcal{B}}\nabla\ell_i(\theta).
+\end{equation}
+小批量引入噪声，有时反而有助于逃离尖锐极小值。物理数据集（喷射图像、点云）几乎总是用小批量。
+
+\subsection{学习率、动量、Adam}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item $\eta$ 太大：损失震荡或发散；太小：学得很慢。
+  \item 动量：$\mathbf{v}\leftarrow\beta\mathbf{v}+(1-\beta)\nabla\loss$，$\theta\leftarrow\theta-\eta\mathbf{v}$，沿峡谷加速。
+  \item Adam：对每个参数用梯度一阶矩与二阶矩做自适应缩放，是神经网络的默认起点。
+\end{itemize}
+
+\begin{example}[一维二次函数]
+$\loss(\theta)=\frac12 a\theta^2$，$a>0$。则 $\theta_{t+1}=(1-\eta a)\theta_t$。收敛条件是 $0<\eta<2/a$。这解释了``学习率为何不能随便取大''：曲率 $a$ 越大，允许的 $\eta$ 越小。
+\end{example}
+
+\subsection{停止条件}
+
+实践中看验证集损失。验证损失不再下降就停止（early stopping）——这本身也是一种正则化。
+
+%======================================================================
+\section{线性回归：完整推导}
+\label{sec:linreg}
+%======================================================================
+
+模型
+\begin{equation}
+  h_{\mathbf{w},b}(\mathbf{x})=\mathbf{w}^\top\mathbf{x}+b.
+\end{equation}
+把偏置吃进向量：令 $\mathbf{x}\leftarrow(1,\mathbf{x})$，$\mathbf{w}\leftarrow(b,\mathbf{w})$，于是 $h_{\mathbf{w}}(\mathbf{x})=\mathbf{w}^\top\mathbf{x}$。
+
+平方损失
+\begin{equation}
+  \loss(\mathbf{w})=\frac{1}{2n}\|X\mathbf{w}-\mathbf{y}\|^2
+  =\frac{1}{2n}(\mathbf{w}^\top X^\top X\mathbf{w}-2\mathbf{y}^\top X\mathbf{w}+\mathbf{y}^\top\mathbf{y}).
+\end{equation}
+对 $\mathbf{w}$ 求导：
+\begin{equation}
+  \nabla_{\mathbf{w}}\loss=\frac{1}{n}X^\top(X\mathbf{w}-\mathbf{y}).
+\end{equation}
+令梯度为零，得到\textbf{正规方程}（normal equation）
+\begin{equation}
+\label{eq:normal}
+  X^\top X\,\mathbf{w}=X^\top\mathbf{y}.
+\end{equation}
+若 $X^\top X$ 可逆（特征线性无关且 $n\ge d$），
+\begin{equation}
+  \mathbf{w}^\star=(X^\top X)^{-1}X^\top\mathbf{y}=X^{+}\mathbf{y},
+\end{equation}
+其中 $X^{+}$ 是 Moore--Penrose 伪逆。这是凸二次问题的唯一全局极小。
+
+\begin{remark}[与最小二乘投影]
+$X\mathbf{w}$ 是 $\mathbf{y}$ 在 $X$ 列空间上的正交投影。残差 $X\mathbf{w}^\star-\mathbf{y}$ 与所有列正交，正是 $X^\top(X\mathbf{w}^\star-\mathbf{y})=0$。
+\end{remark}
+
+\subsection{岭回归}
+
+若特征共线，$X^\top X$ 接近奇异。加上 $L_2$ 正则
+\begin{equation}
+  \loss_\lambda(\mathbf{w})=\frac{1}{2n}\|X\mathbf{w}-\mathbf{y}\|^2+\frac{\lambda}{2}\|\mathbf{w}\|^2,
+\end{equation}
+得
+\begin{equation}
+  \mathbf{w}_\lambda=\bigl(X^\top X+n\lambda I\bigr)^{-1}X^\top\mathbf{y}.
+\end{equation}
+$\lambda$ 把特征值从 $\mu$ 抬到 $\mu+n\lambda$，矩阵必可逆。这是过拟合控制的最干净例子。
+
+\subsection{用梯度下降解线性回归}
+
+即使有闭式解，写 SGD 仍有教学价值：
+\begin{equation}
+  \mathbf{w}\leftarrow\mathbf{w}-\eta\cdot\frac{1}{|\mathcal{B}|}\sum_{i\in\mathcal{B}}(\mathbf{w}^\top\mathbf{x}_i-y_i)\mathbf{x}_i.
+\end{equation}
+神经网络优化就是这一行的非线性推广。
+
+\begin{example}[一维拟合]
+$d=1$，$h=w x+b$。对数据 $\{(x_i,y_i)\}$，
+\begin{equation}
+  \begin{pmatrix} n & \sum x_i\\ \sum x_i & \sum x_i^2\end{pmatrix}
+  \begin{pmatrix}b\\ w\end{pmatrix}
+  =\begin{pmatrix}\sum y_i\\ \sum x_i y_i\end{pmatrix}.
+\end{equation}
+请用手算两三个点验证。课堂若演示``fit a line''，就是这个。
+\end{example}
+
+%======================================================================
+\section{逻辑回归：完整推导}
+\label{sec:logreg}
+%======================================================================
+
+\subsection{模型}
+
+sigmoid 函数
+\begin{equation}
+\label{eq:sigmoid}
+  \sigm(z)=\frac{1}{1+e^{-z}},\qquad
+  \sigm'(z)=\sigm(z)\bigl(1-\sigm(z)\bigr).
+\end{equation}
+逻辑回归把分数 $z=\mathbf{w}^\top\mathbf{x}$ 压到 $(0,1)$：
+\begin{equation}
+  \hat p(\mathbf{x})=\sigm(\mathbf{w}^\top\mathbf{x})=P(y=1\mid\mathbf{x};\mathbf{w}).
+\end{equation}
+
+\subsection{损失与梯度}
+
+把 $\hat p_i=\sigm(\mathbf{w}^\top\mathbf{x}_i)$ 代入~\eqref{eq:bce}。对单个样本，
+\begin{align}
+  \ell(\mathbf{w})&=-y\log\sigm(z)-(1-y)\log\bigl(1-\sigm(z)\bigr),\qquad z=\mathbf{w}^\top\mathbf{x},\\
+  \frac{\partial\ell}{\partial z}
+  &=-y(1-\sigm(z))+(1-y)\sigm(z)
+  =\sigm(z)-y.
+\end{align}
+因此
+\begin{equation}
+\label{eq:loggrad}
+  \nabla_{\mathbf{w}}\loss=\frac{1}{n}\sum_{i=1}^n\bigl(\sigm(\mathbf{w}^\top\mathbf{x}_i)-y_i\bigr)\mathbf{x}_i.
+\end{equation}
+与线性回归梯度同形，只是把 $\mathbf{w}^\top\mathbf{x}$ 换成了 $\sigm(\mathbf{w}^\top\mathbf{x})$。
+
+\begin{keybox}
+逻辑回归\textbf{没有}线性回归那样的闭式解，因为 $\sigm$ 是非线性的。但损失对 $\mathbf{w}$ 是凸的，梯度下降能到全局最优。凸性来自：BCE 对 logit 是凸的，logit 对 $\mathbf{w}$ 是线性的，凸函数复合仿射映射仍凸。
+\end{keybox}
+
+\subsection{决策边界}
+
+$\hat p=1/2$ 当且仅当 $\mathbf{w}^\top\mathbf{x}=0$。所以逻辑回归的决策边界是超平面。它仍是线性分类器；``逻辑''只改变了概率标定与损失，没有自动产生弯曲边界。要弯曲边界，需要非线性特征或神经网络。
+
+\begin{example}[一维阈值]
+$x\in\R$，$\hat p=\sigm(w(x-x_0))$。$w$ 越大，概率跃迁越陡，越接近硬阈值。这对应物理里用一个观测量做 cut。
+\end{example}
+
+%======================================================================
+\section{从线性模型到神经网络}
+\label{sec:nn}
+%======================================================================
+
+\subsection{为什么要非线性}
+
+XOR 问题：四点 $(0,0),(0,1),(1,0),(1,1)$，标签 $0,1,1,0$。任何直线都不能分开两类。若先做一个非线性特征 $\phi(x_1,x_2)=(x_1,x_2,x_1x_2)$，线性分类器就够了。神经网络做的事，就是\textbf{用数据学习 $\phi$}。
+
+\subsection{多层感知机（MLP）}
+
+一层隐藏层的 MLP：
+\begin{equation}
+\label{eq:mlp}
+  \mathbf{h}=\phi(W_1\mathbf{x}+\mathbf{b}_1),\qquad
+  \mathbf{z}=W_2\mathbf{h}+\mathbf{b}_2,\qquad
+  \hat{\mathbf{y}}=g(\mathbf{z}).
+\end{equation}
+其中 $\phi$ 是逐元激活，$g$ 是输出激活（回归用恒等，二分类用 sigmoid，多分类用 softmax）。
+
+深度网络只是把 $\mathbf{h}$ 再送入同样的仿射+激活，重复 $L$ 次：
+\begin{equation}
+  \mathbf{a}^{(0)}=\mathbf{x},\qquad
+  \mathbf{a}^{(\ell)}=\phi\bigl(W^{(\ell)}\mathbf{a}^{(\ell-1)}+\mathbf{b}^{(\ell)}\bigr).
+\end{equation}
+
+\subsection{激活函数}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+名称 & 公式 & 作用 \\
+\midrule
+sigmoid & $(1+e^{-z})^{-1}$ & 早期隐藏层；易饱和 \\
+tanh & $\tanh z$ & 零均值，仍会饱和 \\
+ReLU & $\max(0,z)$ & 现代默认；梯度简单 \\
+GELU / SiLU & 平滑版 ReLU & Transformer 常用 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+没有非线性 $\phi$，无论叠多少层，$h$ 仍是 $\mathbf{x}$ 的仿射函数，表达力与线性模型相同。
+
+\subsection{万能近似}
+
+在很弱的条件下，单隐层 MLP 可以一致逼近紧集上的连续函数。这保证``理论上够用''，不保证``用有限数据、有限宽度能学到''。深度的好处往往是：用更少的参数表示某些由多尺度组成的函数。
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=14mm and 11mm,
+  neuron/.style={circle,draw=mlblue,thick,minimum size=7mm,inner sep=0pt,font=\small},
+  arr/.style={-{Stealth},thick,mlblue!70}
+]
+\node[neuron] (x1) {$x_1$};
+\node[neuron,below=of x1] (x2) {$x_2$};
+\node[neuron,below=of x2] (x3) {$x_3$};
+\node[neuron,right=of x1,yshift=-7mm] (h1) {$h_1$};
+\node[neuron,below=of h1] (h2) {$h_2$};
+\node[neuron,below=of h2] (h3) {$h_3$};
+\node[neuron,right=of h2] (y) {$\hat y$};
+\foreach \i in {1,2,3}
+  \foreach \j in {1,2,3}
+    \draw[arr] (x\i) -- (h\j);
+\foreach \j in {1,2,3}
+  \draw[arr] (h\j) -- (y);
+\node[above=2mm of x1,font=\small] {输入};
+\node[above=2mm of h1,font=\small] {隐藏层};
+\node[above=2mm of y,font=\small] {输出};
+\end{tikzpicture}
+\caption{最简单的前馈网络。每条边是一个权重，每个圆圈内先做加权和再做 $\phi$。}
+\end{figure}
+
+%======================================================================
+\section{反向传播}
+\label{sec:backprop}
+%======================================================================
+
+以一层隐藏层、标量输出、平方损失为例，把链式法则写到底。这是课堂上最容易``以为会、其实没写过''的推导。
+
+\subsection{前向}
+
+\begin{align}
+  z_j&=\sum_{k} W^{(1)}_{jk}x_k+b^{(1)}_j,\\
+  h_j&=\phi(z_j),\\
+  u&=\sum_j W^{(2)}_{j}h_j+b^{(2)},\\
+  \hat y&=u\qquad\text{（回归）},\\
+  \ell&=\frac12(\hat y-y)^2.
+\end{align}
+
+\subsection{反向}
+
+\begin{align}
+  \frac{\partial\ell}{\partial\hat y}&=\hat y-y,\\
+  \frac{\partial\ell}{\partial W^{(2)}_j}&=\frac{\partial\ell}{\partial\hat y}\,h_j,\qquad
+  \frac{\partial\ell}{\partial b^{(2)}}=\frac{\partial\ell}{\partial\hat y},\\
+  \frac{\partial\ell}{\partial h_j}&=\frac{\partial\ell}{\partial\hat y}\,W^{(2)}_j,\\
+  \frac{\partial\ell}{\partial z_j}&=\frac{\partial\ell}{\partial h_j}\,\phi'(z_j),\\
+  \frac{\partial\ell}{\partial W^{(1)}_{jk}}&=\frac{\partial\ell}{\partial z_j}\,x_k,\qquad
+  \frac{\partial\ell}{\partial b^{(1)}_j}=\frac{\partial\ell}{\partial z_j}.
+\end{align}
+
+对 ReLU，$\phi'(z)=\ind[z>0]$。对 sigmoid，$\phi'(z)=\sigm(z)(1-\sigm(z))$。
+
+\begin{keybox}
+反向传播不是新算法，只是把 $\partial\ell/\partial\theta$ 按计算图从输出往输入传。现代框架（PyTorch、JAX）自动做这件事；你需要理解的是：\textbf{梯度从损失流向参数}，以及\textbf{饱和激活会导致梯度消失}。
+\end{keybox}
+
+\subsection{二分类时只改最后一步}
+
+若 $\hat y=\sigm(u)$ 且用 BCE，则 $\partial\ell/\partial u=\hat y-y$，与~\eqref{eq:loggrad} 相同。其余公式不变。
+
+%======================================================================
+\section{过拟合、正则化与模型选择}
+\label{sec:overfit}
+%======================================================================
+
+\subsection{三种数据划分}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{训练集}：用来算梯度、更新 $\theta$。
+  \item \textbf{验证集}：用来选超参数、做 early stopping。\textbf{不能}再拿去训练。
+  \item \textbf{测试集}：只在最后报告一次。HEP 里还要小心：同一批蒙特卡罗被反复调 cut，也会``偷看测试集''。
+\end{itemize}
+
+交叉验证（cross-validation）把数据轮流当验证集，适合小样本。LHC 分析样本量大，更常见的是固定划分或 $k$-fold 仅用于超参数。
+
+\subsection{正则化清单}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item $L_2$（权重衰减）：$\Omega=\frac\lambda2\|\theta\|^2$。
+  \item $L_1$：促使稀疏。
+  \item Dropout：训练时随机把隐藏单元置零。
+  \item Early stopping。
+  \item 数据增强：喷射里可做旋转、软滴度重排等（需符合物理对称性）。
+\end{enumerate}
+
+\subsection{偏差、容量与物理先验}
+
+在粒子物理中，把四动量的洛伦兹协变量、红外安全观测量作为输入，本身就是正则化：假设类被物理限制住了。反之，把原始探测器击中一股脑喂给巨大网络，容量很大，更需要数据与正则。
+
+%======================================================================
+\section{分类器性能：ROC、AUC 与物理显著性}
+\label{sec:roc}
+%======================================================================
+
+对分数 $s(\mathbf{x})$ 与阈值 $t$，定义
+\begin{align}
+  \varepsilon_s(t)&=P(s\ge t\mid y=1)\qquad\text{真阳性率 / 信号效率},\\
+  \varepsilon_b(t)&=P(s\ge t\mid y=0)\qquad\text{假阳性率 / 本底效率}.
+\end{align}
+ROC 曲线是参数曲线 $\bigl(\varepsilon_b(t),\varepsilon_s(t)\bigr)$。AUC 是其下面积：随机排序时 $\mathrm{AUC}=1/2$，完美分类 $\mathrm{AUC}=1$。
+
+\begin{warnbox}
+AUC 很大并不等于物理分析更好。分析真正关心的是某一工作点上的 $\varepsilon_s/\sqrt{\varepsilon_b}$，或完整的似然拟合。一个 AUC 略低但在低 $\varepsilon_b$ 处更陡的分类器，对稀有信号搜索往往更有用。
+\end{warnbox}
+
+近似显著性（没有系统误差时）
+\begin{equation}
+  Z\approx\frac{S}{\sqrt{B}}=\frac{N\varepsilon_s}{\sqrt{N_b\varepsilon_b}}.
+\end{equation}
+系统误差存在时常用 $S/\sqrt{B+\delta B^2}$。机器学习给出的是 $\varepsilon_s,\varepsilon_b$；是否提高 $Z$，还取决于本底估计是否仍然可靠。
+
+%======================================================================
+\section{粒子物理中的典型任务}
+\label{sec:hep}
+%======================================================================
+
+David Shih 的课几乎一定从 HEP 用例讲起，而不是从 ImageNet 讲起。下面是最常见的几类。
+
+\subsection{监督分类：喷射标记与信号--本底}
+
+输入可以是：
+\begin{itemize}[leftmargin=1.4em]
+  \item 高层次观测量：质量、$N$-subjettiness、能量关联函数；
+  \item 低层次：构成粒子的四动量列表（点云）、或喷射图像。
+\end{itemize}
+标签来自蒙特卡罗：这是 $b$-jet vs.\ light-jet、顶夸克喷射 vs.\ QCD 喷射、或 $h\to\tau\tau$ vs.\ 本底等。
+
+\begin{example}[理想监督]
+若你有纯信号模拟与纯本底模拟，就直接训 BCE 分类器。由命题~\ref{sec:lr}，它逼近 $p_S/p_B$。这是所有后续``弱监督变体''的对照基线（fully supervised benchmark）。
+\end{example}
+
+\subsection{回归}
+
+能量回归、质量回归、探测器校准。损失常用 MSE 或分位数损失（预测区间）。
+
+\subsection{生成模型与快速模拟}
+
+用神经网络学习 $p(\mathbf{x})$，从而快速抽样事件，替代部分 GEANT 模拟。这需要密度估计，见下一节。
+
+\subsection{与模型无关的搜索}
+
+新物理可能不像任何现有基准模型。于是不再训练``特定 BSM vs.\ SM''，而是问：\textbf{数据是否偏离我们对 SM 本底的理解}。这是 Shih 工作的核心区。
+
+%======================================================================
+\section{密度估计与生成模型（听课预备）}
+\label{sec:density}
+%======================================================================
+
+\begin{definition}[密度估计]
+给定 $\{\mathbf{x}_i\}_{i=1}^n\sim p$，构造 $\hat p(\mathbf{x})\approx p(\mathbf{x})$。若还能从 $\hat p$ 抽样，就称为生成模型（generative model）。
+\end{definition}
+
+\subsection{从直方图到神经网络}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 一维：直方图、KDE。
+  \item 高维：直方图崩溃（维数灾难）。需要参数化密度。
+\end{itemize}
+
+归一化流（normalizing flow）是 HEP 里很常见的一类：取简单底分布 $p_u(\mathbf{u})$（如标准正态），学习可逆映射 $\mathbf{x}=f_\theta(\mathbf{u})$，则
+\begin{equation}
+\label{eq:flow}
+  p_\theta(\mathbf{x})=p_u\bigl(f_\theta^{-1}(\mathbf{x})\bigr)
+  \Bigl|\det\frac{\partial f_\theta^{-1}}{\partial\mathbf{x}}\Bigr|.
+\end{equation}
+训练目标仍是 NLL：$-\sum_i\log p_\theta(\mathbf{x}_i)$。优点是既有密度值，又能抽样。CATHODE 的``outer density estimation''常用这类模型（以及后来的扩散模型等）。
+
+\subsection{条件密度}
+
+物理里几乎总是条件密度 $p(\mathbf{x}\mid m)$，其中 $m$ 是不变质量等共振变量。学会 $p(\mathbf{x}\mid m)$ 后，可以在信号区的 $m$ 上插值本底密度。这是 ANODE/CATHODE 的技术起点。
+
+\begin{hearbox}
+听到 \emph{density estimator}、\emph{flow}、\emph{generative model} 时，先问两句：它输出的是密度值 $\hat p(\mathbf{x})$，还是只会抽样？它是不是条件于质量 $m$？异常探测方法的差异往往就在这里。
+\end{hearbox}
+
+%======================================================================
+\section{弱监督与异常探测：CWoLa 与 CATHODE}
+\label{sec:anomaly}
+%======================================================================
+
+\subsection{问题}
+
+监督分类需要信号模拟。若信号模型错了，分类器会对``错的信号''最优。异常探测改为：
+\begin{equation}
+  \text{在尽量少的信号假设下，找数据中相对本底的局域过量。}
+\end{equation}
+经典 bump hunt 是在质量 $m$ 上找峰。机器学习要回答：在质量以外的特征 $\mathbf{x}$ 上，能否增强这个峰。
+
+\subsection{CWoLa：用混合样本做弱监督}
+
+CWoLa = Classification Without Labels。核心引理：若两个混合样本
+\begin{align}
+  p_1(\mathbf{x})&=f_1\,p_S(\mathbf{x})+(1-f_1)p_B(\mathbf{x}),\\
+  p_2(\mathbf{x})&=f_2\,p_S(\mathbf{x})+(1-f_2)p_B(\mathbf{x}),
+\end{align}
+且 $f_1\neq f_2$，则区分 $p_1$ 与 $p_2$ 的最优分类器，等价于区分 $p_S$ 与 $p_B$ 的最优分类器（分数是同一似然比的单调函数）。
+
+\textbf{CWoLa hunting}：把质量信号区 SR 与边带 SB 当成两个混合样本。若信号只出现在 SR，则 $f_{\mathrm{SR}}>f_{\mathrm{SB}}\approx 0$。训练``SR vs.\ SB''分类器，就可能把信号从本底中挑出来。
+
+\begin{warnbox}
+若特征 $\mathbf{x}$ 与质量 $m$ 相关，本底在 SR 与 SB 的 $p_B(\mathbf{x}\mid m)$ 不同，CWoLa 会把这种相关误当成信号。这是该方法最重要的系统误差来源。
+\end{warnbox}
+
+\subsection{ANODE}
+
+在边带上学习条件密度 $p(\mathbf{x}\mid m)$，插值到信号区得到本底模型 $p_B(\mathbf{x}\mid m)$；再在信号区估计数据密度 $p_{\mathrm{data}}(\mathbf{x}\mid m)$。异常分数取
+\begin{equation}
+  R(\mathbf{x},m)=\frac{p_{\mathrm{data}}(\mathbf{x}\mid m)}{p_B(\mathbf{x}\mid m)}.
+\end{equation}
+这直接逼近 Neyman--Pearson 最优。难点：高维密度估计本身很难，两个密度的比更不稳定。
+
+\subsection{CATHODE}
+
+CATHODE = Classifying Anomalies THrough Outer Density Estimation（Shih 等, PRD 106, 055006 (2022)）。它把 ANODE 与 CWoLa 的优点合在一起：
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 在边带（outer region）训练条件密度估计器，得到 $p_B(\mathbf{x}\mid m)$。
+  \item 把该密度插值到信号区，并从中\textbf{抽样}出一组人造本底事件。
+  \item 在信号区训练分类器：真实数据 vs.\ 人造本底。
+\end{enumerate}
+
+第三步回到分类（通常比直接除两个密度更稳），而人造本底比原始边带数据更接近 SR 里的 $p_B(\mathbf{x}\mid m)$，从而减轻 CWoLa 的相关问题。理想情况下，该分类器逼近 $p_{\mathrm{data}}/p_B$，也就是最优异常探测分数。
+
+\begin{keybox}
+三句话记住 Shih 路线：
+\textbf{监督分类}逼近 $p_S/p_B$；
+\textbf{CWoLa}用两个不同纯度的混合逼近同一个比；
+\textbf{CATHODE}用边带密度估计在信号区制造本底样本，再分类。
+听课重点是：每一步在逼近哪个分布、依赖什么假设、假设破掉时哪里会假信号。
+\end{keybox}
+
+\subsection{LHC Olympics 与 R\&D 数据集}
+
+课堂很可能用 LHC Olympics 的公开 R\&D 集做演示：一个共振质量附近的新物理喷射对，加上 QCD 本底。预习时只需知道：有一个``信号区质量窗口''，以及若干喷射子结构特征。不必提前把论文读完，但应能看懂``SR / SB / features''这三张图。
+
+%======================================================================
+\section{课堂可能出现的公式与术语}
+\label{sec:classroom}
+%======================================================================
+
+把下列式子看熟，课堂上只需把记号对上。
+
+\begin{align}
+  \theta&\leftarrow\theta-\eta\nabla_\theta\loss
+  && \text{梯度下降}\\
+  \sigm(z)&=(1+e^{-z})^{-1}
+  && \text{sigmoid}\\
+  \loss_{\mathrm{BCE}}&=-\bigl[y\log\hat p+(1-y)\log(1-\hat p)\bigr]
+  && \text{二元交叉熵}\\
+  \hat p_k&=\mathrm{softmax}(\mathbf{z})_k
+  && \text{多类}\\
+  \frac{p_S(\mathbf{x})}{p_B(\mathbf{x})}
+  &&& \text{最优判别分数}\\
+  p(\mathbf{x})&=p_u(f^{-1}(\mathbf{x}))\bigl|\det Df^{-1}\bigr|
+  && \text{归一化流}\\
+  R&=\frac{p_{\mathrm{data}}(\mathbf{x}\mid m)}{p_B(\mathbf{x}\mid m)}
+  && \text{异常分数}
+\end{align}
+
+高频词（完整中英对照见第~\ref{sec:glossary}~节）：
+\textit{supervised / unsupervised / weakly supervised, loss, gradient descent, learning rate, overfitting, regularization, classifier, ROC, AUC, likelihood ratio, density estimation, generative model, sideband, signal region, anomaly detection, CWoLa, CATHODE, ANODE, jet tagging.}
+
+%======================================================================
+\section{常见困惑}
+\label{sec:faq}
+%======================================================================
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{``神经网络能拟合任何函数，所以一定更好。''}\\
+  万能近似不管泛化。数据有限时，线性模型或物理观测量加 BDT 可能更稳。
+
+  \item \textbf{``训练损失下降就是成功。''}\\
+  必须看验证集。训练损失下降、验证损失上升 = 过拟合。
+
+  \item \textbf{``逻辑回归是非线性模型。''}\\
+  概率是 $z$ 的非线性函数，但决策边界是线性的。
+
+  \item \textbf{``AUC 高 = 发现新物理。''}\\
+  AUC 在模拟上算。真实分析还要本底估计、系统误差、试探惩罚（look-elsewhere）。
+
+  \item \textbf{``无监督等于不需要假设。''}\\
+  异常探测总有假设：信号在质量上局域、本底在边带可插值、特征与质量的相关可忽略或可建模。把假设说清楚，比宣称``model independent''更重要。
+
+  \item \textbf{``分类器和密度估计是两套无关技术。''}\\
+  由命题~\ref{sec:lr}，最优分类器就是密度比。CATHODE 正是先密度、后分类。
+
+  \item \textbf{``交叉熵和最大似然是两件事。''}\\
+  对分类的离散标签分布，它们是同一件事。
+
+  \item \textbf{把 $y=\pm1$ 与 $y=0/1$ 的公式混用。}\\
+  损失形式不同。看老师的标签约定再套公式。
+\end{enumerate}
+
+%======================================================================
+\section{听课重点}
+\label{sec:listen}
+%======================================================================
+
+四讲时间紧。建议把注意力放在下面几条，而不是记网络层数。
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item \textbf{第一、二讲（17 日）}：监督学习叙事是否从损失+梯度讲起；有没有强调似然比；喷射标记或简单分类演示。
+  \item \textbf{第三、四讲（18 日）}：生成模型/密度估计如何引入；异常探测的假设（SR/SB）；CWoLa、ANODE、CATHODE 的比较表。
+  \item 每当出现一个方法，自己填空：\\
+  \emph{输入是什么？标签从哪来？损失是什么？它在逼近哪个比？主要系统误差是什么？}
+  \item 记录老师用的数据集（LHC Olympics？ATLAS Open Data？自模拟？）和评价曲线（ROC 还是 significance improvement）。
+  \item 讨论时段优先问：特征--质量相关如何处理、如何避免在 SR 上过拟合波动。
+\end{enumerate}
+
+\begin{hearbox}
+若某张幻灯片出现 CATHODE 流程图，请当场在本子上画：SB $\to$ 条件密度 $\to$ 插值到 SR $\to$ 抽样本底 $\to$ 数据 vs.\ 抽样的分类器 $\to$ 异常分数。能默画，这四讲就没有白听。
+\end{hearbox}
+
+%======================================================================
+\section{进一步学习路线}
+\label{sec:next}
+%======================================================================
+
+\subsection{课前（数小时）}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 亲手用 20 行 Python 实现逻辑回归的梯度下降，画决策边界。
+  \item 读一遍二元交叉熵对 $\hat p$ 的导数，确认是 $\hat p-y$。
+  \item 浏览 CATHODE 论文引言与 Figure~1（arXiv:2109.00546 / PRD 106, 055006）。
+\end{enumerate}
+
+\subsection{课中对照}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 基础教材：Bishop \emph{Pattern Recognition and Machine Learning} 第 3--5 章；或 Goodfellow, Bengio, Courville \emph{Deep Learning} 第 4--6 章。
+  \item HEP 综述：Guest, Cranmer, Whiteson, \emph{Deep Learning and its Application to LHC Physics}；以及机器学习 Living Review（hep-ph）。
+\end{itemize}
+
+\subsection{课后深入}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item 弱监督：Metodiev, Nachman, Thaler, CWoLa (JHEP 2017)。
+  \item 密度异常探测：ANODE (Nachman, Shih, 2020)；CATHODE (Hallin et al.\ 2022)。
+  \item 生成模型：归一化流综述；以及喷射生成（CaloGAN、JetNet 等）。
+  \item 实践：PyTorch 写一个 MLP 做公开喷射分类；再试 LHC Olympics R\&D。
+\end{enumerate}
+
+不要一上来就读 Transformer 综述。对这门课，\textbf{似然比 + 密度估计 + SR/SB} 比最新架构重要得多。
+
+%======================================================================
+\section{英文术语表}
+\label{sec:glossary}
+%======================================================================
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.46\textwidth} p{0.46\textwidth}}
+\toprule
+\textbf{English} & \textbf{中文} \\
+\midrule
+supervised / unsupervised learning & 监督 / 无监督学习 \\
+weakly supervised learning & 弱监督学习 \\
+training / validation / test set & 训练 / 验证 / 测试集 \\
+feature, label, sample / event & 特征、标签、样本 / 事件 \\
+hypothesis class & 假设类 \\
+loss function & 损失函数 \\
+empirical risk minimization (ERM) & 经验风险最小化 \\
+maximum likelihood estimation (MLE) & 极大似然估计 \\
+mean squared error (MSE) & 均方误差 \\
+binary cross-entropy (BCE) & 二元交叉熵 \\
+softmax & 归一化指数（软最大值） \\
+gradient descent / SGD / mini-batch & 梯度下降 / 随机梯度下降 / 小批量 \\
+learning rate & 学习率 \\
+backpropagation & 反向传播 \\
+activation function; ReLU & 激活函数；线性整流 \\
+neural network; MLP & 神经网络；多层感知机 \\
+overfitting / underfitting & 过拟合 / 欠拟合 \\
+regularization; weight decay & 正则化；权重衰减 \\
+early stopping & 早停 \\
+classifier / regressor & 分类器 / 回归器 \\
+decision boundary & 决策边界 \\
+ROC curve; AUC & ROC 曲线；曲线下面积 \\
+working point; efficiency & 工作点；效率 \\
+likelihood ratio & 似然比 \\
+Neyman--Pearson lemma & 奈曼--皮尔逊引理 \\
+density estimation & 密度估计 \\
+generative model & 生成模型 \\
+normalizing flow & 归一化流 \\
+anomaly detection & 异常探测 \\
+signal region (SR) / sideband (SB) & 信号区 / 边带 \\
+background interpolation & 本底插值 \\
+jet tagging & 喷射标记 \\
+bump hunt & 共振峰搜索 \\
+CWoLa, ANODE, CATHODE & 弱监督与异常探测算法名 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1.2em}
+\noindent\textit{声明：}本讲义为暑期学校课前预习材料，由学生侧整理，不代表授课人立场。公式与术语以课堂为准。CATHODE 等方法的细节请参阅原始论文。
+
+\end{document}
