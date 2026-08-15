@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# LaTeX build artifacts
+lecture-notes/build/
+*.aux
+*.out
+*.toc
+*.synctex.gz
