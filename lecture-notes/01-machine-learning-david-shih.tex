@@ -1,0 +1,1686 @@
+% =====================================================================
+%  机器学习课前预习讲义
+%  课程：Machine Learning（授课教师：David Shih）
+%  面向：有物理/数学基础、但未系统学过机器学习的同学
+%  编译方式：xelatex 01-machine-learning-david-shih.tex （需编译两次以生成目录）
+% =====================================================================
+\documentclass[UTF8,a4paper,11pt]{ctexart}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% ---------------------- 定理类环境 ----------------------
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{example}[definition]{例}
+\newtheorem{exercise}[definition]{练习}
+\theoremstyle{plain}
+\newtheorem{theorem}[definition]{定理}
+\newtheorem{lemma}[definition]{引理}
+\newtheorem{proposition}[definition]{命题}
+\newtheorem{corollary}[definition]{推论}
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{注}
+\renewcommand*{\proofname}{证明}
+
+% ---------------------- 数学宏 ----------------------
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\sgn}{sign}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\ReLU}{ReLU}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Loss}{\mathcal{L}}
+\newcommand{\Hyp}{\mathcal{H}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\T}{^{\mathsf{T}}}
+\newcommand{\eng}[1]{\textup{(#1)}}
+
+\setlist[itemize]{itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{itemsep=2pt,topsep=3pt}
+
+% ---------------------- 标题 ----------------------
+\title{\textbf{机器学习课前预习讲义}\\[6pt]
+\large 课程 Machine Learning，授课教师 David Shih\\[4pt]
+\large 面向未系统学过机器学习的物理与数学专业同学}
+\author{课前自学材料（可自由编辑与补充）}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+本讲义是为“机器学习”（Machine Learning）课程准备的\textbf{课前预习}材料。它假设读者具备理工科本科的数学基础：会做矩阵乘法、会求偏导数、知道什么是概率密度与期望；但\textbf{不假设}读者听说过“损失函数”“梯度下降”“反向传播”这些词。
+
+本讲义的写法有三个特点。第一，\textbf{从零开始}：每一个新符号在第一次出现时都会被定义，每一个英文术语在第一次出现时都会给出中文译名。第二，\textbf{推导完整}：正规方程、逻辑回归的梯度与 Hessian 矩阵、多层网络的反向传播、梯度下降的收敛性、偏差--方差分解等，全部给出逐步可验算的推导，而不是“可以证明”一句话带过。第三，\textbf{强调直觉}：每个公式后面都会说明“它在做什么”“为什么必须是这个形式”，因为考试与科研中真正起作用的是直觉，公式可以现场重推。
+
+阅读建议：第 \ref{sec:prelim} 节是符号与工具的字典，可以先快速扫一遍，用到时再回查；第 \ref{sec:supervised}--\ref{sec:nn} 节是主线，建议按顺序精读，并且\textbf{一定要在纸上跟着推一遍}；第 \ref{sec:example} 节的手算例子请务必自己动笔算，数字都设计成可以笔算的；第 \ref{sec:glossary} 节是英汉术语对照表，课堂上老师会直接用英文术语，提前熟悉它们能显著降低听课负担；第 \ref{sec:confusion}--\ref{sec:roadmap} 节回答常见困惑、指出听课重点并给出后续学习路线。
+
+一句话概括整门课的逻辑主线：\emph{我们假设数据由某个未知的概率分布产生，我们希望找到一个函数来预测它；把“预测得好不好”写成一个可微的目标函数，然后用梯度把这个目标函数降下去；模型的容量越大越容易拟合训练数据，但越容易在新数据上失败，于是需要正则化与验证集来控制这种取舍。}整门课的每一个技术细节，都可以挂在这条主线上。
+\end{abstract}
+
+\vspace{1em}
+\begin{center}
+\rule{0.85\textwidth}{0.4pt}
+\end{center}
+\vspace{0.5em}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{预备知识：线性代数、微积分、概率}\label{sec:prelim}
+% =====================================================================
+
+本节的目的不是重讲线性代数与概率论，而是把机器学习里\textbf{反复使用}的那十几个结论集中列出，并统一符号。后面所有推导都只会用到本节的内容。
+
+\subsection{符号约定}
+
+\begin{itemize}
+  \item 标量用普通斜体小写字母：$x,\ y,\ \eta,\ \lambda$。
+  \item 向量用\textbf{粗斜体小写}字母，一律视为\textbf{列向量}：$\bm{x}\in\R^{d}$，即
+  \[
+    \bm{x}=\begin{pmatrix}x_1\\ x_2\\ \vdots\\ x_d\end{pmatrix},
+    \qquad \bm{x}\T=(x_1,\,x_2,\,\dots,\,x_d).
+  \]
+  \item 矩阵用\textbf{粗斜体大写}字母：$\bm{A}\in\R^{m\times n}$，其第 $i$ 行第 $j$ 列元素记作 $A_{ij}$。
+  \item 训练数据有 $n$ 个样本，每个样本有 $d$ 个特征。第 $i$ 个样本记作 $(\bm{x}^{(i)},y^{(i)})$，上标加括号表示“第几个样本”，下标表示“第几个特征”，即 $x^{(i)}_j$ 是第 $i$ 个样本的第 $j$ 个特征。
+  \item 设计矩阵 \eng{design matrix} $\bm{X}\in\R^{n\times d}$ 的第 $i$ 行是 $\bm{x}^{(i)\mathsf{T}}$，即
+  \[
+    \bm{X}=\begin{pmatrix}
+      \bm{x}^{(1)\mathsf{T}}\\ \bm{x}^{(2)\mathsf{T}}\\ \vdots\\ \bm{x}^{(n)\mathsf{T}}
+    \end{pmatrix}
+    =\begin{pmatrix}
+      x^{(1)}_1 & \cdots & x^{(1)}_d\\
+      \vdots & & \vdots\\
+      x^{(n)}_1 & \cdots & x^{(n)}_d
+    \end{pmatrix},
+    \qquad
+    \bm{y}=\begin{pmatrix}y^{(1)}\\ \vdots\\ y^{(n)}\end{pmatrix}\in\R^{n}.
+  \]
+  \item $\bm{I}_d$ 是 $d\times d$ 单位矩阵，$\bm{1}$ 是元素全为 $1$ 的列向量，$\bm{0}$ 同理。
+  \item $\odot$ 表示两个同形状向量（或矩阵）的\textbf{逐元素乘积} \eng{Hadamard product}：$(\bm{u}\odot\bm{v})_i=u_iv_i$。
+  \item 克罗内克符号 \eng{Kronecker delta}：$\delta_{ij}=1$ 当 $i=j$，否则为 $0$。
+\end{itemize}
+
+\begin{remark}
+“列向量约定”看起来是小事，但它决定了后面所有公式里到底是 $\bm{X}\bm{w}$ 还是 $\bm{w}\T\bm{X}$、是 $\bm{X}\T(\hat{\bm{y}}-\bm{y})$ 还是它的转置。\textbf{任何时候推导卡住，第一件事是检查每个量的形状（shape）是否匹配}：这是最有效的自查手段，物理里叫“量纲分析”。
+\end{remark}
+
+\subsection{线性代数的必备结论}
+
+\begin{definition}[内积与欧氏范数]
+对 $\bm{u},\bm{v}\in\R^{d}$，内积 \eng{inner product} 定义为 $\bm{u}\T\bm{v}=\sum_{j=1}^{d}u_jv_j$，欧氏范数 \eng{Euclidean norm, $\ell_2$ norm} 定义为
+\[
+  \norm{\bm{u}}_2=\sqrt{\bm{u}\T\bm{u}}=\Big(\sum_{j=1}^d u_j^2\Big)^{1/2}.
+\]
+另外常用的还有 $\ell_1$ 范数 $\norm{\bm{u}}_1=\sum_j\abs{u_j}$。以后不加下标的 $\norm{\cdot}$ 默认指 $\ell_2$。
+\end{definition}
+
+\begin{proposition}[柯西--施瓦茨不等式]\label{prop:cs}
+对任意 $\bm{u},\bm{v}\in\R^d$，
+\[
+  \abs{\bm{u}\T\bm{v}}\le\norm{\bm{u}}\,\norm{\bm{v}},
+\]
+等号成立当且仅当 $\bm{u}$ 与 $\bm{v}$ 平行（其中之一为零向量时也算）。
+\end{proposition}
+
+\begin{proof}
+若 $\bm{v}=\bm{0}$ 则两边为 $0$。否则对任意 $t\in\R$ 考虑
+\[
+  0\le\norm{\bm{u}-t\bm{v}}^2=\norm{\bm{u}}^2-2t\,\bm{u}\T\bm{v}+t^2\norm{\bm{v}}^2 .
+\]
+右边是关于 $t$ 的二次函数，非负要求判别式非正：$4(\bm{u}\T\bm{v})^2-4\norm{\bm{u}}^2\norm{\bm{v}}^2\le0$，即结论。取 $t=\bm{u}\T\bm{v}/\norm{\bm{v}}^2$ 时等号成立等价于 $\bm{u}=t\bm{v}$。
+\end{proof}
+
+这个不等式在第 \ref{sec:gd} 节会被用来证明“负梯度方向是最陡下降方向”，请记住它。
+
+\begin{definition}[对称与正定]
+方阵 $\bm{A}\in\R^{d\times d}$ 称为对称 \eng{symmetric} 的，若 $\bm{A}\T=\bm{A}$。对称矩阵 $\bm{A}$ 称为
+\begin{itemize}
+  \item 半正定 \eng{positive semi-definite, PSD}，若 $\bm{v}\T\bm{A}\bm{v}\ge0$ 对一切 $\bm{v}\in\R^d$ 成立，记 $\bm{A}\succeq0$；
+  \item 正定 \eng{positive definite, PD}，若 $\bm{v}\T\bm{A}\bm{v}>0$ 对一切 $\bm{v}\ne\bm{0}$ 成立，记 $\bm{A}\succ0$。
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[谱定理]\label{thm:spectral}
+实对称矩阵 $\bm{A}\in\R^{d\times d}$ 可正交对角化：存在正交矩阵 $\bm{Q}$（$\bm{Q}\T\bm{Q}=\bm{I}$）与实对角矩阵 $\bm{\Lambda}=\diag(\lambda_1,\dots,\lambda_d)$，使
+\[
+  \bm{A}=\bm{Q}\bm{\Lambda}\bm{Q}\T=\sum_{i=1}^{d}\lambda_i\,\bm{q}_i\bm{q}_i\T,
+\]
+其中 $\bm{q}_i$ 是 $\bm{Q}$ 的第 $i$ 列，即属于特征值 $\lambda_i$ 的单位特征向量。此时 $\bm{A}\succeq0\iff$ 所有 $\lambda_i\ge0$；$\bm{A}\succ0\iff$ 所有 $\lambda_i>0$。
+\end{theorem}
+
+\begin{proposition}[$\bm{X}\T\bm{X}$ 的性质]\label{prop:xtx}
+对任意 $\bm{X}\in\R^{n\times d}$：
+\begin{enumerate}[label=(\arabic*)]
+  \item $\bm{X}\T\bm{X}$ 对称且半正定；
+  \item $\bm{X}\T\bm{X}\succ0\iff\rank(\bm{X})=d$（即 $\bm{X}$ 的列线性无关）；
+  \item 对任意 $\lambda>0$，$\bm{X}\T\bm{X}+\lambda\bm{I}_d\succ0$，因此\textbf{一定可逆}。
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) 对称性：$(\bm{X}\T\bm{X})\T=\bm{X}\T\bm{X}$。半正定性：对任意 $\bm{v}$，
+\[
+  \bm{v}\T\bm{X}\T\bm{X}\bm{v}=(\bm{X}\bm{v})\T(\bm{X}\bm{v})=\norm{\bm{X}\bm{v}}^2\ge0 .
+\]
+(2) 由上式，$\bm{v}\T\bm{X}\T\bm{X}\bm{v}=0\iff\bm{X}\bm{v}=\bm{0}$。故存在非零 $\bm{v}$ 使二次型为零 $\iff$ $\bm{X}$ 有非平凡零空间 $\iff\rank(\bm{X})<d$。
+(3) $\bm{v}\T(\bm{X}\T\bm{X}+\lambda\bm{I})\bm{v}=\norm{\bm{X}\bm{v}}^2+\lambda\norm{\bm{v}}^2\ge\lambda\norm{\bm{v}}^2>0$ 对 $\bm{v}\ne\bm{0}$ 成立。正定矩阵的特征值全为正，行列式为正，故可逆。
+\end{proof}
+
+第 (3) 条就是岭回归 \eng{ridge regression} 永远有唯一解的全部原因，见第 \ref{sec:reg} 节。
+
+\begin{theorem}[奇异值分解]\label{thm:svd}
+任意 $\bm{X}\in\R^{n\times d}$ 可写成 $\bm{X}=\bm{U}\bm{\Sigma}\bm{V}\T$，其中 $\bm{U}\in\R^{n\times r}$、$\bm{V}\in\R^{d\times r}$ 的列分别正交归一，$\bm{\Sigma}=\diag(\sigma_1,\dots,\sigma_r)$，$\sigma_1\ge\cdots\ge\sigma_r>0$，$r=\rank(\bm{X})$。称 $\sigma_i$ 为奇异值 \eng{singular value}。此时
+\[
+  \bm{X}\T\bm{X}=\bm{V}\bm{\Sigma}^2\bm{V}\T ,
+\]
+即 $\bm{X}\T\bm{X}$ 的特征值是 $\sigma_i^2$，特征向量是 $\bm{V}$ 的列。
+\end{theorem}
+
+\subsection{多元微积分与矩阵求导}
+
+\begin{definition}[梯度、Jacobi 矩阵、Hessian 矩阵]
+设 $f:\R^d\to\R$ 可微。梯度 \eng{gradient} 是把所有偏导数排成的\textbf{列向量}
+\[
+  \nabla f(\bm{w})=\frac{\partial f}{\partial\bm{w}}
+  =\begin{pmatrix}\dfrac{\partial f}{\partial w_1}\\[4pt]\vdots\\[4pt]\dfrac{\partial f}{\partial w_d}\end{pmatrix}\in\R^{d}.
+\]
+设 $\bm{g}:\R^d\to\R^m$，其 Jacobi 矩阵 \eng{Jacobian} 是 $m\times d$ 矩阵 $\big(\partial\bm{g}/\partial\bm{w}\big)_{ij}=\partial g_i/\partial w_j$。
+$f$ 的 Hessian 矩阵 \eng{Hessian} 是 $d\times d$ 二阶偏导数矩阵
+\[
+  \nabla^2f(\bm{w})=\bm{H},\qquad H_{ij}=\frac{\partial^2f}{\partial w_i\partial w_j}.
+\]
+若 $f$ 二阶连续可微，则 $\bm{H}$ 对称（混合偏导可交换）。
+\end{definition}
+
+下面四条求导公式在本讲义中被反复使用，务必会\textbf{自己按分量推出来}，不要死记。
+
+\begin{proposition}[四个基本求导公式]\label{prop:matcalc}
+设 $\bm{a},\bm{w}\in\R^d$，$\bm{A}\in\R^{d\times d}$ 对称，$\bm{X}\in\R^{n\times d}$，$\bm{y}\in\R^n$。则
+\begin{align}
+  \nabla_{\bm{w}}\big(\bm{a}\T\bm{w}\big)&=\bm{a}, \label{eq:mc1}\\
+  \nabla_{\bm{w}}\big(\bm{w}\T\bm{A}\bm{w}\big)&=2\bm{A}\bm{w}, \label{eq:mc2}\\
+  \nabla_{\bm{w}}\norm{\bm{w}}^2&=2\bm{w}, \label{eq:mc3}\\
+  \nabla_{\bm{w}}\norm{\bm{X}\bm{w}-\bm{y}}^2&=2\bm{X}\T(\bm{X}\bm{w}-\bm{y}). \label{eq:mc4}
+\end{align}
+\end{proposition}
+
+\begin{proof}
+\eqref{eq:mc1}：$\bm{a}\T\bm{w}=\sum_j a_jw_j$，故 $\partial(\bm{a}\T\bm{w})/\partial w_k=a_k$，排成列向量即 $\bm{a}$。
+
+\eqref{eq:mc2}：写成分量 $\bm{w}\T\bm{A}\bm{w}=\sum_{i}\sum_{j}A_{ij}w_iw_j$。对 $w_k$ 求偏导，注意 $w_k$ 出现在 $i=k$ 的项与 $j=k$ 的项中：
+\[
+  \frac{\partial}{\partial w_k}\sum_{i,j}A_{ij}w_iw_j
+  =\sum_{j}A_{kj}w_j+\sum_{i}A_{ik}w_i
+  =(\bm{A}\bm{w})_k+(\bm{A}\T\bm{w})_k
+  \overset{\bm{A}\T=\bm{A}}{=}2(\bm{A}\bm{w})_k .
+\]
+（注意：$i=j=k$ 的项 $A_{kk}w_k^2$ 求导得 $2A_{kk}w_k$，与上式一致，没有重复计数问题。）
+
+\eqref{eq:mc3}：取 $\bm{A}=\bm{I}$ 即得。
+
+\eqref{eq:mc4}：先展开
+\[
+  \norm{\bm{X}\bm{w}-\bm{y}}^2=(\bm{X}\bm{w}-\bm{y})\T(\bm{X}\bm{w}-\bm{y})
+  =\bm{w}\T\bm{X}\T\bm{X}\bm{w}-2\bm{y}\T\bm{X}\bm{w}+\bm{y}\T\bm{y}.
+\]
+三项分别用 \eqref{eq:mc2}（$\bm{A}=\bm{X}\T\bm{X}$ 对称）、\eqref{eq:mc1}（$\bm{a}\T=\bm{y}\T\bm{X}$ 即 $\bm{a}=\bm{X}\T\bm{y}$）与常数求导：
+\[
+  \nabla_{\bm{w}}=2\bm{X}\T\bm{X}\bm{w}-2\bm{X}\T\bm{y}+\bm{0}=2\bm{X}\T(\bm{X}\bm{w}-\bm{y}).\qedhere
+\]
+\end{proof}
+
+\begin{proposition}[链式法则的向量形式]\label{prop:chain}
+设 $\bm{z}=\bm{g}(\bm{w})\in\R^m$，$f=h(\bm{z})\in\R$。则
+\[
+  \nabla_{\bm{w}}f=\Big(\frac{\partial\bm{z}}{\partial\bm{w}}\Big)^{\!\mathsf{T}}\nabla_{\bm{z}}f,
+  \qquad\text{按分量即}\qquad
+  \frac{\partial f}{\partial w_k}=\sum_{i=1}^{m}\frac{\partial f}{\partial z_i}\frac{\partial z_i}{\partial w_k}.
+\]
+\end{proposition}
+
+\begin{remark}[这一条就是反向传播的全部内容]
+第 \ref{sec:nn} 节的反向传播 \eng{backpropagation} 没有任何新数学，它就是命题 \ref{prop:chain} 按网络层次\textbf{从后往前}反复使用一次。形状检查告诉你为什么必须转置：$\partial\bm{z}/\partial\bm{w}$ 是 $m\times d$，$\nabla_{\bm{z}}f$ 是 $m\times1$，要得到 $d\times1$ 的结果，只能是 $(m\times d)\T\cdot(m\times1)$。
+\end{remark}
+
+\begin{theorem}[Taylor 展开（二阶）]\label{thm:taylor}
+若 $f:\R^d\to\R$ 二阶连续可微，则对任意 $\bm{w},\bm{\delta}$ 存在 $t\in(0,1)$ 使
+\[
+  f(\bm{w}+\bm{\delta})=f(\bm{w})+\nabla f(\bm{w})\T\bm{\delta}
+  +\tfrac12\bm{\delta}\T\nabla^2f(\bm{w}+t\bm{\delta})\,\bm{\delta}.
+\]
+特别地 $f(\bm{w}+\bm{\delta})=f(\bm{w})+\nabla f(\bm{w})\T\bm{\delta}+O(\norm{\bm{\delta}}^2)$。
+\end{theorem}
+
+\begin{definition}[凸函数]\label{def:convex}
+集合 $C\subseteq\R^d$ 是凸的，若 $\bm{u},\bm{v}\in C\Rightarrow t\bm{u}+(1-t)\bm{v}\in C$ 对一切 $t\in[0,1]$。函数 $f:C\to\R$ 称为凸 \eng{convex} 的，若
+\[
+  f\big(t\bm{u}+(1-t)\bm{v}\big)\le t f(\bm{u})+(1-t)f(\bm{v}),\qquad\forall\,\bm{u},\bm{v}\in C,\ t\in[0,1].
+\]
+若 $f$ 可微，上式等价于\textbf{一阶条件}
+\begin{equation}\label{eq:convex1st}
+  f(\bm{v})\ge f(\bm{u})+\nabla f(\bm{u})\T(\bm{v}-\bm{u}),\qquad\forall\,\bm{u},\bm{v};
+\end{equation}
+若 $f$ 二阶可微，等价于\textbf{二阶条件} $\nabla^2f(\bm{w})\succeq0$ 对一切 $\bm{w}$ 成立。
+\end{definition}
+
+\begin{theorem}[凸函数的驻点即全局最小点]\label{thm:convexmin}
+设 $f$ 可微且凸。若 $\nabla f(\bm{w}^\star)=\bm{0}$，则 $\bm{w}^\star$ 是 $f$ 的全局最小点。
+\end{theorem}
+
+\begin{proof}
+把 $\nabla f(\bm{w}^\star)=\bm{0}$ 代入一阶条件 \eqref{eq:convex1st}（取 $\bm{u}=\bm{w}^\star$）：对任意 $\bm{v}$，
+$f(\bm{v})\ge f(\bm{w}^\star)+\bm{0}\T(\bm{v}-\bm{w}^\star)=f(\bm{w}^\star)$。
+\end{proof}
+
+\begin{remark}
+这条定理是全部“经典”机器学习（线性回归、岭回归、逻辑回归、支持向量机）之所以“安全”的原因：目标函数凸，所以\textbf{令梯度为零}就找到了全局最优，不必担心局部极小 \eng{local minimum}。神经网络的目标函数一般\textbf{非凸}，这是它与线性模型最本质的差别之一。
+\end{remark}
+
+\begin{definition}[$L$-光滑与 $\mu$-强凸]\label{def:smooth}
+可微函数 $f$ 称为 $L$-光滑 \eng{$L$-smooth}，若梯度 Lipschitz 连续：
+\[
+  \norm{\nabla f(\bm{u})-\nabla f(\bm{v})}\le L\norm{\bm{u}-\bm{v}},\qquad\forall\bm{u},\bm{v}.
+\]
+$f$ 称为 $\mu$-强凸 \eng{$\mu$-strongly convex}（$\mu>0$），若
+\begin{equation}\label{eq:sc}
+  f(\bm{v})\ge f(\bm{u})+\nabla f(\bm{u})\T(\bm{v}-\bm{u})+\tfrac{\mu}{2}\norm{\bm{v}-\bm{u}}^2,\qquad\forall\bm{u},\bm{v}.
+\end{equation}
+对二阶可微的 $f$：$L$-光滑 $\iff\nabla^2f\preceq L\bm{I}$，$\mu$-强凸 $\iff\nabla^2f\succeq\mu\bm{I}$。
+\end{definition}
+
+直觉：$L$ 是“曲率上界”，$\mu$ 是“曲率下界”。比值 $\kappa=L/\mu$ 叫条件数 \eng{condition number}，它决定梯度下降有多慢（第 \ref{sec:gd} 节）。
+
+\subsection{概率论的必备结论}
+
+\begin{definition}[期望、方差、协方差]
+对随机变量 $X$（密度 $p$）与函数 $g$，
+\[
+  \E[g(X)]=\int g(x)p(x)\,\dd x,\qquad
+  \Var(X)=\E\big[(X-\E X)^2\big]=\E[X^2]-(\E X)^2 .
+\]
+对随机向量 $\bm{X}\in\R^d$，协方差矩阵 $\Cov(\bm{X})=\E[(\bm{X}-\E\bm{X})(\bm{X}-\E\bm{X})\T]\succeq0$。
+期望是\textbf{线性}的：$\E[aX+bY]=a\E X+b\E Y$，无论 $X,Y$ 是否独立。方差不是线性的：$\Var(aX)=a^2\Var(X)$，且 $\Var(X+Y)=\Var X+\Var Y$ 只在 $\Cov(X,Y)=0$ 时成立。
+\end{definition}
+
+\begin{proposition}[偏差--方差型恒等式]\label{prop:bv-identity}
+设 $Z$ 是随机变量，$c$ 是常数，则
+\[
+  \E\big[(Z-c)^2\big]=\Var(Z)+\big(\E[Z]-c\big)^2 .
+\]
+\end{proposition}
+
+\begin{proof}
+记 $\mu=\E[Z]$。插入 $\mu$ 并展开：
+\[
+  \E[(Z-c)^2]=\E\big[\big((Z-\mu)+(\mu-c)\big)^2\big]
+  =\E[(Z-\mu)^2]+2(\mu-c)\underbrace{\E[Z-\mu]}_{=0}+(\mu-c)^2 .
+\]
+交叉项因 $\E[Z-\mu]=0$ 而消失，得结论。
+\end{proof}
+
+\begin{remark}
+这个三行的恒等式是第 \ref{sec:reg} 节偏差--方差分解 \eng{bias--variance decomposition} 的全部技术内容，也是最小化均方误差为什么得到条件期望（第 \ref{sec:supervised} 节）的原因。请把“插入均值、交叉项为零”这个套路记牢。
+\end{remark}
+
+\begin{definition}[条件概率、Bayes 公式、独立]
+$\Prob(A\mid B)=\Prob(A,B)/\Prob(B)$。由此得 Bayes 公式 \eng{Bayes' rule}
+\[
+  p(\theta\mid \D)=\frac{p(\D\mid\theta)\,p(\theta)}{p(\D)},\qquad p(\D)=\int p(\D\mid\theta)p(\theta)\,\dd\theta,
+\]
+其中 $p(\D\mid\theta)$ 称为似然 \eng{likelihood}，$p(\theta)$ 称为先验 \eng{prior}，$p(\theta\mid\D)$ 称为后验 \eng{posterior}。
+$X,Y$ 独立 \eng{independent} 指 $p(x,y)=p(x)p(y)$，此时 $\E[XY]=\E[X]\E[Y]$。
+样本“独立同分布” \eng{independent and identically distributed, i.i.d.} 是本课程贯穿始终的基本假设。
+\end{definition}
+
+\begin{proposition}[全期望公式/塔性质]\label{prop:tower}
+$\E[Y]=\E_{X}\big[\E[Y\mid X]\big]$，更一般地 $\E[g(X)Y]=\E_X\big[g(X)\E[Y\mid X]\big]$。
+\end{proposition}
+
+\begin{definition}[一维与多维高斯分布]
+$X\sim\mathcal{N}(\mu,\sigma^2)$ 指密度
+\[
+  p(x)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp\Big(-\frac{(x-\mu)^2}{2\sigma^2}\Big).
+\]
+$\bm{X}\sim\mathcal{N}(\bm{\mu},\bm{\Sigma})$ 指
+$p(\bm{x})=\big((2\pi)^d\det\bm{\Sigma}\big)^{-1/2}\exp\big(-\tfrac12(\bm{x}-\bm{\mu})\T\bm{\Sigma}^{-1}(\bm{x}-\bm{\mu})\big)$。
+\end{definition}
+
+\begin{definition}[Bernoulli 分布]
+$Y\sim\mathrm{Bernoulli}(p)$ 指 $Y\in\{0,1\}$ 且 $\Prob(Y=1)=p$。其概率质量函数可以写成一个统一的式子
+\begin{equation}\label{eq:bern}
+  \Prob(Y=y)=p^{y}(1-p)^{1-y},\qquad y\in\{0,1\},
+\end{equation}
+这个技巧（用指数把两种情形合并）在逻辑回归的推导里必不可少。
+\end{definition}
+
+\begin{definition}[最大似然估计]\label{def:mle}
+给定 i.i.d.\ 数据 $\D=\{z^{(i)}\}_{i=1}^n$ 与参数化模型 $p(z\mid\bm{\theta})$，似然与对数似然 \eng{log-likelihood} 为
+\[
+  L(\bm{\theta})=\prod_{i=1}^{n}p(z^{(i)}\mid\bm{\theta}),\qquad
+  \ell(\bm{\theta})=\log L(\bm{\theta})=\sum_{i=1}^{n}\log p(z^{(i)}\mid\bm{\theta}).
+\]
+最大似然估计 \eng{maximum likelihood estimation, MLE} 为 $\hat{\bm{\theta}}=\argmax_{\bm{\theta}}\ell(\bm{\theta})$。
+\end{definition}
+
+取对数的三个理由：乘积变求和，便于求导；数值上避免大量小数相乘下溢；$\log$ 单调递增，不改变最大值点。
+
+\begin{proposition}[Jensen 不等式与 KL 散度非负]\label{prop:kl}
+对凸函数 $\varphi$ 有 $\varphi(\E[X])\le\E[\varphi(X)]$。由此，对两个离散分布 $p,q$，
+\[
+  \KL(p\,\Vert\,q)=\sum_k p_k\log\frac{p_k}{q_k}\ \ge\ 0,
+\]
+等号成立当且仅当 $p=q$。
+\end{proposition}
+
+\begin{proof}
+取 $\varphi(t)=-\log t$（严格凸），令 $X=q_K/p_K$，其中 $K\sim p$：
+\[
+  \KL(p\Vert q)=\E_{K\sim p}\Big[-\log\frac{q_K}{p_K}\Big]
+  \ \ge\ -\log\E_{K\sim p}\Big[\frac{q_K}{p_K}\Big]
+  =-\log\sum_k p_k\frac{q_k}{p_k}=-\log 1=0 .
+\]
+由 $-\log$ 的严格凸性，等号要求 $q_K/p_K$ 几乎必然为常数，结合归一化得 $p=q$。
+\end{proof}
+
+这条命题解释了为什么交叉熵 \eng{cross-entropy} 损失的最小值点恰好是\textbf{真实的}条件概率（第 \ref{sec:loss} 节）。
+
+% =====================================================================
+\section{监督学习总览}\label{sec:supervised}
+% =====================================================================
+
+\subsection{问题设定}
+
+\begin{definition}[监督学习]\label{def:supervised}
+监督学习 \eng{supervised learning} 的设定包含以下要素：
+\begin{itemize}
+  \item 输入空间 $\mathcal{X}$（通常 $\R^d$）与输出空间 $\mathcal{Y}$；
+  \item 一个\textbf{未知}的联合分布 $p(\bm{x},y)$ 定义在 $\mathcal{X}\times\mathcal{Y}$ 上；
+  \item 训练集 \eng{training set} $\D=\{(\bm{x}^{(i)},y^{(i)})\}_{i=1}^{n}$，各样本 i.i.d.\ 地从 $p$ 抽取；
+  \item 假设空间 \eng{hypothesis space} $\Hyp$，即我们允许考虑的函数集合，例如全部线性函数 $\{\bm{x}\mapsto\bm{w}\T\bm{x}+b\}$，或者“某个固定结构的神经网络在所有参数取值下给出的函数”；
+  \item 损失函数 \eng{loss function} $\ell(\hat{y},y)\ge0$，衡量预测 $\hat y$ 与真值 $y$ 的差距。
+\end{itemize}
+目标是找到 $f\in\Hyp$ 使\textbf{泛化误差}（也叫期望风险 \eng{expected risk / true risk / generalization error}）
+\begin{equation}\label{eq:risk}
+  R(f)=\E_{(\bm{x},y)\sim p}\big[\ell(f(\bm{x}),y)\big]
+\end{equation}
+尽可能小。
+\end{definition}
+
+按 $\mathcal{Y}$ 的类型区分两大任务：
+\begin{itemize}
+  \item 回归 \eng{regression}：$\mathcal{Y}=\R$（或 $\R^m$）。例：由星系光谱预测红移；由探测器信号预测粒子能量。
+  \item 分类 \eng{classification}：$\mathcal{Y}=\{1,\dots,K\}$ 是有限离散集。$K=2$ 称二分类 \eng{binary classification}，例：把一个事件判为“信号” \eng{signal} 还是“本底” \eng{background}。
+\end{itemize}
+与之相对，无监督学习 \eng{unsupervised learning} 只有 $\bm{x}$ 没有标签 $y$（聚类、密度估计、降维），强化学习 \eng{reinforcement learning} 则通过与环境交互的奖励信号学习。本课程的主线以监督学习为主。
+
+\begin{remark}[核心困难]
+式 \eqref{eq:risk} 中的 $p$ 是\textbf{未知}的，因此 $R(f)$ 无法计算，更无法直接最小化。整个机器学习方法论就是围绕这一点展开的：\emph{用能算的量（训练集上的平均损失）代替不能算的量（期望风险），再想办法控制两者之差}。前半句是第 \ref{sec:loss} 节的经验风险最小化，后半句是第 \ref{sec:reg} 节的正则化与模型选择。
+\end{remark}
+
+\subsection{最优预测器：Bayes 预测器}
+
+在讨论算法之前，先问一个原则性问题：如果我们\textbf{知道} $p(\bm{x},y)$，而且 $\Hyp$ 包含一切可测函数，最好的预测器是什么？答案对理解“什么是不可避免的误差”至关重要。
+
+\begin{theorem}[平方损失下的最优预测器是条件期望]\label{thm:bayes-reg}
+设 $\ell(\hat y,y)=(\hat y-y)^2$。则在所有可测函数中，$R(f)=\E[(f(\bm{x})-y)^2]$ 的最小点为
+\[
+  f^\star(\bm{x})=\E[y\mid\bm{x}],
+\]
+且对任意 $f$ 有
+\begin{equation}\label{eq:excess-reg}
+  R(f)=\underbrace{\E\big[\Var(y\mid\bm{x})\big]}_{\text{不可约误差}}+\underbrace{\E\big[(f(\bm{x})-f^\star(\bm{x}))^2\big]}_{\ge0}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+用塔性质（命题 \ref{prop:tower}）把期望分成两层：
+\[
+  R(f)=\E_{\bm{x}}\Big[\underbrace{\E_{y}\big[(f(\bm{x})-y)^2\ \big|\ \bm{x}\big]}_{=:\,r(\bm{x})}\Big].
+\]
+固定 $\bm{x}$，则 $c=f(\bm{x})$ 是常数，对内层用命题 \ref{prop:bv-identity}（把 $Z$ 取为条件分布 $y\mid\bm{x}$）：
+\[
+  r(\bm{x})=\Var(y\mid\bm{x})+\big(\E[y\mid\bm{x}]-f(\bm{x})\big)^2 .
+\]
+第一项与 $f$ 无关；第二项非负，且对每个 $\bm{x}$ 独立地取 $f(\bm{x})=\E[y\mid\bm{x}]$ 时同时取到零。逐点最优即整体最优，取外层期望即得 \eqref{eq:excess-reg}。
+\end{proof}
+
+\begin{remark}[三个重要教训]
+\begin{enumerate}[label=(\arabic*)]
+  \item $\E[\Var(y\mid\bm{x})]$ 是\textbf{与模型无关}的误差下界，通常叫不可约误差 \eng{irreducible error} 或噪声 \eng{noise}。任何声称“误差可以降到零”的说法，若数据本身有噪声，就是错的。
+  \item 回归的目标不是“拟合数据点”，而是\textbf{估计条件均值函数} $\E[y\mid\bm{x}]$。这解释了为什么完美穿过所有训练点（插值）通常是坏事：那是在拟合噪声。
+  \item 由 \eqref{eq:excess-reg}，最小化平方损失等价于最小化 $f$ 与 $f^\star$ 的 $L^2(p)$ 距离，这给了“逼近论视角”：$\Hyp$ 越大，$\inf_{f\in\Hyp}\norm{f-f^\star}$ 越小。
+\end{enumerate}
+\end{remark}
+
+\begin{theorem}[0--1 损失下的最优分类器]\label{thm:bayes-cls}
+设 $\mathcal{Y}=\{1,\dots,K\}$，$\ell(\hat y,y)=\bm{1}[\hat y\ne y]$（预测错记 $1$，对记 $0$）。则最优分类器为
+\[
+  f^\star(\bm{x})=\argmax_{k}\ \Prob(y=k\mid\bm{x}),
+\]
+称 Bayes 分类器 \eng{Bayes classifier}，其风险 $R(f^\star)=\E_{\bm{x}}\big[1-\max_k\Prob(y=k\mid\bm{x})\big]$ 称 Bayes 错误率。
+\end{theorem}
+
+\begin{proof}
+同样先对 $y$ 取条件期望：给定 $\bm{x}$，若预测 $\hat y=k$，条件风险为
+\[
+  \E\big[\bm{1}[k\ne y]\mid\bm{x}\big]=\Prob(y\ne k\mid\bm{x})=1-\Prob(y=k\mid\bm{x}).
+\]
+要让它最小，就要让 $\Prob(y=k\mid\bm{x})$ 最大，即 $k=\argmax_k\Prob(y=k\mid\bm{x})$。逐点最优即整体最优。
+\end{proof}
+
+\begin{remark}
+两条定理形式不同，实质一致：\textbf{最优预测完全由条件分布 $p(y\mid\bm{x})$ 决定}。因此现代分类模型（逻辑回归、神经网络分类器）都不直接输出类别，而是先输出对 $p(y\mid\bm{x})$ 的估计，再取 $\argmax$ 或与阈值比较。这也是为什么第 \ref{sec:logistic} 节要费力构造一个输出落在 $(0,1)$ 的模型。
+\end{remark}
+
+\subsection{泛化：训练误差与测试误差}
+
+\begin{definition}[数据集划分]\label{def:split}
+把手上的数据分成三份：
+\begin{itemize}
+  \item 训练集 \eng{training set}：用来拟合参数（做梯度下降）；
+  \item 验证集 \eng{validation set}：用来选择超参数 \eng{hyperparameter}（学习率、正则化强度、网络层数等）与决定何时停止训练；
+  \item 测试集 \eng{test set}：\textbf{只在最后用一次}，用来报告最终性能。
+\end{itemize}
+\end{definition}
+
+\begin{remark}[实验方法论上的警告]
+如果反复用测试集来挑模型，测试集就变成了另一个验证集，报告出来的性能会系统性偏乐观——这在数值上等价于物理实验里“看着结果调切割条件” \eng{cut tuning on the signal region}。避免的办法就是从一开始把测试集封存起来。
+\end{remark}
+
+一个典型的学习曲线定性行为：随着模型容量 \eng{capacity} 增大，训练误差单调下降，测试误差先下降后上升。左侧称欠拟合 \eng{underfitting}（模型太简单，偏差大），右侧称过拟合 \eng{overfitting}（模型太复杂，方差大）。第 \ref{sec:reg} 节将把这句定性描述变成一个精确的分解式。
+
+\subsection{整条流水线}
+
+监督学习的实际流程可以画成一条链，本讲义各节正好对应其中一环：
+\[
+  \underbrace{\text{数据}}_{\S\ref{sec:supervised}}
+  \longrightarrow \underbrace{\text{模型}\ f_{\bm{\theta}}}_{\S\ref{sec:linreg},\ref{sec:logistic},\ref{sec:nn}}
+  \longrightarrow \underbrace{\text{损失}\ \Loss(\bm{\theta})}_{\S\ref{sec:loss}}
+  \longrightarrow \underbrace{\text{优化}\ \nabla_{\bm{\theta}}\Loss}_{\S\ref{sec:gd}}
+  \longrightarrow \underbrace{\text{评估与正则化}}_{\S\ref{sec:reg}} .
+\]
+遇到任何新方法（卷积网络、随机森林、Transformer），都可以问：它换了这条链上的哪一环？绝大多数情况下，只是换了“模型”那一环，其余不变。这就是为什么把前四环彻底学清楚，后面的内容会变得非常轻松。
+
+% =====================================================================
+\section{损失函数与经验风险最小化}\label{sec:loss}
+% =====================================================================
+
+\subsection{经验风险最小化}
+
+期望风险 \eqref{eq:risk} 不可计算，但大数定律告诉我们它可以被样本平均逼近。
+
+\begin{definition}[经验风险与 ERM]\label{def:erm}
+给定训练集 $\D$ 与参数化模型 $f_{\bm{\theta}}$，经验风险 \eng{empirical risk} 定义为训练集上的平均损失
+\begin{equation}\label{eq:erisk}
+  \hat R(\bm{\theta})=\Loss(\bm{\theta})=\frac1n\sum_{i=1}^{n}\ell\big(f_{\bm{\theta}}(\bm{x}^{(i)}),\,y^{(i)}\big).
+\end{equation}
+经验风险最小化 \eng{empirical risk minimization, ERM} 指求解
+\[
+  \hat{\bm{\theta}}=\argmin_{\bm{\theta}}\ \Loss(\bm{\theta}).
+\]
+\end{definition}
+
+\begin{proposition}[经验风险是期望风险的无偏估计]\label{prop:unbiased}
+对\textbf{固定}的 $f$（不依赖于 $\D$），$\E_{\D}[\hat R(f)]=R(f)$，且
+\[
+  \Var_{\D}\big[\hat R(f)\big]=\frac{1}{n}\Var_{(\bm{x},y)}\big[\ell(f(\bm{x}),y)\big]\ \xrightarrow[n\to\infty]{}\ 0 .
+\]
+\end{proposition}
+
+\begin{proof}
+由期望线性性，$\E_\D[\hat R]=\frac1n\sum_i\E[\ell(f(\bm{x}^{(i)}),y^{(i)})]=\frac1n\cdot n\,R(f)=R(f)$。
+由 i.i.d.\ 与独立随机变量方差可加，$\Var[\frac1n\sum_i\xi_i]=\frac{1}{n^2}\cdot n\Var[\xi]=\Var[\xi]/n$，其中 $\xi_i=\ell(f(\bm{x}^{(i)}),y^{(i)})$。
+\end{proof}
+
+\begin{remark}[ERM 的陷阱：为什么训练误差是乐观的]\label{rmk:erm-trap}
+命题 \ref{prop:unbiased} 的前提“$f$ 固定、不依赖于 $\D$”至关重要。而 ERM 选出的 $\hat{\bm{\theta}}$ 恰恰是\textbf{用同一批数据挑出来的}，它专门挑那些在这批数据上碰巧表现好的参数。于是
+\[
+  \E_\D\big[\hat R(\hat{\bm{\theta}}_\D)\big]\ \le\ \E_\D\big[R(\hat{\bm{\theta}}_\D)\big],
+\]
+即训练误差系统性地低于泛化误差，两者之差叫泛化间隙 \eng{generalization gap}。物理类比：用同一组数据既拟合参数又估计 $\chi^2$ 的自由度时必须减去参数个数，道理完全一样。$\Hyp$ 越大，这种“挑选偏差”越严重——这就是过拟合的机制。
+\end{remark}
+
+\subsection{常见损失函数}
+
+\begin{definition}[回归常用损失]\label{def:reg-loss}
+\begin{align*}
+  &\text{平方损失 \eng{squared loss}:} && \ell(\hat y,y)=(\hat y-y)^2 ,\\
+  &\text{绝对损失 \eng{absolute loss}:} && \ell(\hat y,y)=\abs{\hat y-y} ,\\
+  &\text{Huber 损失:} && \ell_\delta(\hat y,y)=
+  \begin{cases}
+    \tfrac12(\hat y-y)^2, & \abs{\hat y-y}\le\delta,\\[2pt]
+    \delta\big(\abs{\hat y-y}-\tfrac{\delta}{2}\big), & \text{否则}.
+  \end{cases}
+\end{align*}
+相应的经验风险分别叫均方误差 \eng{mean squared error, MSE} 与平均绝对误差 \eng{mean absolute error, MAE}。
+\end{definition}
+
+三者的取舍：平方损失处处可微、导数简单（线性），但对离群点 \eng{outlier} 敏感（误差被平方放大）；绝对损失稳健 \eng{robust}，但在 $0$ 点不可微；Huber 是二者的折中，小误差处像平方、大误差处像绝对值，并且处处可微。
+
+\begin{proposition}[$\ell_1$ 损失的最优预测是条件中位数]
+在所有可测函数中，$\E[\abs{f(\bm{x})-y}]$ 的最小点是条件中位数 $f^\star(\bm{x})=\mathrm{median}(y\mid\bm{x})$。
+\end{proposition}
+
+\begin{proof}[证明思路]
+固定 $\bm{x}$，令 $g(c)=\E[\abs{y-c}\mid\bm{x}]$。对 $c$ 求导（可交换求导与积分）：
+\[
+  g'(c)=\E\big[\sgn(c-y)\mid\bm{x}\big]=\Prob(y<c\mid\bm{x})-\Prob(y>c\mid\bm{x}).
+\]
+令其为零得 $\Prob(y<c\mid\bm{x})=\Prob(y>c\mid\bm{x})=1/2$，即 $c$ 是条件中位数。$g$ 是凸函数，故驻点即最小点。
+\end{proof}
+
+\begin{remark}
+把这条与定理 \ref{thm:bayes-reg} 并排看：\textbf{换损失函数就是在换你要估计的统计量}。用 MSE 得到均值，用 MAE 得到中位数，用分位数损失 \eng{quantile loss} 得到分位数。所以“该用哪个损失”不是审美问题，而是“你想估计什么”的问题。
+\end{remark}
+
+\begin{definition}[分类常用损失]\label{def:cls-loss}
+设二分类标签 $y\in\{0,1\}$，模型输出概率估计 $\hat p=f_{\bm{\theta}}(\bm{x})\in(0,1)$。
+\begin{align}
+  &\text{0--1 损失:} && \ell(\hat y,y)=\bm{1}[\hat y\ne y];\\
+  &\text{二元交叉熵 \eng{binary cross-entropy, BCE}:} && \ell(\hat p,y)=-\big[y\log\hat p+(1-y)\log(1-\hat p)\big];\label{eq:bce}\\
+  &\text{多类交叉熵:} && \ell(\hat{\bm{p}},y)=-\sum_{k=1}^{K}\bm{1}[y=k]\log\hat p_k=-\log \hat p_y;\label{eq:ce}\\
+  &\text{合页损失 \eng{hinge loss}}\ (y\in\{-1,+1\}): && \ell(s,y)=\max(0,\,1-ys),\ \ s=\bm{w}\T\bm{x}+b .
+\end{align}
+\end{definition}
+
+0--1 损失是我们\textbf{真正关心}的（错误率），但它对参数的梯度几乎处处为零、在决策边界处不连续，无法做梯度下降。因此实践中最小化一个可微的\textbf{代理损失} \eng{surrogate loss}，交叉熵与合页损失都是这样的代理。
+
+\begin{theorem}[交叉熵的最小值点是真实条件概率]\label{thm:ce-min}
+固定 $\bm{x}$，设真实条件分布为 $\bm{p}=(p_1,\dots,p_K)$，模型输出任意概率向量 $\bm{q}$。则期望交叉熵
+\[
+  H(\bm{p},\bm{q})=-\sum_{k}p_k\log q_k
+\]
+在 $\bm{q}=\bm{p}$ 处取唯一最小值，且
+\begin{equation}\label{eq:ce-decomp}
+  H(\bm{p},\bm{q})=\underbrace{-\sum_k p_k\log p_k}_{H(\bm{p}),\ \text{熵，与模型无关}}+\underbrace{\KL(\bm{p}\Vert\bm{q})}_{\ge0}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+直接计算：
+\[
+  \KL(\bm{p}\Vert\bm{q})=\sum_k p_k\log\frac{p_k}{q_k}
+  =\sum_k p_k\log p_k-\sum_k p_k\log q_k=-H(\bm{p})+H(\bm{p},\bm{q}),
+\]
+移项即 \eqref{eq:ce-decomp}。由命题 \ref{prop:kl}，$\KL\ge0$ 且仅在 $\bm{q}=\bm{p}$ 时为零；$H(\bm{p})$ 不含 $\bm{q}$。故 $H(\bm{p},\bm{q})\ge H(\bm{p})$，等号仅在 $\bm{q}=\bm{p}$。
+\end{proof}
+
+\begin{remark}
+定理 \ref{thm:ce-min} 与定理 \ref{thm:bayes-reg} 是一对：平方损失把你推向条件均值，交叉熵把你推向条件概率分布本身。加上定理 \ref{thm:bayes-cls}（最优分类由条件概率的 $\argmax$ 给出），就完整解释了“训练时最小化交叉熵、预测时取 $\argmax$”这套标准做法的合理性。
+\end{remark}
+
+\subsection{ERM 与最大似然的等价性}
+
+这一小节非常重要：它说明损失函数不是随便拍脑袋定的，而是由\textbf{对噪声的概率假设}唯一决定的。这对物理学生尤其亲切——它就是“最小二乘拟合 $\Leftrightarrow$ 假设高斯误差”这句熟话的精确版本。
+
+\begin{theorem}[高斯噪声 $\Longrightarrow$ 平方损失]\label{thm:gauss-mse}
+假设数据由
+\[
+  y^{(i)}=f_{\bm{\theta}}(\bm{x}^{(i)})+\varepsilon^{(i)},\qquad
+  \varepsilon^{(i)}\overset{\text{i.i.d.}}{\sim}\mathcal{N}(0,\sigma^2)
+\]
+产生，$\sigma^2$ 已知。则最大似然估计等价于最小化均方误差：
+\[
+  \argmax_{\bm{\theta}}\ \ell(\bm{\theta})=\argmin_{\bm{\theta}}\ \frac1n\sum_{i=1}^n\big(f_{\bm{\theta}}(\bm{x}^{(i)})-y^{(i)}\big)^2 .
+\]
+\end{theorem}
+
+\begin{proof}
+由假设，$y^{(i)}\mid\bm{x}^{(i)}\sim\mathcal{N}(f_{\bm{\theta}}(\bm{x}^{(i)}),\sigma^2)$，故条件似然为
+\[
+  L(\bm{\theta})=\prod_{i=1}^{n}\frac{1}{\sqrt{2\pi\sigma^2}}
+  \exp\Big(-\frac{\big(y^{(i)}-f_{\bm{\theta}}(\bm{x}^{(i)})\big)^2}{2\sigma^2}\Big).
+\]
+取对数：
+\[
+  \ell(\bm{\theta})=\sum_{i=1}^n\Big[-\tfrac12\log(2\pi\sigma^2)-\frac{\big(y^{(i)}-f_{\bm{\theta}}(\bm{x}^{(i)})\big)^2}{2\sigma^2}\Big]
+  =-\frac{n}{2}\log(2\pi\sigma^2)-\frac{1}{2\sigma^2}\sum_{i=1}^n\big(y^{(i)}-f_{\bm{\theta}}(\bm{x}^{(i)})\big)^2 .
+\]
+第一项与 $\bm{\theta}$ 无关，第二项前面是负的常数因子 $-1/(2\sigma^2)$。因此最大化 $\ell$ 等价于最小化 $\sum_i(y^{(i)}-f_{\bm{\theta}}(\bm{x}^{(i)}))^2$，再乘以正常数 $1/n$ 不改变最小点。
+\end{proof}
+
+\begin{corollary}[$\sigma^2$ 的 MLE]
+若同时对 $\sigma^2$ 最大化，令 $\partial\ell/\partial\sigma^2=0$：
+\[
+  \frac{\partial\ell}{\partial\sigma^2}=-\frac{n}{2\sigma^2}+\frac{1}{2\sigma^4}\sum_i r_i^2=0
+  \ \Longrightarrow\ \hat\sigma^2=\frac1n\sum_{i=1}^n r_i^2,\qquad r_i=y^{(i)}-f_{\hat{\bm{\theta}}}(\bm{x}^{(i)}),
+\]
+即噪声方差的 MLE 就是残差 \eng{residual} 的均方。（注意它是有偏的，无偏估计需除以 $n-d$。）
+\end{corollary}
+
+\begin{theorem}[Bernoulli 噪声 $\Longrightarrow$ 交叉熵]\label{thm:bern-ce}
+设 $y^{(i)}\in\{0,1\}$ 且 $y^{(i)}\mid\bm{x}^{(i)}\sim\mathrm{Bernoulli}\big(f_{\bm{\theta}}(\bm{x}^{(i)})\big)$，$f_{\bm{\theta}}\in(0,1)$。记 $\hat p^{(i)}=f_{\bm{\theta}}(\bm{x}^{(i)})$。则
+\[
+  -\frac1n\ell(\bm{\theta})=\frac1n\sum_{i=1}^{n}
+  \Big[-y^{(i)}\log\hat p^{(i)}-(1-y^{(i)})\log(1-\hat p^{(i)})\Big],
+\]
+即最大似然等价于最小化二元交叉熵 \eqref{eq:bce}。
+\end{theorem}
+
+\begin{proof}
+用式 \eqref{eq:bern} 的统一写法：
+\[
+  L(\bm{\theta})=\prod_{i=1}^{n}\big(\hat p^{(i)}\big)^{y^{(i)}}\big(1-\hat p^{(i)}\big)^{1-y^{(i)}} .
+\]
+取对数，指数变成系数：
+\[
+  \ell(\bm{\theta})=\sum_{i=1}^{n}\Big[y^{(i)}\log\hat p^{(i)}+(1-y^{(i)})\log(1-\hat p^{(i)})\Big].
+\]
+乘 $-1/n$ 即得结论；最大化 $\ell$ 等价于最小化 $-\ell/n$。
+\end{proof}
+
+\begin{remark}[记忆口诀]
+\emph{连续目标 + 高斯噪声 $\to$ 均方误差；二值目标 + Bernoulli $\to$ 交叉熵；计数目标 + Poisson $\to$ Poisson 负对数似然。}损失函数是噪声模型的对数，负号来自“最大化似然 = 最小化负对数似然 \eng{negative log-likelihood, NLL}”。课堂上老师说 “we minimize the NLL” 时，指的就是这件事。
+\end{remark}
+
+% =====================================================================
+\section{梯度下降}\label{sec:gd}
+% =====================================================================
+
+现在有了目标函数 $\Loss(\bm{\theta})$，问题变成：如何求它的最小点？除线性回归外，几乎都没有闭式解 \eng{closed-form solution}，必须用迭代的数值优化。梯度下降是全部深度学习的计算核心。
+
+\subsection{为什么是负梯度方向}
+
+\begin{definition}[方向导数]
+设 $f$ 可微，$\bm{u}$ 是单位向量（$\norm{\bm{u}}=1$）。$f$ 在 $\bm{w}$ 处沿 $\bm{u}$ 的方向导数 \eng{directional derivative} 为
+\[
+  D_{\bm{u}}f(\bm{w})=\lim_{h\to0^+}\frac{f(\bm{w}+h\bm{u})-f(\bm{w})}{h}=\nabla f(\bm{w})\T\bm{u},
+\]
+最后一步由 Taylor 展开（定理 \ref{thm:taylor}）：$f(\bm{w}+h\bm{u})=f(\bm{w})+h\nabla f(\bm{w})\T\bm{u}+O(h^2)$，两边减 $f(\bm{w})$ 除以 $h$ 再令 $h\to0$。
+\end{definition}
+
+\begin{theorem}[负梯度是最陡下降方向]\label{thm:steepest}
+设 $\nabla f(\bm{w})\ne\bm{0}$。则在所有单位向量中，
+\[
+  \argmin_{\norm{\bm{u}}=1}\ D_{\bm{u}}f(\bm{w})=-\frac{\nabla f(\bm{w})}{\norm{\nabla f(\bm{w})}},
+  \qquad\text{且此时}\quad D_{\bm{u}}f(\bm{w})=-\norm{\nabla f(\bm{w})} .
+\]
+\end{theorem}
+
+\begin{proof}
+由柯西--施瓦茨不等式（命题 \ref{prop:cs}），对任意 $\norm{\bm{u}}=1$，
+\[
+  D_{\bm{u}}f=\nabla f\T\bm{u}\ \ge\ -\abs{\nabla f\T\bm{u}}\ \ge\ -\norm{\nabla f}\norm{\bm{u}}=-\norm{\nabla f} .
+\]
+故 $-\norm{\nabla f}$ 是下界。取 $\bm{u}=-\nabla f/\norm{\nabla f}$（它确实是单位向量）代入：
+\[
+  \nabla f\T\bm{u}=-\frac{\nabla f\T\nabla f}{\norm{\nabla f}}=-\frac{\norm{\nabla f}^2}{\norm{\nabla f}}=-\norm{\nabla f},
+\]
+下界被达到，故它是最小点。等号条件（$\bm{u}$ 与 $\nabla f$ 反向平行）说明最小点唯一。
+\end{proof}
+
+\begin{remark}
+“最陡”是相对于 $\ell_2$ 范数而言的：如果把“步长为 1”的含义换成别的范数（例如 $\ell_1$ 或由某个正定矩阵定义的范数），最陡方向就不是 $-\nabla f$ 了。这正是自然梯度 \eng{natural gradient} 与 Newton 法的出发点：Newton 方向 $-\bm{H}^{-1}\nabla f$ 是在“由 Hessian 定义的度规”下的最陡方向。物理上的类比是：梯度是余切向量（$1$-形式），要变成一个可以加到 $\bm{w}$ 上的向量必须用一个度规去“抬指标”，而朴素梯度下降隐含地用了欧氏度规 $\delta_{ij}$。
+\end{remark}
+
+\begin{definition}[梯度下降]\label{def:gd}
+选定初值 $\bm{w}_0$ 与学习率 \eng{learning rate / step size} $\eta>0$，迭代
+\begin{equation}\label{eq:gd}
+  \boxed{\ \bm{w}_{k+1}=\bm{w}_k-\eta\,\nabla \Loss(\bm{w}_k)\ }\qquad k=0,1,2,\dots
+\end{equation}
+\end{definition}
+
+注意 \eqref{eq:gd} 中我们\textbf{没有}对梯度做归一化，因此步子的长度是 $\eta\norm{\nabla\Loss}$：靠近最小点时梯度变小、步子自动变小，这是好事。
+
+\subsection{下降引理与学习率的选择}
+
+下面这条引理是整个优化理论的地基：它把“函数值下降多少”与“梯度多大”定量联系起来，并直接给出学习率的安全范围。
+
+\begin{lemma}[下降引理 \eng{descent lemma}]\label{lem:descent}
+若 $f$ 是 $L$-光滑的（定义 \ref{def:smooth}），则对任意 $\bm{u},\bm{v}$，
+\begin{equation}\label{eq:descentlemma}
+  f(\bm{v})\ \le\ f(\bm{u})+\nabla f(\bm{u})\T(\bm{v}-\bm{u})+\frac{L}{2}\norm{\bm{v}-\bm{u}}^2 .
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+令 $\bm{\delta}=\bm{v}-\bm{u}$，$g(t)=f(\bm{u}+t\bm{\delta})$，$t\in[0,1]$。则 $g'(t)=\nabla f(\bm{u}+t\bm{\delta})\T\bm{\delta}$，且由微积分基本定理
+\[
+  f(\bm{v})-f(\bm{u})=g(1)-g(0)=\int_0^1 g'(t)\,\dd t=\int_0^1\nabla f(\bm{u}+t\bm{\delta})\T\bm{\delta}\,\dd t .
+\]
+减去 $\nabla f(\bm{u})\T\bm{\delta}=\int_0^1\nabla f(\bm{u})\T\bm{\delta}\,\dd t$，
+\[
+  f(\bm{v})-f(\bm{u})-\nabla f(\bm{u})\T\bm{\delta}
+  =\int_0^1\big[\nabla f(\bm{u}+t\bm{\delta})-\nabla f(\bm{u})\big]\T\bm{\delta}\,\dd t .
+\]
+对被积函数用柯西--施瓦茨与 $L$-光滑性：
+\[
+  \big[\nabla f(\bm{u}+t\bm{\delta})-\nabla f(\bm{u})\big]\T\bm{\delta}
+  \le\norm{\nabla f(\bm{u}+t\bm{\delta})-\nabla f(\bm{u})}\norm{\bm{\delta}}
+  \le L\norm{t\bm{\delta}}\norm{\bm{\delta}}=Lt\norm{\bm{\delta}}^2 .
+\]
+积分得 $\int_0^1 Lt\norm{\bm{\delta}}^2\dd t=\tfrac{L}{2}\norm{\bm{\delta}}^2$，即 \eqref{eq:descentlemma}。
+\end{proof}
+
+\begin{theorem}[一步下降量]\label{thm:onestep}
+设 $f$ 是 $L$-光滑的，按 \eqref{eq:gd} 迭代。则
+\begin{equation}\label{eq:onestep}
+  f(\bm{w}_{k+1})\ \le\ f(\bm{w}_k)-\eta\Big(1-\frac{L\eta}{2}\Big)\norm{\nabla f(\bm{w}_k)}^2 .
+\end{equation}
+特别地：
+\begin{enumerate}[label=(\arabic*)]
+  \item 若 $0<\eta<2/L$，则括号内为正，函数值\textbf{严格下降}（除非梯度为零）；
+  \item 取 $\eta=1/L$ 得最优的形式 $f(\bm{w}_{k+1})\le f(\bm{w}_k)-\frac{1}{2L}\norm{\nabla f(\bm{w}_k)}^2$；
+  \item 若 $\eta>2/L$，上述保证失效，实际中表现为损失震荡或发散。
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+在 \eqref{eq:descentlemma} 中取 $\bm{u}=\bm{w}_k$，$\bm{v}=\bm{w}_{k+1}=\bm{w}_k-\eta\nabla f(\bm{w}_k)$，于是 $\bm{v}-\bm{u}=-\eta\nabla f(\bm{w}_k)$：
+\[
+  f(\bm{w}_{k+1})\le f(\bm{w}_k)+\nabla f(\bm{w}_k)\T\big(-\eta\nabla f(\bm{w}_k)\big)+\frac{L}{2}\norm{\eta\nabla f(\bm{w}_k)}^2
+  =f(\bm{w}_k)-\eta\norm{\nabla f_k}^2+\frac{L\eta^2}{2}\norm{\nabla f_k}^2 ,
+\]
+提取公因子 $\eta\norm{\nabla f_k}^2$ 即 \eqref{eq:onestep}。第 (2) 条由 $\eta(1-L\eta/2)$ 在 $\eta=1/L$ 处取最大值 $1/(2L)$ 得到。
+\end{proof}
+
+\begin{remark}[实践含义]
+定理 \ref{thm:onestep} 是“学习率必须与曲率匹配”的严格表述：$\eta$ 的上限由\textbf{最大曲率} $L$ 决定。这也解释了两个常见现象：训练损失曲线突然变成上翘或 NaN，几乎总是 $\eta$ 太大；而 $\eta$ 太小则每步下降量正比于 $\eta$，训练慢得没有必要。
+\end{remark}
+
+\subsection{凸情形的收敛速率}
+
+\begin{theorem}[凸 + $L$-光滑：$O(1/K)$ 速率]\label{thm:gd-convex}
+设 $f$ 凸、$L$-光滑、有最小点 $\bm{w}^\star$。取 $\eta=1/L$，则对任意 $K\ge1$
+\[
+  f(\bm{w}_K)-f(\bm{w}^\star)\ \le\ \frac{L\norm{\bm{w}_0-\bm{w}^\star}^2}{2K} .
+\]
+\end{theorem}
+
+\begin{proof}
+记 $\Delta_k=f(\bm{w}_k)-f(\bm{w}^\star)\ge0$，$\bm{g}_k=\nabla f(\bm{w}_k)$。
+
+\textbf{第一步（下降）：}由定理 \ref{thm:onestep} 取 $\eta=1/L$，
+\begin{equation}\label{eq:pf1}
+  \Delta_{k+1}\le\Delta_k-\frac{1}{2L}\norm{\bm{g}_k}^2
+  \quad\Longleftrightarrow\quad
+  \frac{1}{L^2}\norm{\bm{g}_k}^2\le\frac{2}{L}\big(\Delta_k-\Delta_{k+1}\big).
+\end{equation}
+
+\textbf{第二步（距离递推）：}展开
+\[
+  \norm{\bm{w}_{k+1}-\bm{w}^\star}^2=\norm{\bm{w}_k-\tfrac1L\bm{g}_k-\bm{w}^\star}^2
+  =\norm{\bm{w}_k-\bm{w}^\star}^2-\frac{2}{L}\bm{g}_k\T(\bm{w}_k-\bm{w}^\star)+\frac{1}{L^2}\norm{\bm{g}_k}^2 .
+\]
+由凸性一阶条件 \eqref{eq:convex1st}（取 $\bm{u}=\bm{w}_k,\bm{v}=\bm{w}^\star$）：$f(\bm{w}^\star)\ge f(\bm{w}_k)+\bm{g}_k\T(\bm{w}^\star-\bm{w}_k)$，即
+\[
+  \bm{g}_k\T(\bm{w}_k-\bm{w}^\star)\ \ge\ f(\bm{w}_k)-f(\bm{w}^\star)=\Delta_k .
+\]
+代入上式（注意 $-2/L<0$，不等号方向）：
+\[
+  \norm{\bm{w}_{k+1}-\bm{w}^\star}^2\le\norm{\bm{w}_k-\bm{w}^\star}^2-\frac{2}{L}\Delta_k+\frac{1}{L^2}\norm{\bm{g}_k}^2 .
+\]
+
+\textbf{第三步（代入并望远镜求和）：}用 \eqref{eq:pf1} 替换最后一项，
+\[
+  \norm{\bm{w}_{k+1}-\bm{w}^\star}^2\le\norm{\bm{w}_k-\bm{w}^\star}^2-\frac{2}{L}\Delta_k+\frac{2}{L}(\Delta_k-\Delta_{k+1})
+  =\norm{\bm{w}_k-\bm{w}^\star}^2-\frac{2}{L}\Delta_{k+1}.
+\]
+即 $\frac{2}{L}\Delta_{k+1}\le\norm{\bm{w}_k-\bm{w}^\star}^2-\norm{\bm{w}_{k+1}-\bm{w}^\star}^2$。对 $k=0,\dots,K-1$ 求和，右端望远镜相消：
+\[
+  \frac{2}{L}\sum_{k=1}^{K}\Delta_k\ \le\ \norm{\bm{w}_0-\bm{w}^\star}^2-\norm{\bm{w}_K-\bm{w}^\star}^2\ \le\ \norm{\bm{w}_0-\bm{w}^\star}^2 .
+\]
+由 \eqref{eq:pf1}，$\{\Delta_k\}$ 单调不增，故 $K\Delta_K\le\sum_{k=1}^K\Delta_k\le\frac{L}{2}\norm{\bm{w}_0-\bm{w}^\star}^2$，整理即得结论。
+\end{proof}
+
+\begin{theorem}[强凸：线性（几何）收敛]\label{thm:gd-sc}
+设 $f$ 是 $\mu$-强凸且 $L$-光滑，$\eta=1/L$。则
+\[
+  f(\bm{w}_K)-f(\bm{w}^\star)\ \le\ \Big(1-\frac{\mu}{L}\Big)^{K}\big(f(\bm{w}_0)-f(\bm{w}^\star)\big).
+\]
+\end{theorem}
+
+\begin{proof}
+先证 Polyak--Łojasiewicz 不等式：对 $\mu$-强凸的 $f$，
+\begin{equation}\label{eq:pl}
+  \norm{\nabla f(\bm{w})}^2\ \ge\ 2\mu\big(f(\bm{w})-f(\bm{w}^\star)\big).
+\end{equation}
+事实上，在 \eqref{eq:sc} 中固定 $\bm{u}=\bm{w}$ 并对右端关于 $\bm{v}$ 求最小值。右端是关于 $\bm{v}$ 的二次函数，其梯度 $\nabla f(\bm{w})+\mu(\bm{v}-\bm{w})=\bm{0}$ 给出 $\bm{v}^\dagger=\bm{w}-\nabla f(\bm{w})/\mu$，代回得右端最小值
+\[
+  f(\bm{w})-\frac{\norm{\nabla f(\bm{w})}^2}{\mu}+\frac{\mu}{2}\frac{\norm{\nabla f(\bm{w})}^2}{\mu^2}
+  =f(\bm{w})-\frac{\norm{\nabla f(\bm{w})}^2}{2\mu}.
+\]
+由于 \eqref{eq:sc} 对一切 $\bm{v}$ 成立，特别地取 $\bm{v}=\bm{w}^\star$ 有 $f(\bm{w}^\star)\ge$ 右端最小值，即 \eqref{eq:pl}。
+
+再把 \eqref{eq:pl} 代入定理 \ref{thm:onestep}(2)：
+\[
+  \Delta_{k+1}\le\Delta_k-\frac{1}{2L}\norm{\nabla f(\bm{w}_k)}^2
+  \le\Delta_k-\frac{2\mu}{2L}\Delta_k=\Big(1-\frac{\mu}{L}\Big)\Delta_k .
+\]
+递推 $K$ 次即得结论。（注意 $\mu\le L$ 保证 $0\le1-\mu/L<1$。）
+\end{proof}
+
+\begin{remark}[条件数决定速度]
+定理 \ref{thm:gd-sc} 中的收敛因子是 $1-1/\kappa$，$\kappa=L/\mu$。要把误差降到 $\epsilon$，需要
+$K\approx\kappa\log(\Delta_0/\epsilon)$ 步。$\kappa$ 大（“峡谷型”地形）时梯度下降极慢：它在陡峭方向来回震荡，在平缓方向前进极慢。这就是特征标准化 \eng{feature standardization}、批归一化 \eng{batch normalization}、动量 \eng{momentum} 与 Adam 之所以有效的根本原因——它们都在实质上降低有效条件数。
+\end{remark}
+
+\subsection{二次函数：把一切算到底}
+
+对二次目标函数可以\textbf{精确}求解迭代，这是理解学习率上限最透彻的例子，且线性回归的损失恰好是二次的。
+
+\begin{theorem}[二次函数上的梯度下降]\label{thm:gd-quad}
+设 $f(\bm{w})=\tfrac12\bm{w}\T\bm{A}\bm{w}-\bm{b}\T\bm{w}$，$\bm{A}\succ0$，特征值 $0<\lambda_1\le\cdots\le\lambda_d$。唯一最小点为 $\bm{w}^\star=\bm{A}^{-1}\bm{b}$。梯度下降的误差 $\bm{e}_k=\bm{w}_k-\bm{w}^\star$ 满足
+\begin{equation}\label{eq:quad-err}
+  \bm{e}_{k+1}=(\bm{I}-\eta\bm{A})\,\bm{e}_k
+  \quad\Longrightarrow\quad
+  \bm{e}_k=(\bm{I}-\eta\bm{A})^k\bm{e}_0 ,
+\end{equation}
+在 $\bm{A}$ 的特征基下按分量写作 $e_{k,i}=(1-\eta\lambda_i)^k e_{0,i}$。因此
+\begin{enumerate}[label=(\arabic*)]
+  \item 对一切初值收敛 $\iff\abs{1-\eta\lambda_i}<1\ \forall i\iff 0<\eta<2/\lambda_d$；
+  \item 最优学习率为 $\eta^\star=\dfrac{2}{\lambda_1+\lambda_d}$，此时最坏收敛因子为 $\dfrac{\kappa-1}{\kappa+1}$，$\kappa=\lambda_d/\lambda_1$。
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+由 \eqref{eq:mc2} 与 \eqref{eq:mc1}，$\nabla f(\bm{w})=\bm{A}\bm{w}-\bm{b}$，令其为零得 $\bm{w}^\star=\bm{A}^{-1}\bm{b}$（$\bm{A}\succ0$ 故可逆），且 $\nabla^2f=\bm{A}\succ0$ 说明 $f$ 严格凸，最小点唯一。注意 $\nabla f(\bm{w}_k)=\bm{A}\bm{w}_k-\bm{b}=\bm{A}(\bm{w}_k-\bm{w}^\star)=\bm{A}\bm{e}_k$。于是
+\[
+  \bm{e}_{k+1}=\bm{w}_{k+1}-\bm{w}^\star=\bm{w}_k-\eta\bm{A}\bm{e}_k-\bm{w}^\star=(\bm{I}-\eta\bm{A})\bm{e}_k .
+\]
+用谱定理（定理 \ref{thm:spectral}）写 $\bm{A}=\bm{Q}\bm{\Lambda}\bm{Q}\T$，令 $\tilde{\bm{e}}_k=\bm{Q}\T\bm{e}_k$，则 $\tilde e_{k+1,i}=(1-\eta\lambda_i)\tilde e_{k,i}$，各分量\textbf{解耦}，故 $\tilde e_{k,i}=(1-\eta\lambda_i)^k\tilde e_{0,i}$。
+
+(1) 该几何序列对任意初值趋于零当且仅当所有 $\abs{1-\eta\lambda_i}<1$，即 $-1<1-\eta\lambda_i<1$，即 $0<\eta<2/\lambda_i$ 对所有 $i$ 成立，最严格的是 $i=d$（最大特征值）。
+
+(2) 收敛速度由 $\rho(\eta)=\max_i\abs{1-\eta\lambda_i}=\max\{\abs{1-\eta\lambda_1},\abs{1-\eta\lambda_d}\}$ 决定（因为 $\eta\mapsto\abs{1-\eta\lambda}$ 的最大值只可能在端点取到）。$\abs{1-\eta\lambda_1}$ 随 $\eta$ 递减、$\abs{1-\eta\lambda_d}$ 在 $\eta>1/\lambda_d$ 后递增，最小的 $\max$ 出现在两者相等处：
+\[
+  1-\eta\lambda_1=\eta\lambda_d-1\ \Longrightarrow\ \eta^\star=\frac{2}{\lambda_1+\lambda_d},
+\]
+此时 $\rho=1-\frac{2\lambda_1}{\lambda_1+\lambda_d}=\frac{\lambda_d-\lambda_1}{\lambda_d+\lambda_1}=\frac{\kappa-1}{\kappa+1}$。
+\end{proof}
+
+\begin{remark}
+式 \eqref{eq:quad-err} 的“各特征方向解耦、各自以 $(1-\eta\lambda_i)^k$ 衰减”是一个完全物理式的图像：把损失曲面看成多个独立的谐振子模式，学习率相当于阻尼步长，$\eta\lambda_i>2$ 的模式会被激发而发散。大特征值方向限制步长，小特征值方向决定总时长。
+\end{remark}
+
+\subsection{随机梯度下降与常用改进}
+
+在 ERM 中 $\Loss(\bm{\theta})=\frac1n\sum_i\ell_i(\bm{\theta})$，算一次完整梯度需要遍历全部 $n$ 个样本，当 $n=10^6$ 时代价高昂。
+
+\begin{definition}[SGD 与小批量]\label{def:sgd}
+每步随机抽取一个下标 $i$（或一个大小为 $B$ 的子集 $\mathcal{B}$，叫小批量 \eng{mini-batch}），用
+\[
+  \bm{g}_k=\frac{1}{B}\sum_{i\in\mathcal{B}_k}\nabla\ell_i(\bm{\theta}_k)
+\]
+代替完整梯度，做 $\bm{\theta}_{k+1}=\bm{\theta}_k-\eta\bm{g}_k$。这叫随机梯度下降 \eng{stochastic gradient descent, SGD}。遍历训练集一次称为一个 epoch \eng{轮次}。
+\end{definition}
+
+\begin{proposition}[小批量梯度是无偏的，方差随 $B$ 下降]\label{prop:sgd-unbiased}
+若 $\mathcal{B}$ 是从 $\{1,\dots,n\}$ 中均匀有放回抽取的 $B$ 个下标，则
+\[
+  \E[\bm{g}_k\mid\bm{\theta}_k]=\nabla\Loss(\bm{\theta}_k),\qquad
+  \Cov[\bm{g}_k\mid\bm{\theta}_k]=\frac1B\Cov\big[\nabla\ell_i(\bm{\theta}_k)\big].
+\]
+\end{proposition}
+
+\begin{proof}
+均匀抽取时 $\E[\nabla\ell_i]=\frac1n\sum_{j=1}^n\nabla\ell_j=\nabla\Loss$，再由期望线性性得第一式。独立抽取时 $B$ 项之和的协方差为单项的 $B$ 倍，除以 $B^2$ 得第二式。
+\end{proof}
+
+于是 SGD 的每步方向“平均来说正确、但带噪声”，噪声标准差按 $1/\sqrt{B}$ 缩小。实践要点：
+\begin{itemize}
+  \item SGD 的损失曲线是抖动的，这正常；判断收敛要看多个 epoch 的移动平均。
+  \item 由于噪声不消失，固定 $\eta$ 的 SGD 只能收敛到最小点附近的一个“噪声球”内，半径 $\propto\eta$；因此常用学习率衰减 \eng{learning rate decay/schedule}，例如 $\eta_k=\eta_0/(1+ck)$ 或余弦退火 \eng{cosine annealing}。
+  \item 噪声也有好处：它能帮助逃离尖锐的局部极小与鞍点 \eng{saddle point}，被认为是深度网络泛化好的原因之一。
+\end{itemize}
+
+\begin{definition}[动量与 Adam]\label{def:momentum}
+带动量 \eng{momentum} 的 SGD：
+\[
+  \bm{v}_{k+1}=\beta\bm{v}_k+\bm{g}_k,\qquad \bm{\theta}_{k+1}=\bm{\theta}_k-\eta\bm{v}_{k+1},\qquad\beta\in[0,1),
+\]
+等价于给参数一个“惯性”，在窄峡谷中抑制横向震荡、放大沿谷底方向的净位移（几何级数求和给出有效步长放大因子 $1/(1-\beta)$，$\beta=0.9$ 时约 $10$ 倍）。
+Adam 进一步对每个坐标用梯度二阶矩的滑动平均做自适应缩放：
+\[
+  \bm{m}_k=\beta_1\bm{m}_{k-1}+(1-\beta_1)\bm{g}_k,\quad
+  \bm{v}_k=\beta_2\bm{v}_{k-1}+(1-\beta_2)\bm{g}_k\odot\bm{g}_k,\quad
+  \bm{\theta}_{k+1}=\bm{\theta}_k-\eta\frac{\hat{\bm{m}}_k}{\sqrt{\hat{\bm{v}}_k}+\epsilon},
+\]
+其中 $\hat{\bm{m}}_k=\bm{m}_k/(1-\beta_1^k)$、$\hat{\bm{v}}_k=\bm{v}_k/(1-\beta_2^k)$ 是偏差校正 \eng{bias correction}。默认值 $\beta_1=0.9,\beta_2=0.999,\epsilon=10^{-8}$。
+\end{definition}
+
+\begin{remark}[梯度检查]
+自己实现梯度时，务必做梯度检查 \eng{gradient checking}：用中心差分
+\[
+  \frac{\partial\Loss}{\partial\theta_j}\approx\frac{\Loss(\bm{\theta}+h\bm{e}_j)-\Loss(\bm{\theta}-h\bm{e}_j)}{2h},
+  \qquad h\sim10^{-5},
+\]
+与解析梯度比较相对误差（应 $\lesssim10^{-6}$）。中心差分的误差是 $O(h^2)$ 而前向差分是 $O(h)$，所以一定用中心差分。这是排查反向传播 bug 最有效的手段。
+\end{remark}
+
+% =====================================================================
+\section{线性回归}\label{sec:linreg}
+% =====================================================================
+
+线性回归是唯一一个我们能把所有东西都算到底的模型：它有闭式解、有几何解释、有统计性质，并且梯度下降在它上面的行为完全可以解析分析。它是后面一切的原型。
+
+\subsection{模型与损失}
+
+\begin{definition}[线性回归]\label{def:linreg}
+模型为
+\[
+  f_{\bm{w},b}(\bm{x})=\bm{w}\T\bm{x}+b=\sum_{j=1}^{d}w_jx_j+b ,
+\]
+$\bm{w}\in\R^d$ 叫权重 \eng{weight}，$b\in\R$ 叫偏置 \eng{bias / intercept}。
+\end{definition}
+
+\begin{remark}[吸收偏置的技巧]\label{rmk:absorb-bias}
+为了让公式干净，我们把偏置吸收进权重：在每个样本前面添一个恒为 $1$ 的特征，
+\[
+  \tilde{\bm{x}}=\begin{pmatrix}1\\ \bm{x}\end{pmatrix}\in\R^{d+1},\qquad
+  \tilde{\bm{w}}=\begin{pmatrix}b\\ \bm{w}\end{pmatrix}\in\R^{d+1}
+  \ \Longrightarrow\ \tilde{\bm{w}}\T\tilde{\bm{x}}=b+\bm{w}\T\bm{x}.
+\]
+此后一律省略波浪号，认为 $\bm{X}\in\R^{n\times d}$ 的第一列全是 $1$，$\bm{w}\in\R^d$ 的第一个分量是偏置。这不是数学上的新内容，只是记号上的方便，但\textbf{做题时必须清楚自己用的是哪种约定}。
+\end{remark}
+
+在此约定下，全部 $n$ 个预测值可以一次写出：$\hat{\bm{y}}=\bm{X}\bm{w}\in\R^n$。取平方损失，经验风险为
+\begin{equation}\label{eq:linreg-loss}
+  \Loss(\bm{w})=\frac{1}{2n}\sum_{i=1}^{n}\big(\bm{w}\T\bm{x}^{(i)}-y^{(i)}\big)^2
+  =\frac{1}{2n}\norm{\bm{X}\bm{w}-\bm{y}}^2 .
+\end{equation}
+（因子 $\tfrac12$ 只是为了求导后消去 $2$，$\tfrac1n$ 使损失与样本量无关；它们都不改变最小点。）
+
+\subsection{解法一：正规方程（闭式解）}
+
+\begin{theorem}[正规方程 \eng{normal equations}]\label{thm:normaleq}
+$\Loss$ 的驻点满足
+\begin{equation}\label{eq:normaleq}
+  \boxed{\ \bm{X}\T\bm{X}\bm{w}=\bm{X}\T\bm{y}\ }
+\end{equation}
+且 $\Loss$ 是凸函数，故任一解都是全局最小点。若 $\rank(\bm{X})=d$，则解唯一：
+\begin{equation}\label{eq:ols}
+  \hat{\bm{w}}=(\bm{X}\T\bm{X})^{-1}\bm{X}\T\bm{y}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}[证法一：按分量求偏导（不用矩阵求导公式）]
+把损失写成显式求和，$\Loss(\bm{w})=\frac{1}{2n}\sum_{i=1}^n r_i^2$，其中残差 $r_i=\sum_{j=1}^d X_{ij}w_j-y^{(i)}$。对第 $k$ 个分量求偏导，先用一元链式法则：
+\[
+  \frac{\partial\Loss}{\partial w_k}
+  =\frac{1}{2n}\sum_{i=1}^{n}2r_i\frac{\partial r_i}{\partial w_k}
+  =\frac1n\sum_{i=1}^{n}r_i\,X_{ik}
+  =\frac1n\sum_{i=1}^{n}X_{ik}\Big(\sum_{j=1}^{d}X_{ij}w_j-y^{(i)}\Big).
+\]
+交换求和次序：
+\[
+  \frac{\partial\Loss}{\partial w_k}
+  =\frac1n\Big[\sum_{j=1}^{d}\Big(\sum_{i=1}^{n}X_{ik}X_{ij}\Big)w_j-\sum_{i=1}^{n}X_{ik}y^{(i)}\Big]
+  =\frac1n\Big[\big(\bm{X}\T\bm{X}\bm{w}\big)_k-\big(\bm{X}\T\bm{y}\big)_k\Big],
+\]
+其中用到 $\sum_i X_{ik}X_{ij}=(\bm{X}\T\bm{X})_{kj}$ 与 $\sum_i X_{ik}y^{(i)}=(\bm{X}\T\bm{y})_k$。令所有 $k$ 的偏导为零，即得 \eqref{eq:normaleq}。
+\end{proof}
+
+\begin{proof}[证法二：矩阵求导]
+直接用 \eqref{eq:mc4}：
+\[
+  \nabla\Loss(\bm{w})=\frac{1}{2n}\cdot2\bm{X}\T(\bm{X}\bm{w}-\bm{y})=\frac1n\bm{X}\T(\bm{X}\bm{w}-\bm{y})
+  =\frac1n\big(\bm{X}\T\bm{X}\bm{w}-\bm{X}\T\bm{y}\big),
+\]
+令 $\nabla\Loss=\bm{0}$ 即 \eqref{eq:normaleq}。再算 Hessian：
+\[
+  \nabla^2\Loss(\bm{w})=\frac1n\bm{X}\T\bm{X}\ \succeq\ 0
+\]
+（命题 \ref{prop:xtx}(1)），由定义 \ref{def:convex} 的二阶条件知 $\Loss$ 凸，再由定理 \ref{thm:convexmin} 知驻点即全局最小点。若 $\rank(\bm{X})=d$，命题 \ref{prop:xtx}(2) 给出 $\bm{X}\T\bm{X}\succ0$，可逆且 $\Loss$ 严格凸，故解唯一并由 \eqref{eq:ols} 给出。
+\end{proof}
+
+\begin{remark}[两种证法的价值]
+证法一告诉你公式\textbf{从哪里来}，并且在你忘记矩阵求导公式时永远可用；证法二快，且顺便给出 Hessian 以判断凸性。建议第一次学时用证法一算一遍（尤其是那次求和次序交换），以后用证法二。
+\end{remark}
+
+\begin{remark}[$n<d$ 会发生什么]
+若样本数少于特征数，则 $\rank(\bm{X})\le n<d$，$\bm{X}\T\bm{X}$ 奇异，正规方程有无穷多解，它们都把训练误差降到相同（通常为 $0$）。此时必须\textbf{额外指定}偏好，例如取范数最小的解 $\hat{\bm{w}}=\bm{X}^{+}\bm{y}$（$\bm{X}^{+}$ 是 Moore--Penrose 伪逆 \eng{pseudo-inverse}），或者加正则化项（第 \ref{sec:reg} 节）。“解不唯一时如何选择”正是正则化的思想起点。
+\end{remark}
+
+\subsection{几何解释：正交投影}
+
+\begin{theorem}[最小二乘 = 正交投影]\label{thm:projection}
+设 $\rank(\bm{X})=d$，记列空间 $\mathrm{Col}(\bm{X})=\{\bm{X}\bm{v}:\bm{v}\in\R^d\}\subseteq\R^n$。则拟合值
+\[
+  \hat{\bm{y}}=\bm{X}\hat{\bm{w}}=\bm{P}\bm{y},\qquad
+  \bm{P}=\bm{X}(\bm{X}\T\bm{X})^{-1}\bm{X}\T ,
+\]
+其中 $\bm{P}$ 满足 $\bm{P}\T=\bm{P}$、$\bm{P}^2=\bm{P}$，即它是到 $\mathrm{Col}(\bm{X})$ 的正交投影算子 \eng{projection matrix / hat matrix}。残差 $\bm{r}=\bm{y}-\hat{\bm{y}}$ 与每一列特征正交：
+\begin{equation}\label{eq:orthres}
+  \bm{X}\T\bm{r}=\bm{0}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+代入 \eqref{eq:ols} 得 $\hat{\bm{y}}=\bm{X}(\bm{X}\T\bm{X})^{-1}\bm{X}\T\bm{y}=\bm{P}\bm{y}$。对称性：
+$\bm{P}\T=\bm{X}\big((\bm{X}\T\bm{X})^{-1}\big)\T\bm{X}\T=\bm{X}(\bm{X}\T\bm{X})^{-1}\bm{X}\T=\bm{P}$（对称矩阵的逆对称）。幂等性：
+\[
+  \bm{P}^2=\bm{X}(\bm{X}\T\bm{X})^{-1}\underbrace{\bm{X}\T\bm{X}(\bm{X}\T\bm{X})^{-1}}_{=\bm{I}}\bm{X}\T=\bm{P}.
+\]
+正交性 \eqref{eq:orthres} 就是正规方程的改写：$\bm{X}\T(\bm{y}-\bm{X}\hat{\bm{w}})=\bm{X}\T\bm{y}-\bm{X}\T\bm{X}\hat{\bm{w}}=\bm{0}$。
+\end{proof}
+
+\begin{corollary}[两条实用推论]
+若 $\bm{X}$ 的第一列是全 $1$（含偏置），则 \eqref{eq:orthres} 的第一个分量给出
+\[
+  \bm{1}\T\bm{r}=\sum_{i=1}^{n}r_i=0,
+\]
+即\textbf{残差和恒为零}（回归直线必过样本均值点 $(\bar{\bm{x}},\bar y)$）。此外 $\norm{\bm{y}}^2=\norm{\hat{\bm{y}}}^2+\norm{\bm{r}}^2$（勾股定理），因为 $\hat{\bm{y}}\perp\bm{r}$。
+\end{corollary}
+
+这给了一个纯几何的理解：$\bm{y}\in\R^n$ 是数据向量，模型能表达的一切构成一个 $d$ 维子空间 $\mathrm{Col}(\bm{X})$，最小二乘就是\textbf{把 $\bm{y}$ 垂直投到这个子空间上}。“垂直”正是最小距离的条件——与解析几何里“点到平面的最短距离沿法向”完全一样。
+
+\subsection{解法二：梯度下降}
+
+即使有了闭式解，也值得用梯度下降来做，原因：$\bm{X}\T\bm{X}$ 是 $d\times d$，求逆代价 $O(d^3)$、构造代价 $O(nd^2)$，当 $d\sim10^5$ 时不可行；而每步梯度下降只要 $O(nd)$。更重要的是，梯度下降的推导方式可以原封不动地搬到非线性模型上。
+
+\begin{proposition}[线性回归的梯度下降迭代]\label{prop:linreg-gd}
+对损失 \eqref{eq:linreg-loss}，梯度为
+\begin{equation}\label{eq:linreg-grad}
+  \nabla\Loss(\bm{w})=\frac1n\bm{X}\T(\bm{X}\bm{w}-\bm{y})=\frac1n\sum_{i=1}^{n}\big(\hat y^{(i)}-y^{(i)}\big)\bm{x}^{(i)},
+\end{equation}
+迭代为
+\begin{equation}\label{eq:linreg-update}
+  \bm{w}_{k+1}=\bm{w}_k-\frac{\eta}{n}\bm{X}\T(\bm{X}\bm{w}_k-\bm{y})
+  = \bm{w}_k-\frac{\eta}{n}\sum_{i=1}^{n}\big(\hat y^{(i)}_k-y^{(i)}\big)\bm{x}^{(i)} .
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+第一个等号已在定理 \ref{thm:normaleq} 证法二给出。第二个等号是把矩阵乘法写成行的组合：$\bm{X}\T\bm{u}=\sum_i u_i\bm{x}^{(i)}$，取 $u_i=\hat y^{(i)}-y^{(i)}=(\bm{X}\bm{w}-\bm{y})_i$。
+\end{proof}
+
+\begin{remark}[“误差 $\times$ 输入”结构]
+式 \eqref{eq:linreg-update} 的形式值得刻进脑子里：
+\[
+  \text{参数更新}\ \propto\ -\sum_{\text{样本}}(\text{预测误差})\times(\text{输入}) .
+\]
+第 \ref{sec:logistic} 节会看到逻辑回归的梯度\textbf{形式完全一样}，第 \ref{sec:nn} 节会看到神经网络每一层的梯度也是“该层误差 $\times$ 该层输入”。这不是巧合，而是链式法则的必然结果。
+\end{remark}
+
+\begin{corollary}[线性回归的学习率上限]\label{cor:linreg-eta}
+$\Loss$ 是二次函数，Hessian 为常矩阵 $\bm{A}=\frac1n\bm{X}\T\bm{X}$。由定理 \ref{thm:gd-quad}，梯度下降收敛当且仅当
+\[
+  0<\eta<\frac{2}{\lambda_{\max}(\frac1n\bm{X}\T\bm{X})}=\frac{2n}{\sigma_{\max}^2(\bm{X})},
+\]
+最优学习率 $\eta^\star=2/(\lambda_{\min}+\lambda_{\max})$，收敛因子 $(\kappa-1)/(\kappa+1)$，$\kappa=\lambda_{\max}/\lambda_{\min}$。
+\end{corollary}
+
+\begin{remark}[为什么一定要标准化特征]\label{rmk:standardize}
+若某个特征以“米”为单位、另一个以“纳米”为单位，则 $\bm{X}\T\bm{X}$ 的条件数 $\kappa$ 会大到 $10^{18}$，梯度下降实际上无法前进。标准化 \eng{standardization}
+\[
+  x_j\ \longleftarrow\ \frac{x_j-\bar x_j}{s_j},\qquad
+  \bar x_j=\frac1n\sum_i x^{(i)}_j,\quad s_j=\sqrt{\frac1n\sum_i(x^{(i)}_j-\bar x_j)^2}
+\]
+使每个特征均值 $0$、方差 $1$，通常把 $\kappa$ 降低若干个数量级。注意：\textbf{$\bar x_j$ 与 $s_j$ 必须只用训练集计算}，然后用同一组数值去变换验证集与测试集，否则会造成数据泄漏 \eng{data leakage}。
+\end{remark}
+
+\subsection{统计性质（选读但值得看）}
+
+\begin{proposition}[OLS 估计的无偏性与方差]\label{prop:ols-stat}
+设真实模型 $\bm{y}=\bm{X}\bm{w}^\star+\bm{\varepsilon}$，$\E[\bm{\varepsilon}]=\bm{0}$，$\Cov(\bm{\varepsilon})=\sigma^2\bm{I}_n$，$\bm{X}$ 固定且满列秩。则
+\[
+  \E[\hat{\bm{w}}]=\bm{w}^\star,\qquad
+  \Cov(\hat{\bm{w}})=\sigma^2(\bm{X}\T\bm{X})^{-1}.
+\]
+\end{proposition}
+
+\begin{proof}
+代入：
+\[
+  \hat{\bm{w}}=(\bm{X}\T\bm{X})^{-1}\bm{X}\T\bm{y}
+  =(\bm{X}\T\bm{X})^{-1}\bm{X}\T(\bm{X}\bm{w}^\star+\bm{\varepsilon})
+  =\bm{w}^\star+(\bm{X}\T\bm{X})^{-1}\bm{X}\T\bm{\varepsilon}.
+\]
+取期望，第二项为零，得无偏。记 $\bm{M}=(\bm{X}\T\bm{X})^{-1}\bm{X}\T$，则
+\[
+  \Cov(\hat{\bm{w}})=\bm{M}\Cov(\bm{\varepsilon})\bm{M}\T=\sigma^2\bm{M}\bm{M}\T
+  =\sigma^2(\bm{X}\T\bm{X})^{-1}\bm{X}\T\bm{X}(\bm{X}\T\bm{X})^{-1}=\sigma^2(\bm{X}\T\bm{X})^{-1}. \qedhere
+\]
+\end{proof}
+
+用 SVD（定理 \ref{thm:svd}）写 $\Cov(\hat{\bm{w}})=\sigma^2\bm{V}\bm{\Sigma}^{-2}\bm{V}\T=\sigma^2\sum_i\sigma_i^{-2}\bm{v}_i\bm{v}_i\T$：\textbf{小奇异值方向上的参数方差极大}。这正是多重共线性 \eng{multicollinearity} 的危害，也预示了岭回归为什么能通过牺牲一点偏差来大幅降低方差（第 \ref{sec:reg} 节）。
+
+% =====================================================================
+\section{逻辑回归}\label{sec:logistic}
+% =====================================================================
+
+\subsection{为什么不能直接用线性回归做分类}
+
+设 $y\in\{0,1\}$。若直接用线性回归拟合 $y$，会遇到三个问题：
+\begin{enumerate}[label=(\arabic*)]
+  \item 输出 $\bm{w}\T\bm{x}$ 可以是 $-3$ 或 $+7$，无法解释为概率；
+  \item 平方损失会惩罚“过于自信但正确”的预测：真值 $y=1$、预测 $2.0$ 时损失为 $1$，尽管分类完全正确；
+  \item 一个远离决策边界的正确样本会通过平方损失强烈拉动边界，使分类器对离群点极其脆弱。
+\end{enumerate}
+解决办法：让模型输出一个概率 $\hat p=\Prob(y=1\mid\bm{x})$，并用交叉熵作为损失（由定理 \ref{thm:bern-ce}，这就是 Bernoulli 假设下的最大似然）。要把 $\bm{w}\T\bm{x}\in\R$ 压进 $(0,1)$，最自然的函数就是 sigmoid。
+
+\subsection{Sigmoid 函数及其性质}
+
+\begin{definition}[logistic sigmoid]\label{def:sigmoid}
+\[
+  \sigma(z)=\frac{1}{1+e^{-z}},\qquad z\in\R .
+\]
+中文常称“对数几率函数”或直接叫 sigmoid \eng{S 形函数}。
+\end{definition}
+
+\begin{proposition}[sigmoid 的五条性质]\label{prop:sigmoid}
+\begin{enumerate}[label=(\arabic*)]
+  \item 值域：$\sigma:\R\to(0,1)$，严格单调递增，$\sigma(0)=1/2$，$\sigma(-\infty)=0$，$\sigma(+\infty)=1$；
+  \item 对称性：$\sigma(-z)=1-\sigma(z)$；
+  \item 导数：$\sigma'(z)=\sigma(z)\big(1-\sigma(z)\big)$，且 $0<\sigma'(z)\le\tfrac14$，最大值在 $z=0$；
+  \item 反函数（logit \eng{对数几率}）：$\sigma^{-1}(p)=\log\dfrac{p}{1-p}$；
+  \item $\log\sigma(z)=-\log(1+e^{-z})=-\mathrm{softplus}(-z)$。
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) $e^{-z}>0$ 故分母 $>1$，$\sigma<1$；分母有限故 $\sigma>0$。单调性由 (3) 的正性得到。
+
+(2) 直接计算：
+\[
+  1-\sigma(z)=1-\frac{1}{1+e^{-z}}=\frac{e^{-z}}{1+e^{-z}}
+  =\frac{1}{e^{z}+1}=\sigma(-z).
+\]
+
+(3) 记 $u=1+e^{-z}$，则 $\sigma=u^{-1}$，$\dfrac{\dd u}{\dd z}=-e^{-z}$，故
+\[
+  \sigma'(z)=-u^{-2}\frac{\dd u}{\dd z}=\frac{e^{-z}}{(1+e^{-z})^2}
+  =\underbrace{\frac{1}{1+e^{-z}}}_{\sigma(z)}\cdot\underbrace{\frac{e^{-z}}{1+e^{-z}}}_{1-\sigma(z)}
+  =\sigma(z)\big(1-\sigma(z)\big).
+\]
+令 $p=\sigma(z)\in(0,1)$，则 $\sigma'=p(1-p)$，作为 $p$ 的函数在 $p=1/2$ 处取最大值 $1/4$，对应 $z=0$。
+
+(4) 解 $p=1/(1+e^{-z})$：$1+e^{-z}=1/p\Rightarrow e^{-z}=(1-p)/p\Rightarrow -z=\log\frac{1-p}{p}$，即 $z=\log\frac{p}{1-p}$。
+
+(5) $\log\sigma(z)=\log\frac{1}{1+e^{-z}}=-\log(1+e^{-z})$。
+\end{proof}
+
+性质 (3) 是后面所有梯度推导的引擎；性质 (3) 中的上界 $1/4$ 是第 \ref{sec:nn} 节梯度消失 \eng{vanishing gradient} 现象的根源；性质 (5) 是数值稳定实现的关键。
+
+\subsection{模型与损失函数}
+
+\begin{definition}[逻辑回归]\label{def:logreg}
+沿用吸收偏置的约定（注 \ref{rmk:absorb-bias}），令 $z=\bm{w}\T\bm{x}$（叫 logit 或分数 \eng{score}），模型为
+\begin{equation}\label{eq:logreg}
+  \hat p(\bm{x})=\Prob(y=1\mid\bm{x};\bm{w})=\sigma(\bm{w}\T\bm{x})=\frac{1}{1+e^{-\bm{w}\T\bm{x}}} .
+\end{equation}
+\end{definition}
+
+\begin{remark}[名字里的“回归”与“线性”]
+逻辑回归 \eng{logistic regression} 是\textbf{分类}方法，名字里的“回归”是历史遗留：它回归的是 logit。由性质 (4)，
+\[
+  \log\frac{\hat p}{1-\hat p}=\bm{w}\T\bm{x},
+\]
+即模型假设\textbf{对数几率 \eng{log-odds} 是特征的线性函数}。这才是“线性”的准确含义：决策边界 $\{\bm{x}:\hat p=1/2\}=\{\bm{x}:\bm{w}\T\bm{x}=0\}$ 是一个超平面 \eng{hyperplane}，$\bm{w}$ 是它的法向量。
+\end{remark}
+
+\begin{definition}[逻辑回归的损失]\label{def:logreg-loss}
+由定理 \ref{thm:bern-ce}，负对数似然（平均交叉熵）为
+\begin{equation}\label{eq:logreg-loss}
+  \Loss(\bm{w})=-\frac1n\sum_{i=1}^{n}\Big[y^{(i)}\log\sigma(z^{(i)})+(1-y^{(i)})\log\big(1-\sigma(z^{(i)})\big)\Big],
+  \qquad z^{(i)}=\bm{w}\T\bm{x}^{(i)} .
+\end{equation}
+\end{definition}
+
+利用性质 (2) 与 (5) 可把它写成一个更紧凑、且数值稳定的形式。若把标签改记为 $\tilde y=2y-1\in\{-1,+1\}$，则
+\begin{equation}\label{eq:logreg-softplus}
+  \Loss(\bm{w})=\frac1n\sum_{i=1}^{n}\log\big(1+e^{-\tilde y^{(i)}z^{(i)}}\big).
+\end{equation}
+推导：当 $y=1$（$\tilde y=1$）时，$-\log\sigma(z)=\log(1+e^{-z})$；当 $y=0$（$\tilde y=-1$）时，
+$-\log(1-\sigma(z))=-\log\sigma(-z)=\log(1+e^{z})=\log(1+e^{-\tilde y z})$。两种情形统一。这个形式叫 logistic 损失，从中可以直接看出：只要 $\tilde y z\gg0$（分类正确且自信），损失指数地趋于 $0$；只要 $\tilde yz\ll0$，损失近似线性增长 $\approx-\tilde yz$——比平方损失温和得多，这是逻辑回归比“最小二乘分类”稳健的原因。
+
+\subsection{梯度的完整推导}
+
+\begin{theorem}[逻辑回归的梯度]\label{thm:logreg-grad}
+对损失 \eqref{eq:logreg-loss}，
+\begin{equation}\label{eq:logreg-grad}
+  \boxed{\ \nabla\Loss(\bm{w})=\frac1n\sum_{i=1}^{n}\big(\sigma(z^{(i)})-y^{(i)}\big)\bm{x}^{(i)}
+  =\frac1n\bm{X}\T\big(\sigma(\bm{X}\bm{w})-\bm{y}\big)\ }
+\end{equation}
+其中 $\sigma$ 作用在向量上表示逐元素作用。
+\end{theorem}
+
+\begin{proof}
+只需对单个样本的损失 $\ell(\bm{w})=-\big[y\log\sigma(z)+(1-y)\log(1-\sigma(z))\big]$ 求梯度，再平均。
+
+\textbf{第一步：对 $z$ 求导。}用 $\dfrac{\dd}{\dd z}\log\sigma(z)=\dfrac{\sigma'(z)}{\sigma(z)}$ 与性质 (3)：
+\[
+  \frac{\dd}{\dd z}\log\sigma(z)=\frac{\sigma(z)(1-\sigma(z))}{\sigma(z)}=1-\sigma(z).
+\]
+同理，注意 $\dfrac{\dd}{\dd z}\big(1-\sigma(z)\big)=-\sigma'(z)$，
+\[
+  \frac{\dd}{\dd z}\log\big(1-\sigma(z)\big)=\frac{-\sigma(z)(1-\sigma(z))}{1-\sigma(z)}=-\sigma(z).
+\]
+于是
+\[
+  \frac{\partial\ell}{\partial z}
+  =-\Big[y\big(1-\sigma(z)\big)+(1-y)\big(-\sigma(z)\big)\Big]
+  =-\Big[y-y\sigma(z)-\sigma(z)+y\sigma(z)\Big]
+  =\sigma(z)-y .
+\]
+注意中间的 $y\sigma(z)$ 项精确抵消，这正是“sigmoid + 交叉熵”这对搭配的妙处：\textbf{导数简化成了纯粹的“预测减真值”}。
+
+\textbf{第二步：链式法则回到 $\bm{w}$。}由 $z=\bm{w}\T\bm{x}$ 得 $\partial z/\partial w_k=x_k$，即 $\nabla_{\bm{w}}z=\bm{x}$。由命题 \ref{prop:chain}，
+\[
+  \nabla_{\bm{w}}\ell=\frac{\partial\ell}{\partial z}\,\nabla_{\bm{w}}z=\big(\sigma(z)-y\big)\bm{x}.
+\]
+
+\textbf{第三步：对样本平均。}
+\[
+  \nabla\Loss=\frac1n\sum_{i=1}^n\big(\sigma(z^{(i)})-y^{(i)}\big)\bm{x}^{(i)} .
+\]
+再把它写成矩阵形式：记 $\bm{r}=\sigma(\bm{X}\bm{w})-\bm{y}\in\R^n$，则 $\sum_i r_i\bm{x}^{(i)}=\bm{X}\T\bm{r}$。
+\end{proof}
+
+\begin{remark}[与线性回归一模一样的结构]
+对比 \eqref{eq:linreg-grad} 与 \eqref{eq:logreg-grad}：两者\textbf{完全同形}，只是 $\hat y=\bm{w}\T\bm{x}$ 换成了 $\hat p=\sigma(\bm{w}\T\bm{x})$。这不是巧合：两者都属于广义线性模型 \eng{generalized linear model, GLM}，用各自分布的“正则联系函数”时梯度总是“$(\text{预测均值}-\text{观测})\times\text{输入}$”。记住这一条，可以省掉一半的记忆量。
+\end{remark}
+
+\begin{corollary}[更新公式与“无闭式解”]
+梯度下降迭代为
+\[
+  \bm{w}_{k+1}=\bm{w}_k-\frac{\eta}{n}\bm{X}\T\big(\sigma(\bm{X}\bm{w}_k)-\bm{y}\big).
+\]
+令 $\nabla\Loss=\bm{0}$ 得方程 $\bm{X}\T\sigma(\bm{X}\bm{w})=\bm{X}\T\bm{y}$。由于 $\sigma$ 非线性，这是一个\textbf{超越方程}，一般没有闭式解——这就是为什么逻辑回归必须迭代求解，而线性回归不必。
+\end{corollary}
+
+\subsection{Hessian 矩阵与凸性}
+
+\begin{theorem}[逻辑回归损失的 Hessian 与凸性]\label{thm:logreg-hess}
+记 $p_i=\sigma(z^{(i)})$，$\bm{S}=\diag\big(p_1(1-p_1),\dots,p_n(1-p_n)\big)\in\R^{n\times n}$。则
+\begin{equation}\label{eq:logreg-hess}
+  \nabla^2\Loss(\bm{w})=\frac1n\sum_{i=1}^{n}p_i(1-p_i)\,\bm{x}^{(i)}\bm{x}^{(i)\mathsf{T}}
+  =\frac1n\bm{X}\T\bm{S}\bm{X}\ \succeq\ 0 ,
+\end{equation}
+因此 $\Loss$ 是凸函数，任何驻点都是全局最小点。若进一步 $\rank(\bm{X})=d$ 且所有 $p_i\in(0,1)$，则 $\nabla^2\Loss\succ0$，$\Loss$ 严格凸。
+\end{theorem}
+
+\begin{proof}
+由定理 \ref{thm:logreg-grad} 第二步，$\nabla\Loss=\frac1n\sum_i(p_i-y^{(i)})\bm{x}^{(i)}$。对第 $m$ 个分量再求 $w_l$ 的偏导：$y^{(i)}$ 与 $\bm{x}^{(i)}$ 都不依赖 $\bm{w}$，只有 $p_i=\sigma(\bm{w}\T\bm{x}^{(i)})$ 依赖，
+\[
+  \frac{\partial p_i}{\partial w_l}=\sigma'(z^{(i)})\frac{\partial z^{(i)}}{\partial w_l}=p_i(1-p_i)\,x^{(i)}_l .
+\]
+于是
+\[
+  \big(\nabla^2\Loss\big)_{ml}=\frac{\partial}{\partial w_l}\Big[\frac1n\sum_i(p_i-y^{(i)})x^{(i)}_m\Big]
+  =\frac1n\sum_{i=1}^{n}p_i(1-p_i)\,x^{(i)}_m x^{(i)}_l ,
+\]
+即 \eqref{eq:logreg-hess} 的分量形式；写成矩阵即 $\frac1n\bm{X}\T\bm{S}\bm{X}$（因为 $(\bm{X}\T\bm{S}\bm{X})_{ml}=\sum_i X_{im}S_{ii}X_{il}$）。
+
+半正定性：对任意 $\bm{v}\in\R^d$，令 $u_i=\bm{x}^{(i)\mathsf{T}}\bm{v}$，则
+\[
+  \bm{v}\T\nabla^2\Loss\,\bm{v}=\frac1n\sum_{i=1}^{n}\underbrace{p_i(1-p_i)}_{>0}\big(\bm{x}^{(i)\mathsf{T}}\bm{v}\big)^2
+  =\frac1n\sum_i p_i(1-p_i)u_i^2\ \ge\ 0 .
+\]
+由性质 (1)，$p_i\in(0,1)$ 故 $p_i(1-p_i)>0$。因此上式为零当且仅当所有 $u_i=0$，即 $\bm{X}\bm{v}=\bm{0}$；当 $\rank(\bm{X})=d$ 时只有 $\bm{v}=\bm{0}$ 满足，故严格正定。凸性由定义 \ref{def:convex} 的二阶条件，全局最优性由定理 \ref{thm:convexmin}。
+\end{proof}
+
+\begin{remark}[样本的“有效权重”]
+$\nabla^2\Loss$ 中每个样本的权重是 $p_i(1-p_i)$：靠近决策边界（$p_i\approx1/2$）的样本权重最大（$1/4$），已经被自信正确分类的样本（$p_i\approx0$ 或 $1$）权重趋于 $0$。也就是说，\textbf{逻辑回归的解主要由边界附近的样本决定}——这与支持向量机 \eng{support vector machine, SVM} 只依赖“支持向量”的图像是同一个精神。
+\end{remark}
+
+\begin{definition}[Newton 法与 IRLS]
+利用 Hessian 可用 Newton 法 \eng{Newton's method} 加速：
+\[
+  \bm{w}_{k+1}=\bm{w}_k-\big(\nabla^2\Loss\big)^{-1}\nabla\Loss
+  =\bm{w}_k-\big(\bm{X}\T\bm{S}\bm{X}\big)^{-1}\bm{X}\T(\bm{p}-\bm{y}).
+\]
+它等价于每步解一个加权最小二乘问题，故名迭代重加权最小二乘 \eng{iteratively reweighted least squares, IRLS}。$d$ 不大时它收敛极快（二次收敛，通常 $5\sim10$ 步）；$d$ 很大时求 $d\times d$ 逆太贵，仍用一阶方法。
+\end{definition}
+
+\begin{proposition}[完全可分时参数发散]\label{prop:separable}
+若数据线性可分，即存在 $\bm{w}_0$ 使 $\tilde y^{(i)}\bm{w}_0\T\bm{x}^{(i)}>0$ 对一切 $i$ 成立，则 $\Loss$ 的下确界为 $0$ 但\textbf{取不到}，且沿 $\bm{w}=t\bm{w}_0$（$t\to\infty$）有 $\Loss\to0$，$\norm{\bm{w}}\to\infty$。
+\end{proposition}
+
+\begin{proof}
+用形式 \eqref{eq:logreg-softplus}：$\Loss(t\bm{w}_0)=\frac1n\sum_i\log(1+e^{-t\,\tilde y^{(i)}\bm{w}_0\T\bm{x}^{(i)}})$。由可分性，每个指数中的 $\tilde y^{(i)}\bm{w}_0\T\bm{x}^{(i)}=:c_i>0$，故当 $t\to\infty$ 时 $e^{-tc_i}\to0$，$\log(1+e^{-tc_i})\to0$，故 $\Loss\to0$。另一方面 $\Loss>0$ 恒成立（每项 $\log(1+\text{正数})>0$），故下确界取不到，最小点不存在。
+\end{proof}
+
+这是实践中必须加正则化的一个具体理由：$d>n$ 时数据几乎总是可分的，不加正则化会让权重无限增大、数值溢出。加上 $\frac{\lambda}{2}\norm{\bm{w}}^2$ 后目标函数变为强凸且系数有界，最小点存在唯一。
+
+\subsection{多分类：softmax 回归}
+
+\begin{definition}[softmax 函数]\label{def:softmax}
+对 $\bm{z}\in\R^K$，
+\[
+  \softmax(\bm{z})_k=p_k=\frac{e^{z_k}}{\sum_{j=1}^{K}e^{z_j}},\qquad k=1,\dots,K .
+\]
+显然 $p_k>0$ 且 $\sum_kp_k=1$，故 $\bm{p}$ 是概率分布。多分类模型（softmax 回归，也叫多项逻辑回归 \eng{multinomial logistic regression}）取 $\bm{z}=\bm{W}\bm{x}$，$\bm{W}\in\R^{K\times d}$，预测 $\Prob(y=k\mid\bm{x})=p_k$。
+\end{definition}
+
+\begin{proposition}[softmax 的两条性质]\label{prop:softmax}
+\begin{enumerate}[label=(\arabic*)]
+  \item 平移不变性：对任意 $c\in\R$，$\softmax(\bm{z}+c\bm{1})=\softmax(\bm{z})$。因此参数有冗余（$K$ 组权重只有 $K-1$ 组是可辨识的）；数值实现时取 $c=-\max_kz_k$ 可避免 $e^{z_k}$ 溢出，这叫 log-sum-exp 技巧。
+  \item Jacobi 矩阵：
+  \begin{equation}\label{eq:softmax-jac}
+    \frac{\partial p_k}{\partial z_j}=p_k(\delta_{kj}-p_j).
+  \end{equation}
+  \item $K=2$ 时 softmax 退化为 sigmoid：$p_1=\sigma(z_1-z_2)$。
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) 分子分母同乘 $e^{c}$ 后相消。
+
+(2) 记 $Z=\sum_je^{z_j}$，则 $p_k=e^{z_k}/Z$，且 $\partial Z/\partial z_j=e^{z_j}$。用商法则：
+\[
+  \frac{\partial p_k}{\partial z_j}
+  =\frac{\dfrac{\partial e^{z_k}}{\partial z_j}Z-e^{z_k}\dfrac{\partial Z}{\partial z_j}}{Z^2}
+  =\frac{\delta_{kj}e^{z_k}Z-e^{z_k}e^{z_j}}{Z^2}
+  =\delta_{kj}\frac{e^{z_k}}{Z}-\frac{e^{z_k}}{Z}\frac{e^{z_j}}{Z}
+  =\delta_{kj}p_k-p_kp_j ,
+\]
+提取 $p_k$ 即 \eqref{eq:softmax-jac}。（用到 $\partial e^{z_k}/\partial z_j=\delta_{kj}e^{z_k}$。）
+
+(3) $p_1=\dfrac{e^{z_1}}{e^{z_1}+e^{z_2}}=\dfrac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1-z_2)$。
+\end{proof}
+
+\begin{theorem}[softmax + 交叉熵的梯度]\label{thm:softmax-grad}
+设真实标签为 $y\in\{1,\dots,K\}$，用独热编码 \eng{one-hot encoding} $\bm{t}\in\R^K$（$t_k=\delta_{k,y}$）。取交叉熵损失 $\ell=-\sum_kt_k\log p_k=-\log p_y$。则
+\begin{equation}\label{eq:softmax-grad}
+  \boxed{\ \frac{\partial\ell}{\partial z_j}=p_j-t_j
+  \quad\Longleftrightarrow\quad
+  \nabla_{\bm{z}}\ell=\bm{p}-\bm{t}\ }
+\end{equation}
+从而对权重 $\bm{W}$（$\bm{z}=\bm{W}\bm{x}$）：$\nabla_{\bm{W}}\ell=(\bm{p}-\bm{t})\bm{x}\T\in\R^{K\times d}$，对整个数据集
+$\nabla_{\bm{W}}\Loss=\frac1n(\bm{P}-\bm{T})\T\bm{X}$，其中 $\bm{P},\bm{T}\in\R^{n\times K}$ 逐行存放 $\bm{p}$ 与 $\bm{t}$。
+\end{theorem}
+
+\begin{proof}
+用链式法则，注意 $\ell$ 通过\textbf{所有} $p_k$ 依赖 $z_j$：
+\[
+  \frac{\partial\ell}{\partial z_j}
+  =\sum_{k=1}^{K}\frac{\partial\ell}{\partial p_k}\frac{\partial p_k}{\partial z_j}
+  =\sum_{k=1}^{K}\Big(-\frac{t_k}{p_k}\Big)p_k\big(\delta_{kj}-p_j\big)
+  =-\sum_{k=1}^{K}t_k\big(\delta_{kj}-p_j\big).
+\]
+把求和拆开：$\sum_kt_k\delta_{kj}=t_j$，而 $\sum_kt_kp_j=p_j\sum_kt_k=p_j$（独热向量元素和为 $1$）。故
+\[
+  \frac{\partial\ell}{\partial z_j}=-\big(t_j-p_j\big)=p_j-t_j .
+\]
+对 $\bm{W}$：由 $z_k=\sum_jW_{kj}x_j$ 得 $\partial z_k/\partial W_{mj}=\delta_{km}x_j$，故
+\[
+  \frac{\partial\ell}{\partial W_{mj}}=\sum_k\frac{\partial\ell}{\partial z_k}\delta_{km}x_j=(p_m-t_m)x_j,
+\]
+即外积 $(\bm{p}-\bm{t})\bm{x}\T$。
+\end{proof}
+
+\begin{remark}[三个层次的同一个公式]
+\eqref{eq:linreg-grad}、\eqref{eq:logreg-grad}、\eqref{eq:softmax-grad} 是同一个结构的三种外观：\emph{输出层的“误差信号”等于预测概率（或预测值）减去目标}。正因为此，深度学习框架把 softmax 与交叉熵合成一个算子（如 \texttt{CrossEntropyLoss}）：不仅少算一次除法，更重要的是避免了 $\log$ 与 $\exp$ 分开计算时的数值不稳定。\textbf{这也是实践中的一个常见 bug：把已经过 softmax 的输出再喂给要求 logits 的损失函数。}
+\end{remark}
+
+% =====================================================================
+\section{神经网络基础}\label{sec:nn}
+% =====================================================================
+
+逻辑回归的决策边界是超平面，表达能力有限。要处理非线性问题，有两条路：手工构造特征（如多项式特征 $x_1^2,x_1x_2,\dots$），或让模型\textbf{自己学习特征}。后者就是神经网络。
+
+\subsection{结构与前向传播}
+
+\begin{definition}[多层感知机]\label{def:mlp}
+$L$ 层全连接神经网络（多层感知机 \eng{multi-layer perceptron, MLP}）由下述递推定义。令 $\bm{a}^{(0)}=\bm{x}\in\R^{d}$，对 $l=1,\dots,L$：
+\begin{align}
+  \bm{z}^{(l)}&=\bm{W}^{(l)}\bm{a}^{(l-1)}+\bm{b}^{(l)}, \label{eq:fwd-z}\\
+  \bm{a}^{(l)}&=\phi^{(l)}\big(\bm{z}^{(l)}\big), \label{eq:fwd-a}
+\end{align}
+其中 $\bm{W}^{(l)}\in\R^{n_l\times n_{l-1}}$ 是权重矩阵，$\bm{b}^{(l)}\in\R^{n_l}$ 是偏置向量，$n_l$ 是第 $l$ 层的宽度 \eng{width}，$\phi^{(l)}$ 是\textbf{逐元素}作用的激活函数 \eng{activation function}。最后一层的输出 $\hat{\bm{y}}=\bm{a}^{(L)}$ 是网络的预测。中间层 $1\le l\le L-1$ 称隐藏层 \eng{hidden layer}。
+参数总体记为 $\bm{\theta}=\{\bm{W}^{(l)},\bm{b}^{(l)}\}_{l=1}^{L}$，其个数为 $\sum_{l=1}^{L}(n_{l-1}n_l+n_l)$。
+\end{definition}
+
+前向传播 \eng{forward propagation} 就是按 \eqref{eq:fwd-z}--\eqref{eq:fwd-a} 从 $l=1$ 算到 $l=L$：
+\[
+  \bm{x}=\bm{a}^{(0)}
+  \ \xrightarrow{\ \bm{W}^{(1)},\bm{b}^{(1)}\ }\ \bm{z}^{(1)}
+  \ \xrightarrow{\ \phi\ }\ \bm{a}^{(1)}
+  \ \xrightarrow{\ \bm{W}^{(2)},\bm{b}^{(2)}\ }\ \bm{z}^{(2)}
+  \ \xrightarrow{\ \phi\ }\ \cdots
+  \ \xrightarrow{\ \phi^{(L)}\ }\ \bm{a}^{(L)}=\hat{\bm{y}} .
+\]
+
+\begin{remark}[非线性是不可省的]\label{rmk:need-nonlinear}
+若所有 $\phi^{(l)}=\mathrm{id}$（恒等），则
+\[
+  \hat{\bm{y}}=\bm{W}^{(L)}\big(\cdots(\bm{W}^{(1)}\bm{x}+\bm{b}^{(1)})\cdots\big)+\bm{b}^{(L)}
+  =\underbrace{\bm{W}^{(L)}\cdots\bm{W}^{(1)}}_{=:\,\bm{W}_{\text{eff}}}\bm{x}+\bm{b}_{\text{eff}},
+\]
+仍然只是一个线性模型——层数再多也没有增加任何表达能力。\textbf{激活函数的非线性是深度网络全部威力的来源。}
+\end{remark}
+
+\begin{definition}[常用激活函数]\label{def:activations}
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+名称 & 定义 & 导数 & 备注\\
+\midrule
+sigmoid & $\sigma(z)=\dfrac{1}{1+e^{-z}}$ & $\sigma(1-\sigma)\in(0,\tfrac14]$ & 输出 $(0,1)$；易梯度消失\\
+tanh & $\tanh z=\dfrac{e^{z}-e^{-z}}{e^{z}+e^{-z}}$ & $1-\tanh^2z\in(0,1]$ & 零中心，优于 sigmoid\\
+ReLU & $\max(0,z)$ & $\bm{1}[z>0]$ & 计算快，缓解梯度消失；可能“死亡”\\
+Leaky ReLU & $\max(\alpha z,z)$, $\alpha\!\approx\!0.01$ & $\bm{1}[z>0]+\alpha\bm{1}[z\le0]$ & 修补死亡 ReLU\\
+GELU / Swish & $z\,\Phi(z)$ / $z\sigma(z)$ & 光滑 & 现代大模型常用\\
+\bottomrule
+\end{tabular}
+\end{center}
+恒等式 $\tanh z=2\sigma(2z)-1$ 说明 tanh 与 sigmoid 只差一个仿射变换。
+\end{definition}
+
+输出层的激活由\textbf{任务}决定，与隐藏层无关：回归用恒等（配平方损失）；二分类用 sigmoid（配 BCE）；$K$ 分类用 softmax（配交叉熵）。
+
+\begin{theorem}[通用逼近定理，只叙述不证明]\label{thm:uat}
+设 $\phi$ 是非常数、有界、单调递增的连续函数（如 sigmoid）。则对任意紧集 $C\subset\R^d$、任意连续函数 $f:C\to\R$ 与任意 $\epsilon>0$，存在整数 $N$ 与参数 $\{w_i,\bm{v}_i,b_i\}_{i=1}^{N}$ 使
+\[
+  \sup_{\bm{x}\in C}\Big|f(\bm{x})-\sum_{i=1}^{N}w_i\phi\big(\bm{v}_i\T\bm{x}+b_i\big)\Big|<\epsilon .
+\]
+即\textbf{单个隐藏层}的网络（宽度足够）可以一致逼近任何连续函数。对 ReLU 也有相应结论。
+\end{theorem}
+
+\begin{remark}[这条定理说了什么、没说什么]
+它保证了假设空间足够大（表达能力 \eng{expressivity}），但\textbf{没有}说：需要多少神经元（可能随 $d$ 指数增长）、能否用梯度下降\textbf{找到}那组参数（可学习性 \eng{learnability}）、以及找到后是否\textbf{泛化}。实践中偏好“深而窄”而非“浅而宽”，因为许多函数用深网络表示所需参数量指数地少。切勿把这条定理当作“神经网络万能”的证明。
+\end{remark}
+
+\subsection{两层 MLP 的反向传播：完整推导}
+
+先把最重要的情形彻底算清楚：一个隐藏层的网络（$L=2$），标量输出，平方损失。这是所有反向传播推导的样板。
+
+\textbf{设定。}输入 $\bm{x}\in\R^{d}$，隐藏层宽度 $m$，输出为标量：
+\begin{align}
+  \bm{z}^{(1)}&=\bm{W}^{(1)}\bm{x}+\bm{b}^{(1)}, & \bm{W}^{(1)}&\in\R^{m\times d},\ \bm{b}^{(1)}\in\R^{m},\label{eq:2l-1}\\
+  \bm{a}^{(1)}&=\phi\big(\bm{z}^{(1)}\big), & &\label{eq:2l-2}\\
+  z^{(2)}&=\bm{w}^{(2)\mathsf{T}}\bm{a}^{(1)}+b^{(2)}, & \bm{w}^{(2)}&\in\R^{m},\ b^{(2)}\in\R,\label{eq:2l-3}\\
+  \hat y&=z^{(2)},\qquad \ell=\tfrac12(\hat y-y)^2 . & &\label{eq:2l-4}
+\end{align}
+
+\textbf{第一步：输出层的误差信号。}定义 $\delta^{(2)}=\dfrac{\partial\ell}{\partial z^{(2)}}$。由 \eqref{eq:2l-4}，
+\begin{equation}\label{eq:2l-delta2}
+  \delta^{(2)}=\frac{\partial}{\partial z^{(2)}}\tfrac12\big(z^{(2)}-y\big)^2=\hat y-y .
+\end{equation}
+
+\textbf{第二步：输出层参数的梯度。}由 \eqref{eq:2l-3}，$\partial z^{(2)}/\partial w^{(2)}_j=a^{(1)}_j$ 与 $\partial z^{(2)}/\partial b^{(2)}=1$，故
+\begin{equation}\label{eq:2l-gw2}
+  \frac{\partial\ell}{\partial w^{(2)}_j}
+  =\frac{\partial\ell}{\partial z^{(2)}}\frac{\partial z^{(2)}}{\partial w^{(2)}_j}=\delta^{(2)}a^{(1)}_j
+  \ \Longrightarrow\ \nabla_{\bm{w}^{(2)}}\ell=\delta^{(2)}\bm{a}^{(1)},
+  \qquad \frac{\partial\ell}{\partial b^{(2)}}=\delta^{(2)} .
+\end{equation}
+
+\textbf{第三步：把误差信号传回隐藏层。}$z^{(2)}$ 依赖每一个 $a^{(1)}_j$，而 $a^{(1)}_j$ 只依赖 $z^{(1)}_j$（激活是逐元素的，这一点很关键）。于是
+\begin{equation}\label{eq:2l-delta1}
+  \delta^{(1)}_j:=\frac{\partial\ell}{\partial z^{(1)}_j}
+  =\underbrace{\frac{\partial\ell}{\partial z^{(2)}}}_{\delta^{(2)}}
+  \underbrace{\frac{\partial z^{(2)}}{\partial a^{(1)}_j}}_{w^{(2)}_j}
+  \underbrace{\frac{\partial a^{(1)}_j}{\partial z^{(1)}_j}}_{\phi'(z^{(1)}_j)}
+  =\delta^{(2)}\,w^{(2)}_j\,\phi'\big(z^{(1)}_j\big),
+\end{equation}
+写成向量形式
+\[
+  \bm{\delta}^{(1)}=\big(\delta^{(2)}\bm{w}^{(2)}\big)\odot\phi'\big(\bm{z}^{(1)}\big).
+\]
+
+\textbf{第四步：隐藏层参数的梯度。}由 \eqref{eq:2l-1}，$z^{(1)}_j=\sum_k W^{(1)}_{jk}x_k+b^{(1)}_j$，故 $\partial z^{(1)}_j/\partial W^{(1)}_{pq}=\delta_{jp}x_q$，于是
+\begin{equation}\label{eq:2l-gw1}
+  \frac{\partial\ell}{\partial W^{(1)}_{pq}}
+  =\sum_{j}\frac{\partial\ell}{\partial z^{(1)}_j}\frac{\partial z^{(1)}_j}{\partial W^{(1)}_{pq}}
+  =\sum_j\delta^{(1)}_j\delta_{jp}x_q=\delta^{(1)}_p x_q
+  \ \Longrightarrow\ \nabla_{\bm{W}^{(1)}}\ell=\bm{\delta}^{(1)}\bm{x}\T,
+\end{equation}
+以及 $\nabla_{\bm{b}^{(1)}}\ell=\bm{\delta}^{(1)}$。
+
+\begin{remark}[规律总结]
+四步之后浮现出两条普适规律，它们对任意层数都成立：
+\[
+  \boxed{\ \nabla_{\bm{W}^{(l)}}\ell=\bm{\delta}^{(l)}\,\bm{a}^{(l-1)\mathsf{T}}\ }\qquad
+  \boxed{\ \bm{\delta}^{(l)}=\big(\bm{W}^{(l+1)\mathsf{T}}\bm{\delta}^{(l+1)}\big)\odot\phi'\big(\bm{z}^{(l)}\big)\ }
+\]
+即：\emph{某层权重的梯度 = 该层的误差信号 $\times$ 该层的输入（外积）}；\emph{误差信号从后往前传播时，先用权重矩阵的转置“反向线性映射”，再逐元素乘上本层激活函数的导数}。式 \eqref{eq:2l-gw2} 与 \eqref{eq:2l-gw1} 都是第一条的特例，\eqref{eq:2l-delta1} 是第二条的特例。
+\end{remark}
+
+\subsection{一般 $L$ 层网络的反向传播}
+
+\begin{theorem}[反向传播 \eng{backpropagation}]\label{thm:backprop}
+对定义 \ref{def:mlp} 的网络与任意可微损失 $\ell(\bm{a}^{(L)},y)$，定义误差信号 $\bm{\delta}^{(l)}=\nabla_{\bm{z}^{(l)}}\ell\in\R^{n_l}$。则
+\begin{align}
+  \bm{\delta}^{(L)}&=\nabla_{\bm{a}^{(L)}}\ell\ \odot\ \phi^{(L)\prime}\big(\bm{z}^{(L)}\big), \label{eq:bp1}\\
+  \bm{\delta}^{(l)}&=\Big(\bm{W}^{(l+1)\mathsf{T}}\bm{\delta}^{(l+1)}\Big)\odot\phi^{(l)\prime}\big(\bm{z}^{(l)}\big),
+  \qquad l=L-1,\dots,1, \label{eq:bp2}\\
+  \nabla_{\bm{W}^{(l)}}\ell&=\bm{\delta}^{(l)}\bm{a}^{(l-1)\mathsf{T}},
+  \qquad
+  \nabla_{\bm{b}^{(l)}}\ell=\bm{\delta}^{(l)} . \label{eq:bp3}
+\end{align}
+\end{theorem}
+
+\begin{proof}
+\textbf{(a) 式 \eqref{eq:bp1}：}由 $\bm{a}^{(L)}=\phi^{(L)}(\bm{z}^{(L)})$ 且激活逐元素作用，$\partial a^{(L)}_k/\partial z^{(L)}_j=\delta_{kj}\phi^{(L)\prime}(z^{(L)}_j)$。故
+\[
+  \delta^{(L)}_j=\frac{\partial\ell}{\partial z^{(L)}_j}
+  =\sum_k\frac{\partial\ell}{\partial a^{(L)}_k}\frac{\partial a^{(L)}_k}{\partial z^{(L)}_j}
+  =\frac{\partial\ell}{\partial a^{(L)}_j}\phi^{(L)\prime}\big(z^{(L)}_j\big).
+\]
+
+\textbf{(b) 式 \eqref{eq:bp2}：}损失对 $\bm{z}^{(l)}$ 的依赖\textbf{只能}通过 $\bm{z}^{(l+1)}$（因为网络是逐层前馈的），而
+\[
+  z^{(l+1)}_i=\sum_{j=1}^{n_l}W^{(l+1)}_{ij}a^{(l)}_j+b^{(l+1)}_i
+  =\sum_{j}W^{(l+1)}_{ij}\phi^{(l)}\big(z^{(l)}_j\big)+b^{(l+1)}_i .
+\]
+因此
+\[
+  \frac{\partial z^{(l+1)}_i}{\partial z^{(l)}_j}=W^{(l+1)}_{ij}\,\phi^{(l)\prime}\big(z^{(l)}_j\big),
+\]
+代入链式法则（对 $i$ 求和，因为 $\bm{z}^{(l)}$ 的每个分量影响 $\bm{z}^{(l+1)}$ 的所有分量）：
+\[
+  \delta^{(l)}_j=\sum_{i=1}^{n_{l+1}}\frac{\partial\ell}{\partial z^{(l+1)}_i}\frac{\partial z^{(l+1)}_i}{\partial z^{(l)}_j}
+  =\sum_{i}\delta^{(l+1)}_i W^{(l+1)}_{ij}\,\phi^{(l)\prime}\big(z^{(l)}_j\big)
+  =\Big[\big(\bm{W}^{(l+1)\mathsf{T}}\bm{\delta}^{(l+1)}\big)_j\Big]\phi^{(l)\prime}\big(z^{(l)}_j\big),
+\]
+其中用到 $\sum_i\delta_i W_{ij}=\sum_i (W\T)_{ji}\delta_i=(\bm{W}\T\bm{\delta})_j$。这正是 \eqref{eq:bp2}。
+
+\textbf{(c) 式 \eqref{eq:bp3}：}由 \eqref{eq:fwd-z}，$\partial z^{(l)}_i/\partial W^{(l)}_{pq}=\delta_{ip}a^{(l-1)}_q$ 与 $\partial z^{(l)}_i/\partial b^{(l)}_p=\delta_{ip}$，故
+\[
+  \frac{\partial\ell}{\partial W^{(l)}_{pq}}=\sum_i\delta^{(l)}_i\delta_{ip}a^{(l-1)}_q=\delta^{(l)}_p a^{(l-1)}_q,
+  \qquad
+  \frac{\partial\ell}{\partial b^{(l)}_p}=\delta^{(l)}_p . \qedhere
+\]
+\end{proof}
+
+\begin{remark}[为什么叫“反向”，以及为什么高效]
+计算 $\bm{\delta}^{(l)}$ 需要 $\bm{\delta}^{(l+1)}$，所以必须\textbf{从最后一层往前}算；而计算 $\bm{\delta}^{(l)}$ 又需要前向时保存下来的 $\bm{z}^{(l)},\bm{a}^{(l-1)}$，所以标准流程是“先前向并缓存中间量，再反向”。
+
+代价分析：一次前向的主要开销是每层的矩阵--向量乘 $O(n_ln_{l-1})$，反向传播也是同一量级（\eqref{eq:bp2} 一次乘 $\bm{W}\T$，\eqref{eq:bp3} 一次外积）。因此\textbf{算全部 $P$ 个参数的梯度只需大约 $2\sim3$ 倍前向的代价}，与 $P$ 无关。相比之下，用有限差分逐个参数近似需要 $O(P)$ 次前向——当 $P=10^{7}$ 时前者可行、后者绝无可能。这就是反向传播（自动微分的反向模式 \eng{reverse-mode automatic differentiation}）之所以是深度学习基石的原因。代价是内存：所有中间激活都要缓存，这通常是显存瓶颈。
+\end{remark}
+
+\begin{corollary}[小批量的矩阵形式]\label{cor:bp-batch}
+把一个批量的 $B$ 个样本按\textbf{行}堆成 $\bm{A}^{(0)}=\bm{X}_{\mathcal{B}}\in\R^{B\times d}$，则前向为
+$\bm{Z}^{(l)}=\bm{A}^{(l-1)}\bm{W}^{(l)\mathsf{T}}+\bm{1}_B\bm{b}^{(l)\mathsf{T}}$，$\bm{A}^{(l)}=\phi(\bm{Z}^{(l)})$；反向为
+\[
+  \bm{\Delta}^{(l)}=\big(\bm{\Delta}^{(l+1)}\bm{W}^{(l+1)}\big)\odot\phi'\big(\bm{Z}^{(l)}\big),
+  \qquad
+  \nabla_{\bm{W}^{(l)}}\Loss=\frac1B\bm{\Delta}^{(l)\mathsf{T}}\bm{A}^{(l-1)},
+  \qquad
+  \nabla_{\bm{b}^{(l)}}\Loss=\frac1B\bm{\Delta}^{(l)\mathsf{T}}\bm{1}_B .
+\]
+样本间的求和被矩阵乘法自动完成，这正是 GPU 高效的原因。（注意 $\bm{1}_B\bm{b}\T$ 这种“广播” \eng{broadcasting} 加法在框架中是隐式的。）
+\end{corollary}
+
+\subsection{分类输出层：softmax 与交叉熵的合并}
+
+若最后一层是 softmax 且损失是交叉熵，则由定理 \ref{thm:softmax-grad} 可直接得到
+\begin{equation}\label{eq:bp-softmax}
+  \bm{\delta}^{(L)}=\bm{p}-\bm{t},
+\end{equation}
+\textbf{不需要}用 \eqref{eq:bp1} 分别算 $\nabla_{\bm{a}^{(L)}}\ell$ 与 softmax 的 Jacobi 矩阵。同理，二分类 sigmoid + BCE 给出 $\delta^{(L)}=\hat p-y$（定理 \ref{thm:logreg-grad} 第一步）。这个化简既省计算又避免了数值灾难：当 $p_k\to0$ 时 $\partial\ell/\partial p_k=-t_k/p_k\to\infty$，分开算会溢出，合并算却完全良态。
+
+\subsection{梯度消失与初始化}
+
+\begin{proposition}[梯度消失/爆炸的机制]\label{prop:vanish}
+反复代入 \eqref{eq:bp2}，第 $l$ 层的误差信号可写成
+\[
+  \bm{\delta}^{(l)}=\bm{D}^{(l)}\bm{W}^{(l+1)\mathsf{T}}\bm{D}^{(l+1)}\bm{W}^{(l+2)\mathsf{T}}\cdots\bm{D}^{(L-1)}\bm{W}^{(L)\mathsf{T}}\bm{\delta}^{(L)},
+  \qquad \bm{D}^{(l)}=\diag\big(\phi'(\bm{z}^{(l)})\big),
+\]
+于是范数满足
+\[
+  \norm{\bm{\delta}^{(l)}}\ \le\ \Big(\prod_{j=l}^{L-1}\norm{\bm{D}^{(j)}}_2\norm{\bm{W}^{(j+1)}}_2\Big)\norm{\bm{\delta}^{(L)}} .
+\]
+若每个因子的典型大小为 $c$，则 $\norm{\bm{\delta}^{(l)}}\sim c^{L-l}$：$c<1$ 时深层网络的浅层梯度\textbf{指数衰减}（梯度消失），$c>1$ 时\textbf{指数增长}（梯度爆炸 \eng{exploding gradient}）。
+\end{proposition}
+
+对 sigmoid，$\norm{\bm{D}}_2\le1/4$，仅激活函数一项就带来每层 $\le1/4$ 的衰减：$10$ 层即 $4^{-10}\approx10^{-6}$。这解释了三件事：为什么 2010 年前深网络训练不起来；为什么 ReLU（$\phi'\in\{0,1\}$，正区间无衰减）是关键突破；为什么残差连接 \eng{residual/skip connection} $\bm{a}^{(l)}=\bm{a}^{(l-1)}+\mathcal{F}(\bm{a}^{(l-1)})$ 有效——它让 Jacobi 矩阵变成 $\bm{I}+\partial\mathcal{F}$，乘积中始终保留一条“恒等通路”，使梯度不被指数压缩。
+
+\begin{theorem}[He 初始化的方差推导]\label{thm:he-init}
+设某层输入 $\bm{a}\in\R^{n_{\mathrm{in}}}$ 的各分量独立、零均值、方差 $v_a$；权重 $W_{ij}$ 独立、零均值、方差 $v_w$，与 $\bm{a}$ 独立；忽略偏置。则 $z_i=\sum_jW_{ij}a_j$ 满足
+\[
+  \E[z_i]=0,\qquad \Var(z_i)=n_{\mathrm{in}}\,v_w\,v_a .
+\]
+要使信号方差逐层保持不变（$\Var(z)=v_a$），需 $v_w=1/n_{\mathrm{in}}$（对 $\tanh$，即 Xavier/Glorot 初始化）。对 ReLU，激活把一半的分量置零，使方差减半（$\Var(\phi(z))\approx\tfrac12\Var(z)$），故需
+\[
+  \boxed{\ v_w=\frac{2}{n_{\mathrm{in}}}\ }
+\]
+即 He 初始化：$W_{ij}\sim\mathcal{N}(0,2/n_{\mathrm{in}})$。
+\end{theorem}
+
+\begin{proof}
+$\E[z_i]=\sum_j\E[W_{ij}]\E[a_j]=0$（独立性 + 零均值）。方差：由独立可加，
+\[
+  \Var(z_i)=\sum_{j=1}^{n_{\mathrm{in}}}\Var(W_{ij}a_j)
+  =\sum_j\Big(\E[W_{ij}^2a_j^2]-\big(\E[W_{ij}a_j]\big)^2\Big)
+  =\sum_j\E[W_{ij}^2]\E[a_j^2]=n_{\mathrm{in}}v_wv_a ,
+\]
+用了独立性使 $\E[W^2a^2]=\E[W^2]\E[a^2]$，以及零均值使 $\E[W^2]=v_w$、$\E[a^2]=v_a$、$\E[Wa]=0$。
+
+对 ReLU：设 $z$ 关于 $0$ 对称分布，则
+\[
+  \E\big[\phi(z)^2\big]=\E\big[z^2\bm{1}[z>0]\big]=\tfrac12\E[z^2]=\tfrac12\Var(z),
+\]
+即输出的二阶矩只有输入方差的一半。要求 $\tfrac12 n_{\mathrm{in}}v_wv_a=v_a$ 得 $v_w=2/n_{\mathrm{in}}$。
+\end{proof}
+
+\begin{remark}[千万不要全零初始化]
+若把某层所有权重初始化为同一个常数（特别是 $0$），则该层所有神经元的 $z$ 相同、$\delta$ 也相同，梯度完全一致，更新后依然相同——它们永远是同一个神经元的复制品，网络的有效宽度退化为 $1$。这叫对称性未被破缺 \eng{symmetry breaking failure}。因此权重必须\textbf{随机}初始化（偏置可以取 $0$）。
+\end{remark}
+
+\subsection{把网络当作“可学习的特征提取器”}
+
+一个有用的看法：把 $L$ 层网络拆成两截，
+\[
+  \hat y=\underbrace{\bm{w}^{(L)\mathsf{T}}}_{\text{线性/逻辑回归}}\underbrace{\bm{a}^{(L-1)}(\bm{x};\bm{\theta}_{1:L-1})}_{\text{学到的特征}\ \varphi(\bm{x})}+b^{(L)} .
+\]
+最后一层就是普通的线性/逻辑回归，只不过它作用在\textbf{学出来的特征} $\varphi(\bm{x})$ 上，而不是原始特征上。这解释了为什么“先用大数据预训练、再换一个线性头微调” \eng{pre-training + fine-tuning / linear probing} 的做法有效，也说明神经网络与前面几节不是两套东西：它只是把“人工设计特征”这一步也变成了可优化的对象。
+
+\end{document}
