@@ -56,6 +56,31 @@ MACRO_HEADER = r"""
 \newcommand{\pform}[1]{#1\text{-form}}
 \newcommand{\eng}[1]{\textup{(#1)}}
 \newcommand{\en}[1]{\textup{(#1)}}
+% SCET slash notation: use \not{.} (GitHub MathJax-friendly)
+\newcommand{\nsl}{\not{n}}
+\newcommand{\nbsl}{\not{\bar{n}}}
+\newcommand{\Dsl}{\not{D}}
+\newcommand{\psl}{\not{p}}
+\newcommand{\ksl}{\not{k}}
+\newcommand{\lsl}{\not{\ell}}
+\newcommand{\qsl}{\not{q}}
+\newcommand{\Asl}{\not{A}}
+\newcommand{\dsl}{\not{\partial}}
+\newcommand{\epsl}{\not{\varepsilon}}
+\newcommand{\vsl}{\not{v}}
+\newcommand{\Bsl}{\not{B}}
+\newcommand{\pperp}{\boldsymbol{p}_\perp}
+\newcommand{\kperp}{\boldsymbol{k}_\perp}
+\newcommand{\qperp}{\boldsymbol{q}_\perp}
+\newcommand{\as}{\alpha_s}
+\newcommand{\CF}{C_F}
+\newcommand{\CA}{C_A}
+\newcommand{\TF}{T_F}
+\newcommand{\muMS}{\overline{\mathrm{MS}}}
+\newcommand{\LQCD}{\Lambda_{\mathrm{QCD}}}
+\newcommand{\Gcusp}{\Gamma_{\mathrm{cusp}}}
+\newcommand{\SCETI}{\mathrm{SCET}_{I}}
+\newcommand{\SCETII}{\mathrm{SCET}_{II}}
 \DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -133,6 +158,7 @@ def preprocess(tex: str) -> tuple[str, str, str]:
     body = re.sub(r"\\texorpdfstring\{([^{}]*)\}\{[^{}]*\}", r"\1", body)
     # GitHub MathJax: prefer \boldsymbol over ams \bm
     body = body.replace(r"\bm{", r"\boldsymbol{")
+    body = re.sub(r"\\bm\s+([A-Za-z])", r"\\boldsymbol{\1}", body)
     body = replace_theorem_envs(body)
 
     # abstract -> quote
@@ -153,6 +179,129 @@ def preprocess(tex: str) -> tuple[str, str, str]:
     return wrapped, title, author
 
 
+def _replace_cmd_one_arg(text: str, cmd: str, left: str, right: str) -> str:
+    """Replace \\cmd{...} allowing one nesting level of braces."""
+    out = []
+    i = 0
+    token = "\\" + cmd
+    n = len(text)
+    while i < n:
+        if text.startswith(token, i) and (i + len(token) >= n or not text[i + len(token)].isalpha()):
+            j = i + len(token)
+            if j < n and text[j] == "*":
+                j += 1
+            if j < n and text[j] == "{":
+                depth = 0
+                k = j
+                while k < n:
+                    if text[k] == "{":
+                        depth += 1
+                    elif text[k] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            break
+                    k += 1
+                if depth == 0:
+                    inner = text[j + 1 : k]
+                    out.append(left + inner + right)
+                    i = k + 1
+                    continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+
+
+def fix_github_math(md: str) -> str:
+    """Make math GitHub-MathJax friendly."""
+    # Expand macros GitHub does not know (safety net if pandoc left them)
+    slash = {
+        r"\nsl": r"\not{n}",
+        r"\nbsl": r"\not{\bar{n}}",
+        r"\Dsl": r"\not{D}",
+        r"\psl": r"\not{p}",
+        r"\ksl": r"\not{k}",
+        r"\lsl": r"\not{\ell}",
+        r"\qsl": r"\not{q}",
+        r"\Asl": r"\not{A}",
+        r"\dsl": r"\not{\partial}",
+        r"\epsl": r"\not{\varepsilon}",
+        r"\vsl": r"\not{v}",
+        r"\Bsl": r"\not{B}",
+    }
+    # longer names first
+    for k in sorted(slash, key=len, reverse=True):
+        md = re.sub(re.escape(k) + r"(?![A-Za-z])", lambda m, v=slash[k]: v, md)
+
+    simple = {
+        r"\pperp": r"\boldsymbol{p}_\perp",
+        r"\kperp": r"\boldsymbol{k}_\perp",
+        r"\qperp": r"\boldsymbol{q}_\perp",
+        r"\as": r"\alpha_s",
+        r"\CF": r"C_F",
+        r"\CA": r"C_A",
+        r"\TF": r"T_F",
+        r"\muMS": r"\overline{\mathrm{MS}}",
+        r"\LQCD": r"\Lambda_{\mathrm{QCD}}",
+        r"\Gcusp": r"\Gamma_{\mathrm{cusp}}",
+        r"\SCETI": r"\mathrm{SCET}_{I}",
+        r"\SCETII": r"\mathrm{SCET}_{II}",
+    }
+    for k in sorted(simple, key=len, reverse=True):
+        md = re.sub(re.escape(k) + r"(?![A-Za-z])", lambda m, v=simple[k]: v, md)
+
+    md = _replace_cmd_one_arg(md, "norm", r"\left\lVert ", r"\right\rVert")
+    md = _replace_cmd_one_arg(md, "abs", r"\left\lvert ", r"\right\rvert")
+    md = md.replace(r"\qedhere", "")
+    md = md.replace(r"\bm{", r"\boldsymbol{")
+    md = re.sub(r"\\bm\s+([A-Za-z])", r"\\boldsymbol{\1}", md)
+    # strip labels inside math (GitHub ignores them; they can confuse parsers)
+    md = re.sub(r"\\label\{[^}]*\}", "", md)
+    # \text{\emph{...}} -> \textit{...} for MathJax
+    md = re.sub(r"\\text\{\\emph\{([^{}]*)\}\}", r"\\textit{\1}", md)
+
+    # Convert \[ \] if any remain
+    md = re.sub(
+        r"\\\[(.+?)\\\]",
+        lambda m: f"\n\n$$\n{m.group(1).strip()}\n$$\n\n",
+        md,
+        flags=re.S,
+    )
+
+    # Isolate every $$...$$ block onto its own lines (GitHub requirement)
+    def isol(m: re.Match) -> str:
+        body = m.group(1).strip()
+        # tidy spaces before _ or ^ after delimiters
+        body = re.sub(r"\\right\\rVert\s+([_^])", r"\\right\\rVert\1", body)
+        body = re.sub(r"\\right\\rvert\s+([_^])", r"\\right\\rvert\1", body)
+        return f"\n\n$$\n{body}\n$$\n\n"
+
+    md = re.sub(r"\$\$(.+?)\$\$", isol, md, flags=re.S)
+
+    # Blockquote-aware math lines
+    lines = md.splitlines()
+    out_lines = []
+    in_bq = False
+    in_math = False
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith(">"):
+            in_bq = True
+        elif stripped == "":
+            in_bq = False
+        if line.strip() == "$$":
+            in_math = not in_math
+            if in_bq and not stripped.startswith(">"):
+                out_lines.append("> " + line)
+                continue
+        if in_math and in_bq and line.strip() and not stripped.startswith(">"):
+            out_lines.append("> " + line)
+            continue
+        out_lines.append(line)
+    md = "\n".join(out_lines)
+    md = re.sub(r"\n{3,}", "\n\n", md)
+    return md
+
+
 def postprocess(md: str, title: str, author: str) -> str:
     # drop empty YAML / leftover pandoc title blocks if any
     md = re.sub(r"^---\n.*?\n---\n+", "", md, count=1, flags=re.S)
@@ -168,11 +317,11 @@ def postprocess(md: str, title: str, author: str) -> str:
     md = re.sub(r'<div class="center">\s*', "", md)
     md = re.sub(r"</div>", "", md)
     md = re.sub(r"</?div[^>]*>", "", md)
-    md = md.replace(r"\bm{", r"\boldsymbol{")
     md = re.sub(r"\(\(([^()\n]+)\)\)", r"(\1)", md)
     md = re.sub(r"（\(([^()\n]+)\)）", r"（\1）", md)
     md = re.sub(r"（\(([^()\n]+)\)\)", r"（\1）", md)
-    # normalize excessive blank lines
+
+    md = fix_github_math(md)
     md = re.sub(r"\n{3,}", "\n\n", md).strip() + "\n"
 
     def clean_title(t: str) -> str:
@@ -187,8 +336,8 @@ def postprocess(md: str, title: str, author: str) -> str:
         header.append(f"*{author}*\n")
     header.append(
         "> 本文由 LaTeX 课前讲义转换为 Markdown，可在 GitHub 直接阅读。"
-        "数学公式使用 `$...$` / `$$...$$`。"
-        "排版以同目录 `.tex` 为准；若个别公式显示异常，请对照源文件。\n"
+        "公式已按 GitHub 渲染要求处理（独立公式块、常用宏已展开）。"
+        "若仍有个别公式异常，请对照同目录 `.tex`。\n"
     )
     return "\n".join(header) + "\n" + md
 

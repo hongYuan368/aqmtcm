@@ -2,7 +2,7 @@
 
 *课前自学材料（简体中文，英文术语另列）*
 
-> 本文由 LaTeX 课前讲义转换为 Markdown，可在 GitHub 直接阅读。数学公式使用 `$...$` / `$$...$$`。排版以同目录 `.tex` 为准；若个别公式显示异常，请对照源文件。
+> 本文由 LaTeX 课前讲义转换为 Markdown，可在 GitHub 直接阅读。公式已按 GitHub 渲染要求处理（独立公式块、常用宏已展开）。若仍有个别公式异常，请对照同目录 `.tex`。
 
 > **摘要**
 >
@@ -28,9 +28,12 @@
 
 3.  **对称性由连续变换的生成元定义**。 去掉它 $\Rightarrow$ 离散、有限群甚至“范畴型”对称性 （categorical symmetry）都被统一描述。
 
-把这三条统称为**广义（全局）对称性** （generalized global symmetry）。它们的共同语言是： $$\boxed{\ \text{一个对称性} \;\Longleftrightarrow\;
+把这三条统称为**广义（全局）对称性** （generalized global symmetry）。它们的共同语言是： 
+
+$$
+\boxed{\ \text{一个对称性} \;\Longleftrightarrow\;
   \text{一族\emph{拓扑}算符（在时空中支撑于某个子流形上）}\ }
-  \label{eq:slogan}$$
+$$
 
 ## 为什么值得学
 
@@ -98,9 +101,14 @@
 
 - $\mathrm{U}(1)=\{e^{i\alpha}:\alpha\in[0,2\pi)\}$：阿贝尔、**连续**、紧致。 它是本课程最重要的群。
 
-- $\mathrm{SU}(N)$：非阿贝尔、连续、紧致。其**中心** （center）为 $$Z\big(\mathrm{SU}(N)\big)
+- $\mathrm{SU}(N)$：非阿贝尔、连续、紧致。其**中心** （center）为 
+
+$$
+Z\big(\mathrm{SU}(N)\big)
             =\Big\{\omega\,\mathbf 1_N:\ \omega^N=1\Big\}\cong\mathbb{Z}_N .
-            \label{eq:center}$$ 这个 $\mathbb{Z}_N$ 将在第 9.2.6 小节变成 1-form 对称性。
+$$
+
+ 这个 $\mathbb{Z}_N$ 将在第 9.2.6 小节变成 1-form 对称性。
 
 **定义（表示）。**
 
@@ -124,18 +132,25 @@ $\mathbb{Z}_N\subset\mathrm{U}(1)$（$N$ 次单位根）， $\mathrm{U}(1)/\math
 
 ## 拉氏量形式
 
-场论由作用量给出。设场为 $\phi^a(x)$（$a$ 标记场的种类与分量）， $$S[\phi]=\int_{\mathcal{M}_d}\mathrm{d}^dx\;\mathcal{L}\big(\phi^a,\partial_\mu\phi^a\big).
-  \label{eq:action}$$
+场论由作用量给出。设场为 $\phi^a(x)$（$a$ 标记场的种类与分量）， 
+
+$$
+S[\phi]=\int_{\mathcal{M}_d}\mathrm{d}^dx\;\mathcal{L}\big(\phi^a,\partial_\mu\phi^a\big).
+$$
 
 **命题（Euler–Lagrange 方程）。**
 
-$S$ 在 $\phi\to\phi+\delta\phi$（$\delta\phi$ 在边界上为零）下取极值的条件是 $$\boxed{\ \frac{\partial \mathcal{L}}{\partial \phi^a}
+$S$ 在 $\phi\to\phi+\delta\phi$（$\delta\phi$ 在边界上为零）下取极值的条件是 
+
+$$
+\boxed{\ \frac{\partial \mathcal{L}}{\partial \phi^a}
   -\partial_\mu\!\left(\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\right)=0\ }
-  \label{eq:EL}$$
+$$
 
 **证明。**
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   \delta S
   &=\int\mathrm{d}^dx\left[\frac{\partial \mathcal{L}}{\partial \phi^a}\delta\phi^a
     +\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\partial_\mu\delta\phi^a\right]
@@ -144,7 +159,10 @@ $$\begin{aligned}
     -\partial_\mu\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\right]\delta\phi^a
     +\underbrace{\int\mathrm{d}^dx\;\partial_\mu\!\left[
     \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\delta\phi^a\right]}_{\text{边界项}=0} .
-\end{aligned}$$ 因 $\delta\phi^a$ 任意，方括号必须为零。
+\end{aligned}
+$$
+
+ 因 $\delta\phi^a$ 任意，方括号必须为零。
 
 **例（本讲义要用的三个拉氏量）。**
 
@@ -161,17 +179,28 @@ $$\begin{aligned}
 
 正则量子化的三步：
 
-1.  **定义共轭动量** $$\pi_a(x)=\frac{\partial \mathcal{L}}{\partial \dot\phi^a(x)} .$$
+1.  **定义共轭动量** 
 
-2.  **等时正则关系**（把 Poisson 括号换成交换子） $$\big[\phi^a(t,\bm x),\ \pi_b(t,\bm y)\big]
-              =i\,\delta^a_{\ b}\,\delta^{d-1}(\bm x-\bm y),
+$$
+\pi_a(x)=\frac{\partial \mathcal{L}}{\partial \dot\phi^a(x)} .
+$$
+
+2.  **等时正则关系**（把 Poisson 括号换成交换子） 
+
+$$
+\big[\phi^a(t,\boldsymbol{x}),\ \pi_b(t,\boldsymbol{y})\big]
+              =i\,\delta^a_{\ b}\,\delta^{d-1}(\boldsymbol{x}-\boldsymbol{y}),
               \qquad
               [\phi,\phi]=[\pi,\pi]=0 .
-              \label{eq:canonical}$$
+$$
 
-3.  **Hamilton 量生成时间演化** $$H=\int\mathrm{d}^{d-1}x\,\big(\pi_a\dot\phi^a-\mathcal{L}\big),
+3.  **Hamilton 量生成时间演化** 
+
+$$
+H=\int\mathrm{d}^{d-1}x\,\big(\pi_a\dot\phi^a-\mathcal{L}\big),
               \qquad
-              \dot{\mathcal{O}}=i[H,\mathcal{O}] .$$
+              \dot{\mathcal{O}}=i[H,\mathcal{O}] .
+$$
 
 **要点。**
 
@@ -179,12 +208,17 @@ $$\begin{aligned}
 
 #### 路径积分表述。
 
-后面讨论关联函数与 Ward 恒等式时会用 $$\big\langle \mathcal{O}_1(x_1)\cdots\mathcal{O}_n(x_n)\big\rangle
+后面讨论关联函数与 Ward 恒等式时会用 
+
+$$
+\big\langle \mathcal{O}_1(x_1)\cdots\mathcal{O}_n(x_n)\big\rangle
   =\frac{1}{Z}\int\!\mathcal{D}\phi\;
   \mathcal{O}_1(x_1)\cdots\mathcal{O}_n(x_n)\;e^{iS[\phi]},
   \qquad
   Z=\int\!\mathcal{D}\phi\;e^{iS[\phi]} .
-  \label{eq:pathintegral}$$ 在欧氏信号下 $e^{iS}\to e^{-S_E}$。 **广义对称性的大部分论证在欧氏信号、路径积分语言下最自然**， 因为“把算符支撑在任意子流形上并连续形变”在那里是显然的操作。
+$$
+
+ 在欧氏信号下 $e^{iS}\to e^{-S_E}$。 **广义对称性的大部分论证在欧氏信号、路径积分语言下最自然**， 因为“把算符支撑在任意子流形上并连续形变”在那里是显然的操作。
 
 ## 微分形式速成
 
@@ -194,39 +228,70 @@ $$\begin{aligned}
 
 **定义（$p$-形式）。**
 
-$d$ 维流形上的 **$p$-形式**（$p$-form）是完全反对称张量场， 写作 $$\omega=\frac{1}{p!}\,\omega_{\mu_1\cdots\mu_p}\,
+$d$ 维流形上的 **$p$-形式**（$p$-form）是完全反对称张量场， 写作 
+
+$$
+\omega=\frac{1}{p!}\,\omega_{\mu_1\cdots\mu_p}\,
   \mathrm{d}x^{\mu_1}\wedge\cdots\wedge\mathrm{d}x^{\mu_p},
   \qquad
-  \omega_{\cdots\mu_i\cdots\mu_j\cdots}=-\omega_{\cdots\mu_j\cdots\mu_i\cdots} .$$ $p=0$ 即标量函数。因反对称性，$d$ 维中 $p>d$ 的形式恒为零。
+  \omega_{\cdots\mu_i\cdots\mu_j\cdots}=-\omega_{\cdots\mu_j\cdots\mu_i\cdots} .
+$$
 
-**楔积**（wedge product）满足 $$\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu=-\,\mathrm{d}x^\nu\wedge \mathrm{d}x^\mu,
+ $p=0$ 即标量函数。因反对称性，$d$ 维中 $p>d$ 的形式恒为零。
+
+**楔积**（wedge product）满足 
+
+$$
+\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu=-\,\mathrm{d}x^\nu\wedge \mathrm{d}x^\mu,
   \qquad
   \omega_{(p)}\wedge\eta_{(q)}=(-1)^{pq}\,\eta_{(q)}\wedge\omega_{(p)} .
-  \label{eq:wedge}$$ 特别地，奇数次形式与自身的楔积为零：$\omega_{(1)}\wedge\omega_{(1)}=0$。
+$$
+
+ 特别地，奇数次形式与自身的楔积为零：$\omega_{(1)}\wedge\omega_{(1)}=0$。
 
 ### 外微分
 
 **定义（外微分）。**
 
-$\mathrm{d}:\Omega^p\to\Omega^{p+1}$， $$\mathrm{d}\omega=\frac{1}{p!}\,\partial_\nu\omega_{\mu_1\cdots\mu_p}\,
-  \mathrm{d}x^\nu\wedge \mathrm{d}x^{\mu_1}\wedge\cdots\wedge \mathrm{d}x^{\mu_p} .$$
+$\mathrm{d}:\Omega^p\to\Omega^{p+1}$， 
 
-两条核心性质： $$\boxed{\ \mathrm{d}^2=0\ },
+$$
+\mathrm{d}\omega=\frac{1}{p!}\,\partial_\nu\omega_{\mu_1\cdots\mu_p}\,
+  \mathrm{d}x^\nu\wedge \mathrm{d}x^{\mu_1}\wedge\cdots\wedge \mathrm{d}x^{\mu_p} .
+$$
+
+两条核心性质： 
+
+$$
+\boxed{\ \mathrm{d}^2=0\ },
   \qquad
   \mathrm{d}\big(\omega_{(p)}\wedge\eta_{(q)}\big)
   =\mathrm{d}\omega_{(p)}\wedge\eta_{(q)}
   +(-1)^p\,\omega_{(p)}\wedge \mathrm{d}\eta_{(q)} .
-  \label{eq:dsquared}$$ $\mathrm{d}^2=0$ 的理由：$\mathrm{d}^2\omega$ 的系数含 $\partial_\rho\partial_\nu\omega_{\cdots}$， 对 $\rho\nu$ 对称，而 $\mathrm{d}x^\rho\wedge \mathrm{d}x^\nu$ 反对称，故相消。
+$$
+
+ $\mathrm{d}^2=0$ 的理由：$\mathrm{d}^2\omega$ 的系数含 $\partial_\rho\partial_\nu\omega_{\cdots}$， 对 $\rho\nu$ 对称，而 $\mathrm{d}x^\rho\wedge \mathrm{d}x^\nu$ 反对称，故相消。
 
 **例（电磁学就是外微分）。**
 
-$A=A_\mu \mathrm{d}x^\mu$ 是 1-形式， $$F=\mathrm{d}A=\partial_\mu A_\nu\,\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu
+$A=A_\mu \mathrm{d}x^\mu$ 是 1-形式， 
+
+$$
+F=\mathrm{d}A=\partial_\mu A_\nu\,\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu
   =\frac12\big(\partial_\mu A_\nu-\partial_\nu A_\mu\big)
   \mathrm{d}x^\mu\wedge \mathrm{d}x^\nu
-  =\frac12 F_{\mu\nu}\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu .$$ 于是 Bianchi 恒等式**自动成立**： $$\mathrm{d}F=\mathrm{d}^2A=0
+  =\frac12 F_{\mu\nu}\mathrm{d}x^\mu\wedge \mathrm{d}x^\nu .
+$$
+
+ 于是 Bianchi 恒等式**自动成立**： 
+
+$$
+\mathrm{d}F=\mathrm{d}^2A=0
   \qquad\Longleftrightarrow\qquad
   \partial_{[\rho}F_{\mu\nu]}=0 .
-  \label{eq:bianchi}$$ 规范变换 $A\to A+\mathrm{d}\lambda$ 使 $F$ 不变，同样因 $\mathrm{d}^2=0$。
+$$
+
+ 规范变换 $A\to A+\mathrm{d}\lambda$ 使 $F$ 不变，同样因 $\mathrm{d}^2=0$。
 
 **定义（闭形式与恰当形式）。**
 
@@ -236,9 +301,12 @@ $\mathrm{d}\omega=0$ 称 $\omega$ **闭**（closed）； $\omega=\mathrm{d}\eta$
 
 **定理（Stokes）。**
 
-设 $\mathcal{M}_{p+1}$ 是 $(p+1)$ 维带边流形，边界 $\partial\mathcal{M}_{p+1}$， $\omega$ 为 $p$-形式，则 $$\boxed{\ \int_{\mathcal{M}_{p+1}}\mathrm{d}\omega
+设 $\mathcal{M}_{p+1}$ 是 $(p+1)$ 维带边流形，边界 $\partial\mathcal{M}_{p+1}$， $\omega$ 为 $p$-形式，则 
+
+$$
+\boxed{\ \int_{\mathcal{M}_{p+1}}\mathrm{d}\omega
   =\int_{\partial\mathcal{M}_{p+1}}\omega\ }
-  \label{eq:stokes}$$
+$$
 
 **要点。**
 
@@ -248,51 +316,74 @@ $\mathrm{d}\omega=0$ 称 $\omega$ **闭**（closed）； $\omega=\mathrm{d}\eta$
 
 **证明（要点（同调不变性））。**
 
-设 $\Sigma$ 与 $\Sigma'$ 是两个 $p$ 维闭子流形， 且它们“同调”（homologous），即存在 $(p+1)$ 维 $V$ 使 $\partial V=\Sigma-\Sigma'$。若 $\mathrm{d}\omega=0$，则 $$\int_\Sigma\omega-\int_{\Sigma'}\omega
+设 $\Sigma$ 与 $\Sigma'$ 是两个 $p$ 维闭子流形， 且它们“同调”（homologous），即存在 $(p+1)$ 维 $V$ 使 $\partial V=\Sigma-\Sigma'$。若 $\mathrm{d}\omega=0$，则 
+
+$$
+\int_\Sigma\omega-\int_{\Sigma'}\omega
   =\int_{\partial V}\omega
   =\int_V \mathrm{d}\omega=0 .
-  \label{eq:homologyinv}$$
+$$
 
 ### Hodge 星号与守恒律
 
 **定义（Hodge 星号）。**
 
-在 $d$ 维带度规流形上，$\star:\Omega^p\to\Omega^{d-p}$， $$(\star\omega)_{\mu_1\cdots\mu_{d-p}}
+在 $d$ 维带度规流形上，$\star:\Omega^p\to\Omega^{d-p}$， 
+
+$$
+(\star\omega)_{\mu_1\cdots\mu_{d-p}}
   =\frac{1}{p!}\,\sqrt{|g|}\;
   \epsilon_{\mu_1\cdots\mu_{d-p}\nu_1\cdots\nu_p}\,
   \omega^{\nu_1\cdots\nu_p} .
-  \label{eq:hodge}$$ 在欧氏号差下 $\star\star=(-1)^{p(d-p)}$；洛伦兹号差下多一个整体负号。
+$$
+
+ 在欧氏号差下 $\star\star=(-1)^{p(d-p)}$；洛伦兹号差下多一个整体负号。
 
 现在是关键的翻译。设 $j=j_\mu \mathrm{d}x^\mu$ 为 1-形式电流， 则 $\star j$ 是 $(d-1)$-形式，$\mathrm{d}\star j$ 是 $d$-形式，正比于体积元：
 
 **命题（守恒律的形式语言）。**
 
-$$\boxed{\ \partial_\mu j^\mu=0
+$$
+\boxed{\ \partial_\mu j^\mu=0
   \qquad\Longleftrightarrow\qquad
   \mathrm{d}\star j=0\ }
-  \label{eq:conservation}$$
+$$
 
 **证明。**
 
 由 [eq:hodge]，$(\star j)_{\mu_1\cdots\mu_{d-1}}
-=\sqrt{|g|}\,\epsilon_{\mu_1\cdots\mu_{d-1}\nu}j^\nu$。 取外微分并注意 $d$-形式空间是一维的（正比于 $\mathrm{d}^dx$），得 $$\mathrm{d}\star j=\big(\partial_\mu j^\mu\big)\sqrt{|g|}\;
-  \mathrm{d}x^1\wedge\cdots\wedge \mathrm{d}x^d
-  =\big(\partial_\mu j^\mu\big)\,\mathrm{vol}_d .$$ 故 $\mathrm{d}\star j=0$ 当且仅当 $\partial_\mu j^\mu=0$。
+=\sqrt{|g|}\,\epsilon_{\mu_1\cdots\mu_{d-1}\nu}j^\nu$。 取外微分并注意 $d$-形式空间是一维的（正比于 $\mathrm{d}^dx$），得 
 
-同理，对反对称的 $(q+1)$ 阶张量电流 $J^{\mu_1\cdots\mu_{q+1}}$（即 $(q+1)$-形式 $J$）： $$\partial_{\mu_1}J^{\mu_1\cdots\mu_{q+1}}=0
+$$
+\mathrm{d}\star j=\big(\partial_\mu j^\mu\big)\sqrt{|g|}\;
+  \mathrm{d}x^1\wedge\cdots\wedge \mathrm{d}x^d
+  =\big(\partial_\mu j^\mu\big)\,\mathrm{vol}_d .
+$$
+
+ 故 $\mathrm{d}\star j=0$ 当且仅当 $\partial_\mu j^\mu=0$。
+
+同理，对反对称的 $(q+1)$ 阶张量电流 $J^{\mu_1\cdots\mu_{q+1}}$（即 $(q+1)$-形式 $J$）： 
+
+$$
+\partial_{\mu_1}J^{\mu_1\cdots\mu_{q+1}}=0
   \qquad\Longleftrightarrow\qquad
   \mathrm{d}\star J=0 ,
   \qquad
   \star J\in\Omega^{d-q-1} .
-  \label{eq:conservation-q}$$ **请记住 $\star J$ 的次数是 $d-q-1$**： 它决定了对称算符支撑在多少维的子流形上（第 7 节）。
+$$
+
+ **请记住 $\star J$ 的次数是 $d-q-1$**： 它决定了对称算符支撑在多少维的子流形上（第 7 节）。
 
 ### de Rham 上同调与连接数
 
 **定义（de Rham 上同调）。**
 
-$$H^p(\mathcal{M},\mathbb{R})
+$$
+H^p(\mathcal{M},\mathbb{R})
   =\frac{\{\text{闭 }p\text{-形式}\}}{\{\text{恰当 }p\text{-形式}\}} .
-  \label{eq:deRham}$$ 它测量“闭但不恰当”的程度，是纯拓扑量。
+$$
+
+ 它测量“闭但不恰当”的程度，是纯拓扑量。
 
 **例（$S^2$ 上的磁通）。**
 
@@ -300,8 +391,13 @@ $$H^p(\mathcal{M},\mathbb{R})
 
 **定义（连接数）。**
 
- 设 $\mathcal{M}_p$ 与 $\mathcal{M}_q$ 是 $d$ 维时空中两个**不相交**的闭子流形， 且 $$\boxed{\ p+q+1=d\ }
-  \label{eq:linkdim}$$ 则可定义整数**连接数**（linking number）$\mathrm{Link}(\mathcal{M}_p,\mathcal{M}_q)$： 取 $(p+1)$ 维 $V$ 使 $\partial V=\mathcal{M}_p$， 则 $\mathrm{Link}=$ $V$ 与 $\mathcal{M}_q$ 的（带符号）相交数。
+ 设 $\mathcal{M}_p$ 与 $\mathcal{M}_q$ 是 $d$ 维时空中两个**不相交**的闭子流形， 且 
+
+$$
+\boxed{\ p+q+1=d\ }
+$$
+
+ 则可定义整数**连接数**（linking number）$\mathrm{Link}(\mathcal{M}_p,\mathcal{M}_q)$： 取 $(p+1)$ 维 $V$ 使 $\partial V=\mathcal{M}_p$， 则 $\mathrm{Link}=$ $V$ 与 $\mathcal{M}_q$ 的（带符号）相交数。
 
 **例（$d=3$：两条圈）。**
 
@@ -317,9 +413,14 @@ $p=2,q=1$，$2+1+1=4$ $\checkmark$。 一个 2 维球面 $\Sigma_2$ 可以“套
 
 #### $\delta$-函数形式（Poincaré 对偶）。
 
-对 $d$ 维时空中的 $k$ 维闭子流形 $\mathcal{M}_k$， 定义 $(d-k)$-形式 $\delta_{\mathcal{M}_k}$，使得对任意 $k$-形式 $\omega$ $$\int_{\mathcal{M}_d}\delta_{\mathcal{M}_k}\wedge\omega
+对 $d$ 维时空中的 $k$ 维闭子流形 $\mathcal{M}_k$， 定义 $(d-k)$-形式 $\delta_{\mathcal{M}_k}$，使得对任意 $k$-形式 $\omega$ 
+
+$$
+\int_{\mathcal{M}_d}\delta_{\mathcal{M}_k}\wedge\omega
   =\int_{\mathcal{M}_k}\omega .
-  \label{eq:poincare}$$ 它是“支撑在 $\mathcal{M}_k$ 上的 $\delta$ 函数”。 这个记号能把“线算符插入”写进运动方程，见 [eq:modifiedEOM]。
+$$
+
+ 它是“支撑在 $\mathcal{M}_k$ 上的 $\delta$ 函数”。 这个记号能把“线算符插入”写进运动方程，见 [eq:modifiedEOM]。
 
 **练习。**
 
@@ -335,10 +436,15 @@ $p=2,q=1$，$2+1+1=4$ $\checkmark$。 一个 2 维球面 $\Sigma_2$ 可以“套
 
 **定义（经典对称性）。**
 
-一个场变换 $\phi^a\to\phi'^a=\phi^a+\delta\phi^a$ 称为作用量 $S$ 的 **对称性**，若 $$S[\phi']=S[\phi]
+一个场变换 $\phi^a\to\phi'^a=\phi^a+\delta\phi^a$ 称为作用量 $S$ 的 **对称性**，若 
+
+$$
+S[\phi']=S[\phi]
   \qquad\text{或更一般地}\qquad
   \delta\mathcal{L}=\partial_\mu K^\mu
-  \label{eq:symdef}$$ 即拉氏量最多变化一个全导数（此时作用量在合适边界条件下不变）。
+$$
+
+ 即拉氏量最多变化一个全导数（此时作用量在合适边界条件下不变）。
 
 **注意。**
 
@@ -406,32 +512,62 @@ $p=2,q=1$，$2+1+1=4$ $\checkmark$。 一个 2 维球面 $\Sigma_2$ 可以“套
 
 **定理（Noether）。**
 
- 设 $S=\int \mathrm{d}^dx\,\mathcal{L}(\phi^a,\partial_\mu\phi^a)$ 在无穷小变换 $$\phi^a\longrightarrow\phi^a+\epsilon\,\Delta^a(\phi,\partial\phi)
-  \label{eq:infsym}$$ 下满足 $\delta\mathcal{L}=\epsilon\,\partial_\mu K^\mu$（$\epsilon$ 为常数）。 则在运动方程成立时（on-shell），电流 $$\boxed{\ j^\mu=\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\Delta^a-K^\mu\ }
-  \label{eq:noethercurrent}$$ 满足守恒律 $\partial_\mu j^\mu=0$。
+ 设 $S=\int \mathrm{d}^dx\,\mathcal{L}(\phi^a,\partial_\mu\phi^a)$ 在无穷小变换 
+
+$$
+\phi^a\longrightarrow\phi^a+\epsilon\,\Delta^a(\phi,\partial\phi)
+$$
+
+ 下满足 $\delta\mathcal{L}=\epsilon\,\partial_\mu K^\mu$（$\epsilon$ 为常数）。 则在运动方程成立时（on-shell），电流 
+
+$$
+\boxed{\ j^\mu=\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\Delta^a-K^\mu\ }
+$$
+
+ 满足守恒律 $\partial_\mu j^\mu=0$。
 
 **证明。**
 
-**第 1 步（变分）。**直接对 $\mathcal{L}$ 做变分， 注意 $\delta(\partial_\mu\phi^a)=\partial_\mu(\delta\phi^a)$： $$\delta\mathcal{L}
+**第 1 步（变分）。**直接对 $\mathcal{L}$ 做变分， 注意 $\delta(\partial_\mu\phi^a)=\partial_\mu(\delta\phi^a)$： 
+
+$$
+\delta\mathcal{L}
   =\frac{\partial \mathcal{L}}{\partial \phi^a}\,\delta\phi^a
   +\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\partial_\mu\big(\delta\phi^a\big),
   \qquad \delta\phi^a=\epsilon\Delta^a .
-  \label{eq:noether1}$$
+$$
 
-**第 2 步（用运动方程消去 $\partial\mathcal{L}/\partial\phi$）。** 由 Euler–Lagrange 方程 [eq:EL]， $$\frac{\partial \mathcal{L}}{\partial \phi^a}
+**第 2 步（用运动方程消去 $\partial\mathcal{L}/\partial\phi$）。** 由 Euler–Lagrange 方程 [eq:EL]， 
+
+$$
+\frac{\partial \mathcal{L}}{\partial \phi^a}
   =\partial_\mu\!\left(\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\right).
-  \label{eq:noether2}$$ 代入 [eq:noether1]： $$\begin{aligned}
+$$
+
+ 代入 [eq:noether1]： 
+
+$$
+\begin{aligned}
   \delta\mathcal{L}
   &=\partial_\mu\!\left(\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\right)\epsilon\Delta^a
    +\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\partial_\mu\big(\epsilon\Delta^a\big)
   \notag\\[2pt]
   &=\epsilon\,\partial_\mu\!\left[
     \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\Delta^a\right],
-  \label{eq:noether3}
-\end{aligned}$$ 最后一步就是乘积法则的逆用（这里用到 $\epsilon$ 是常数）。
+  
+\end{aligned}
+$$
 
-**第 3 步（与假设比较）。** 按对称性假设 $\delta\mathcal{L}=\epsilon\,\partial_\mu K^\mu$， 与 [eq:noether3] 相减： $$\epsilon\,\partial_\mu\!\left[
-  \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\Delta^a-K^\mu\right]=0 .$$ 因 $\epsilon\ne0$ 任意，方括号的散度为零，即 [eq:noethercurrent]。
+ 最后一步就是乘积法则的逆用（这里用到 $\epsilon$ 是常数）。
+
+**第 3 步（与假设比较）。** 按对称性假设 $\delta\mathcal{L}=\epsilon\,\partial_\mu K^\mu$， 与 [eq:noether3] 相减： 
+
+$$
+\epsilon\,\partial_\mu\!\left[
+  \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\Delta^a-K^\mu\right]=0 .
+$$
+
+ 因 $\epsilon\ne0$ 任意，方括号的散度为零，即 [eq:noethercurrent]。
 
 **注（为什么必须“在壳”）。**
 
@@ -441,17 +577,24 @@ $p=2,q=1$，$2+1+1=4$ $\checkmark$。 一个 2 维球面 $\Sigma_2$ 可以“套
 
 **命题（守恒荷）。**
 
-定义在固定时刻 $t$ 的空间切片上的积分 $$Q(t)=\int_{\mathbb{R}^{d-1}}\mathrm{d}^{d-1}x\;j^0(t,\bm x),
-  \label{eq:chargedef}$$ 若场在空间无穷远处足够快衰减，则 $\dfrac{\mathrm{d}Q}{\mathrm{d}t}=0$。
+定义在固定时刻 $t$ 的空间切片上的积分 
+
+$$
+Q(t)=\int_{\mathbb{R}^{d-1}}\mathrm{d}^{d-1}x\;j^0(t,\boldsymbol{x}),
+$$
+
+ 若场在空间无穷远处足够快衰减，则 $\dfrac{\mathrm{d}Q}{\mathrm{d}t}=0$。
 
 **证明。**
 
-$$\frac{\mathrm{d}Q}{\mathrm{d}t}
+$$
+\frac{\mathrm{d}Q}{\mathrm{d}t}
   =\int \mathrm{d}^{d-1}x\;\partial_0 j^0
   \overset{\partial_\mu j^\mu=0}{=}
   -\int \mathrm{d}^{d-1}x\;\partial_i j^i
   \overset{\text{Stokes}}{=}
-  -\oint_{S^{d-2}_\infty}\mathrm{d}S_i\;j^i=0 .$$
+  -\oint_{S^{d-2}_\infty}\mathrm{d}S_i\;j^i=0 .
+$$
 
 **注意。**
 
@@ -461,29 +604,58 @@ $$\frac{\mathrm{d}Q}{\mathrm{d}t}
 
 **例（复标量的 $\mathrm{U}(1)$ 流）。**
 
- 取例 [ex:threelag](2)： $\mathcal{L}=-\partial_\mu\phi^*\partial^\mu\phi-V(|\phi|^2)$。 对称变换 $\phi\to e^{i\alpha}\phi$，无穷小 $$\delta\phi=i\alpha\phi,\qquad \delta\phi^*=-i\alpha\phi^* .$$ 势项只依赖 $|\phi|^2$ 故不变；动能项也不变，所以 $K^\mu=0$。 计算导数： $$\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi)}=-\partial^\mu\phi^*,
+ 取例 [ex:threelag](2)： $\mathcal{L}=-\partial_\mu\phi^*\partial^\mu\phi-V(|\phi|^2)$。 对称变换 $\phi\to e^{i\alpha}\phi$，无穷小 
+
+$$
+\delta\phi=i\alpha\phi,\qquad \delta\phi^*=-i\alpha\phi^* .
+$$
+
+ 势项只依赖 $|\phi|^2$ 故不变；动能项也不变，所以 $K^\mu=0$。 计算导数： 
+
+$$
+\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi)}=-\partial^\mu\phi^*,
   \qquad
-  \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^*)}=-\partial^\mu\phi .$$ 代入 [eq:noethercurrent]（把 $\alpha$ 提出，$\Delta=i\phi$， $\Delta^*=-i\phi^*$）： $$\begin{aligned}
+  \frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^*)}=-\partial^\mu\phi .
+$$
+
+ 代入 [eq:noethercurrent]（把 $\alpha$ 提出，$\Delta=i\phi$， $\Delta^*=-i\phi^*$）： 
+
+$$
+\begin{aligned}
   j^\mu
   &=\big(-\partial^\mu\phi^*\big)\big(i\phi\big)
    +\big(-\partial^\mu\phi\big)\big(-i\phi^*\big)
   \notag\\
   &=i\left(\phi^*\partial^\mu\phi-\phi\,\partial^\mu\phi^*\right).
-  \label{eq:u1current}
-\end{aligned}$$ 验证守恒： $$\partial_\mu j^\mu
+  
+\end{aligned}
+$$
+
+ 验证守恒： 
+
+$$
+\partial_\mu j^\mu
   =i\left(\phi^*\Box\phi-\phi\,\Box\phi^*\right)
   \overset{\text{EOM}}{=}
-  i\left(\phi^*\,\phi\,V'-\phi\,\phi^*\,V'\right)=0 . \checkmark$$ （用了运动方程 $\Box\phi=V'(|\phi|^2)\phi$ 及其复共轭。）
+  i\left(\phi^*\,\phi\,V'-\phi\,\phi^*\,V'\right)=0 . \checkmark
+$$
+
+ （用了运动方程 $\Box\phi=V'(|\phi|^2)\phi$ 及其复共轭。）
 
 **例（平移与能量–动量张量）。**
 
  取变换为时空平移 $x^\mu\to x^\mu-\epsilon^\nu\delta^\mu_\nu$， 即 $\delta\phi^a=\epsilon^\nu\partial_\nu\phi^a$。 此时 $\mathcal{L}$ 本身也平移：$\delta\mathcal{L}=\epsilon^\nu\partial_\nu\mathcal{L}
-=\epsilon^\nu\partial_\mu(\delta^\mu_\nu\mathcal{L})$， 故 $K^\mu{}_\nu=\delta^\mu_\nu\mathcal{L}$。代入 [eq:noethercurrent]： $$\boxed{\ T^\mu{}_\nu
+=\epsilon^\nu\partial_\mu(\delta^\mu_\nu\mathcal{L})$， 故 $K^\mu{}_\nu=\delta^\mu_\nu\mathcal{L}$。代入 [eq:noethercurrent]： 
+
+$$
+\boxed{\ T^\mu{}_\nu
   =\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\,\partial_\nu\phi^a
   -\delta^\mu_\nu\,\mathcal{L}\ },
   \qquad
   \partial_\mu T^\mu{}_\nu=0 .
-  \label{eq:stresstensor}$$ 每个 $\nu$ 给一个守恒流；对应的荷是能量与动量 $P_\nu=\int \mathrm{d}^{d-1}x\,T^0{}_\nu$。
+$$
+
+ 每个 $\nu$ 给一个守恒流；对应的荷是能量与动量 $P_\nu=\int \mathrm{d}^{d-1}x\,T^0{}_\nu$。
 
 **练习。**
 
@@ -493,61 +665,109 @@ $$\frac{\mathrm{d}Q}{\mathrm{d}t}
 
 守恒荷不只是个数，它是**生成元**。这里用例 [ex:u1current] 做完整验证。
 
-自由复标量（$V=m^2|\phi|^2$）的共轭动量 $$\pi=\frac{\partial \mathcal{L}}{\partial \dot\phi}=\dot\phi^*,
+自由复标量（$V=m^2|\phi|^2$）的共轭动量 
+
+$$
+\pi=\frac{\partial \mathcal{L}}{\partial \dot\phi}=\dot\phi^*,
   \qquad
-  \pi^*=\frac{\partial \mathcal{L}}{\partial \dot\phi^*}=\dot\phi .$$ 由 [eq:u1current] 取 $\mu=0$（号差 $(-,+,+,+)$ 下 $\partial^0=-\partial_0$，此处把整体符号吸收进 $Q$ 的定义， 最终结论不依赖该约定）： $$j^0=i\big(\phi\,\pi-\phi^*\pi^*\big),
+  \pi^*=\frac{\partial \mathcal{L}}{\partial \dot\phi^*}=\dot\phi .
+$$
+
+ 由 [eq:u1current] 取 $\mu=0$（号差 $(-,+,+,+)$ 下 $\partial^0=-\partial_0$，此处把整体符号吸收进 $Q$ 的定义， 最终结论不依赖该约定）： 
+
+$$
+j^0=i\big(\phi\,\pi-\phi^*\pi^*\big),
   \qquad
   Q=\int \mathrm{d}^{d-1}x\;i\big(\phi\,\pi-\phi^*\pi^*\big).
-  \label{eq:Qcanonical}$$ 用正则关系 [eq:canonical]， $[\phi(\bm x),\pi(\bm y)]=i\delta^{d-1}(\bm x-\bm y)$： $$\begin{aligned}
-  \big[Q,\phi(\bm x)\big]
-  &=\int \mathrm{d}^{d-1}y\;i\,\phi(\bm y)\,
-    \big[\pi(\bm y),\phi(\bm x)\big]
+$$
+
+ 用正则关系 [eq:canonical]， $[\phi(\boldsymbol{x}),\pi(\boldsymbol{y})]=i\delta^{d-1}(\boldsymbol{x}-\boldsymbol{y})$： 
+
+$$
+\begin{aligned}
+  \big[Q,\phi(\boldsymbol{x})\big]
+  &=\int \mathrm{d}^{d-1}y\;i\,\phi(\boldsymbol{y})\,
+    \big[\pi(\boldsymbol{y}),\phi(\boldsymbol{x})\big]
   \notag\\
-  &=\int \mathrm{d}^{d-1}y\;i\,\phi(\bm y)\,
-    \big(-i\,\delta^{d-1}(\bm x-\bm y)\big)
-  \;=\;\phi(\bm x).
-  \label{eq:Qphi}
-\end{aligned}$$ （$\phi^*\pi^*$ 项与 $\phi$ 交换为零。）于是对有限参数 $$\boxed{\ U_\alpha=e^{i\alpha Q}:
+  &=\int \mathrm{d}^{d-1}y\;i\,\phi(\boldsymbol{y})\,
+    \big(-i\,\delta^{d-1}(\boldsymbol{x}-\boldsymbol{y})\big)
+  \;=\;\phi(\boldsymbol{x}).
+  
+\end{aligned}
+$$
+
+ （$\phi^*\pi^*$ 项与 $\phi$ 交换为零。）于是对有限参数 
+
+$$
+\boxed{\ U_\alpha=e^{i\alpha Q}:
   \qquad
   U_\alpha\,\phi(x)\,U_\alpha^{-1}
   =\phi+i\alpha[Q,\phi]+\cdots
   =e^{i\alpha}\phi(x)\ }
-  \label{eq:Uacts}$$ 恰好是我们出发的对称变换。$\checkmark$
+$$
+
+ 恰好是我们出发的对称变换。$\checkmark$
 
 **要点。**
 
- [eq:Uacts] 定义的 $U_\alpha=e^{i\alpha Q}$ 就是**对称算符** （symmetry operator）。注意它满足 $$U_\alpha\,U_\beta=U_{\alpha+\beta},
+ [eq:Uacts] 定义的 $U_\alpha=e^{i\alpha Q}$ 就是**对称算符** （symmetry operator）。注意它满足 
+
+$$
+U_\alpha\,U_\beta=U_{\alpha+\beta},
   \qquad
   U_\alpha^{-1}=U_{-\alpha},
-  \label{eq:groupfusion}$$ 即**可逆**，且乘法就是群 $\mathrm{U}(1)$ 的乘法。 广义对称性放松的正是 [eq:groupfusion]： 若只要求算符相乘时闭合成某个代数而不要求有逆， 就得到不可逆对称性。
+$$
+
+ 即**可逆**，且乘法就是群 $\mathrm{U}(1)$ 的乘法。 广义对称性放松的正是 [eq:groupfusion]： 若只要求算符相乘时闭合成某个代数而不要求有逆， 就得到不可逆对称性。
 
 ## Ward 恒等式：荷如何“测量”算符
 
-在关联函数层面，对称性表现为 Ward 恒等式。 设 $\mathcal{O}(y)$ 是带荷 $q$ 的局域算符，即 $$U_\alpha\,\mathcal{O}(y)\,U_\alpha^{-1}=e^{iq\alpha}\,\mathcal{O}(y),
+在关联函数层面，对称性表现为 Ward 恒等式。 设 $\mathcal{O}(y)$ 是带荷 $q$ 的局域算符，即 
+
+$$
+U_\alpha\,\mathcal{O}(y)\,U_\alpha^{-1}=e^{iq\alpha}\,\mathcal{O}(y),
   \qquad\text{无穷小地}\qquad
-  \delta\mathcal{O}=i q\alpha\,\mathcal{O}.$$
+  \delta\mathcal{O}=i q\alpha\,\mathcal{O}.
+$$
 
 #### 推导。
 
-在路径积分 [eq:pathintegral] 中做一个**局域**的 变换 $\phi\to\phi+\epsilon(x)\Delta$，其中参数 $\epsilon$ 现在依赖 $x$。 因为常数 $\epsilon$ 时 $\delta S=0$，一般 $\epsilon(x)$ 时 $\delta S$ 必须 正比于 $\partial_\mu\epsilon$： $$\delta S=-\int \mathrm{d}^dx\;\epsilon(x)\,\partial_\mu j^\mu ,
-  \label{eq:deltaSlocal}$$ （把 $\int\partial_\mu\epsilon\,j^\mu$ 分部积分而得）。 路径积分对场的重命名不变，故 $$0=\delta\Big\langle \mathcal{O}(y)\Big\rangle
+在路径积分 [eq:pathintegral] 中做一个**局域**的 变换 $\phi\to\phi+\epsilon(x)\Delta$，其中参数 $\epsilon$ 现在依赖 $x$。 因为常数 $\epsilon$ 时 $\delta S=0$，一般 $\epsilon(x)$ 时 $\delta S$ 必须 正比于 $\partial_\mu\epsilon$： 
+
+$$
+\delta S=-\int \mathrm{d}^dx\;\epsilon(x)\,\partial_\mu j^\mu ,
+$$
+
+ （把 $\int\partial_\mu\epsilon\,j^\mu$ 分部积分而得）。 路径积分对场的重命名不变，故 
+
+$$
+0=\delta\Big\langle \mathcal{O}(y)\Big\rangle
   =\Big\langle i\,\delta S\;\mathcal{O}(y)\Big\rangle
-   +\Big\langle \delta\mathcal{O}(y)\Big\rangle .$$ 代入 [eq:deltaSlocal] 与 $\delta\mathcal{O}(y)=i q\,\epsilon(y)\mathcal{O}(y)$， 并对任意 $\epsilon(x)$ 成立，得
+   +\Big\langle \delta\mathcal{O}(y)\Big\rangle .
+$$
+
+ 代入 [eq:deltaSlocal] 与 $\delta\mathcal{O}(y)=i q\,\epsilon(y)\mathcal{O}(y)$， 并对任意 $\epsilon(x)$ 成立，得
 
 **命题（Ward 恒等式）。**
 
-$$\boxed{\
+$$
+\boxed{\
   \partial_\mu\big\langle j^\mu(x)\,\mathcal{O}(y)\big\rangle
   = q\;\delta^{d}(x-y)\,\big\langle \mathcal{O}(y)\big\rangle \ }
-  \label{eq:ward}$$ （整体符号依赖 $j$ 与 $Q$ 的符号约定；结构是关键。）
+$$
+
+ （整体符号依赖 $j$ 与 $Q$ 的符号约定；结构是关键。）
 
 #### 最重要的推论。
 
-把 [eq:ward] 在一个包住 $y$ 的 $d$ 维区域 $V$ 上积分，并用 Stokes 定理： $$\oint_{\partial V}\big\langle \star j\;\mathcal{O}(y)\big\rangle
+把 [eq:ward] 在一个包住 $y$ 的 $d$ 维区域 $V$ 上积分，并用 Stokes 定理： 
+
+$$
+\oint_{\partial V}\big\langle \star j\;\mathcal{O}(y)\big\rangle
   =\int_V \big\langle \mathrm{d}\star j\;\mathcal{O}(y)\big\rangle
   = q\,\big\langle\mathcal{O}(y)\big\rangle
   \qquad (y\in V).
-  \label{eq:chargebylinking}$$
+$$
 
 **要点。**
 
@@ -563,26 +783,36 @@ $$\boxed{\
 
 **定义（曲面上的荷）。**
 
-对 $d$ 维时空中任意闭的 $(d-1)$ 维子流形 $\Sigma_{d-1}$，定义 $$\boxed{\ Q(\Sigma_{d-1})=\int_{\Sigma_{d-1}}\star j ,
+对 $d$ 维时空中任意闭的 $(d-1)$ 维子流形 $\Sigma_{d-1}$，定义 
+
+$$
+\boxed{\ Q(\Sigma_{d-1})=\int_{\Sigma_{d-1}}\star j ,
   \qquad
   U_\alpha(\Sigma_{d-1})=\exp\!\Big[i\alpha\!\int_{\Sigma_{d-1}}\star j\Big]\ }
-  \label{eq:Qsurface}$$
+$$
 
 取 $\Sigma_{d-1}=\{t=\text{const}\}$ 的空间切片就回到 [eq:chargedef]（因为 $\star j$ 在等时面上的分量正是 $j^0$）。 但 [eq:Qsurface] 允许 $\Sigma$ 是**任意**闭曲面—— 甚至是弯曲的、不等时的、多个连通分支的。
 
 **定理（对称算符是拓扑的）。**
 
- 设 $\mathrm{d}\star j=0$（即 $\partial_\mu j^\mu=0$）。 若 $\Sigma$ 与 $\Sigma'$ 同调，即存在 $d$ 维区域 $V$ 使 $\partial V=\Sigma-\Sigma'$，且 $V$ 内没有带荷算符插入，则 $$Q(\Sigma)=Q(\Sigma'),
+ 设 $\mathrm{d}\star j=0$（即 $\partial_\mu j^\mu=0$）。 若 $\Sigma$ 与 $\Sigma'$ 同调，即存在 $d$ 维区域 $V$ 使 $\partial V=\Sigma-\Sigma'$，且 $V$ 内没有带荷算符插入，则 
+
+$$
+Q(\Sigma)=Q(\Sigma'),
   \qquad
   U_\alpha(\Sigma)=U_\alpha(\Sigma') .
-  \label{eq:topological}$$
+$$
 
 **证明。**
 
-直接用 Stokes 定理 [eq:stokes] 与守恒律： $$Q(\Sigma)-Q(\Sigma')
+直接用 Stokes 定理 [eq:stokes] 与守恒律： 
+
+$$
+Q(\Sigma)-Q(\Sigma')
   =\int_{\partial V}\star j
   =\int_V \mathrm{d}\star j
-  =0 .$$
+  =0 .
+$$
 
 **要点。**
 
@@ -618,7 +848,13 @@ $$\boxed{\
 
 ## 关联函数是理论的定义
 
-一个 QFT 的全部信息可以编码在所有算符的关联函数中： $$\big\langle \mathcal{O}_1(x_1)\,\mathcal{O}_2(x_2)\cdots\big\rangle .$$ 两个理论若所有关联函数相同，就是同一个理论。 所以**“有哪些算符”是理论定义的一部分**—— 这句话在第 9.3 小节会变得非常实在： $\mathrm{U}(1)$ 与 $\mathrm{U}(1)/\mathbb{Z}_N$ 规范理论的*局域*动力学完全相同， 差别只在**允许哪些线算符存在**。
+一个 QFT 的全部信息可以编码在所有算符的关联函数中： 
+
+$$
+\big\langle \mathcal{O}_1(x_1)\,\mathcal{O}_2(x_2)\cdots\big\rangle .
+$$
+
+ 两个理论若所有关联函数相同，就是同一个理论。 所以**“有哪些算符”是理论定义的一部分**—— 这句话在第 9.3 小节会变得非常实在： $\mathrm{U}(1)$ 与 $\mathrm{U}(1)/\mathbb{Z}_N$ 规范理论的*局域*动力学完全相同， 差别只在**允许哪些线算符存在**。
 
 ## 局域算符
 
@@ -640,24 +876,43 @@ $$\boxed{\
 
 **例（Wilson 线：最重要的线算符）。**
 
- 对 $\mathrm{U}(1)$ 规范场，沿闭曲线 $C$ 定义 $$\boxed{\ W_n(C)=\exp\!\left[i\,n\oint_C A\right]
+ 对 $\mathrm{U}(1)$ 规范场，沿闭曲线 $C$ 定义 
+
+$$
+\boxed{\ W_n(C)=\exp\!\left[i\,n\oint_C A\right]
   =\exp\!\left[i\,n\oint_C A_\mu\,\mathrm{d}x^\mu\right],
   \qquad n\in\mathbb{Z}\ }
-  \label{eq:wilson}$$ **规范不变性**：在 $A\to A+\mathrm{d}\lambda$ 下 $$\oint_C A\;\longrightarrow\;\oint_C A+\oint_C \mathrm{d}\lambda
+$$
+
+ **规范不变性**：在 $A\to A+\mathrm{d}\lambda$ 下 
+
+$$
+\oint_C A\;\longrightarrow\;\oint_C A+\oint_C \mathrm{d}\lambda
   =\oint_C A+\int_{\partial C}\lambda
-  =\oint_C A ,$$ 因为 $C$ 闭合故 $\partial C=\emptyset$。$\checkmark$
+  =\oint_C A ,
+$$
+
+ 因为 $C$ 闭合故 $\partial C=\emptyset$。$\checkmark$
 
 **整数量子化**：若 $\lambda$ 是允许绕圈的（大规范变换）， $\oint_C \mathrm{d}\lambda\in2\pi\mathbb{Z}$，要求 $W$ 单值就需 $n\in\mathbb{Z}$。
 
 **物理意义**：$W_n(C)$ 是一个**电荷为 $n$ 的无穷重（探针）粒子 沿 $C$ 运动的世界线**。取 $C$ 为时间方向的直线即一个静止的静态电荷。
 
-对非阿贝尔群，需路径有序化并取迹： $$W_R(C)=\mathrm{Tr}_R\,\mathbf{P}\exp\!\left[i\oint_C A\right].
-  \label{eq:wilsonNA}$$
+对非阿贝尔群，需路径有序化并取迹： 
+
+$$
+W_R(C)=\mathrm{Tr}_R\,\mathbf{P}\exp\!\left[i\oint_C A\right].
+$$
 
 **例（’t Hooft 线）。**
 
- **’t Hooft 线**（’t Hooft line）$T_m(C)$ 是**磁**荷 $m$ 的 探针粒子（磁单极子）的世界线。它不像 [eq:wilson] 那样有简单的 “$\exp\oint$”表达式，而是通过**边界条件**定义： 要求在环绕 $C$ 的小球面 $S^2$ 上 $$\frac{1}{2\pi}\oint_{S^2}F=m\in\mathbb{Z}.
-  \label{eq:thooftdef}$$ 即“挖掉 $C$ 并规定其周围有 $m$ 个单位磁通”。 在对偶描述中（$F\leftrightarrow\star F$）它变成 Wilson 线。
+ **’t Hooft 线**（’t Hooft line）$T_m(C)$ 是**磁**荷 $m$ 的 探针粒子（磁单极子）的世界线。它不像 [eq:wilson] 那样有简单的 “$\exp\oint$”表达式，而是通过**边界条件**定义： 要求在环绕 $C$ 的小球面 $S^2$ 上 
+
+$$
+\frac{1}{2\pi}\oint_{S^2}F=m\in\mathbb{Z}.
+$$
+
+ 即“挖掉 $C$ 并规定其周围有 $m$ 个单位磁通”。 在对偶描述中（$F\leftrightarrow\star F$）它变成 Wilson 线。
 
 **例（面算符与其他）。**
 
@@ -697,9 +952,12 @@ $$\boxed{\
 
 **定义（拓扑算符）。**
 
- 支撑在闭子流形 $\mathcal{M}_k$ 上的算符 $U(\mathcal{M}_k)$ 称为**拓扑的** （topological），若在**任何**关联函数中， 连续形变 $\mathcal{M}_k\to\mathcal{M}_k'$ 都不改变结果， 只要形变过程中 $\mathcal{M}_k$ **不扫过其他算符插入点**： $$\big\langle U(\mathcal{M}_k)\;\mathcal{O}_1\cdots\mathcal{O}_n\big\rangle
+ 支撑在闭子流形 $\mathcal{M}_k$ 上的算符 $U(\mathcal{M}_k)$ 称为**拓扑的** （topological），若在**任何**关联函数中， 连续形变 $\mathcal{M}_k\to\mathcal{M}_k'$ 都不改变结果， 只要形变过程中 $\mathcal{M}_k$ **不扫过其他算符插入点**： 
+
+$$
+\big\langle U(\mathcal{M}_k)\;\mathcal{O}_1\cdots\mathcal{O}_n\big\rangle
   =\big\langle U(\mathcal{M}_k')\;\mathcal{O}_1\cdots\mathcal{O}_n\big\rangle .
-  \label{eq:topodef}$$
+$$
 
 **注（等价的三种判据）。**
 
@@ -721,17 +979,23 @@ $\exp\big[i\oint_C A\big]$（Wilson 线）**不是**拓扑算符： 它的期望
 
 **定义（融合规则）。**
 
-$$U_a(\mathcal{M}_k)\times U_b(\mathcal{M}_k)
+$$
+U_a(\mathcal{M}_k)\times U_b(\mathcal{M}_k)
   =\sum_c N_{ab}^{\ \ c}\;U_c(\mathcal{M}_k),
   \qquad N_{ab}^{\ \ c}\in\mathbb{Z}_{\ge0}
-  \label{eq:fusion}$$ 称**融合规则**（fusion rule）。
+$$
+
+ 称**融合规则**（fusion rule）。
 
 两种情形：
 
 - **可逆（群）情形**：右边只有一项且系数为 1， $U_a\times U_b=U_{a\cdot b}$。 此时 $\{U_a\}$ 构成群，存在 $U_{a^{-1}}$ 使 $U_a\times U_{a^{-1}}=U_{\mathbf 1}$。 这是普通对称性，如 [eq:groupfusion]。
 
-- **不可逆情形**：右边是多项之和， 于是**没有**逆元。此时称 **不可逆对称性**（non-invertible symmetry）。 典型例子（第 9.1 小节）： $$\mathcal N\times\mathcal N=\mathbf 1+\eta .
-            \label{eq:isingfusionpreview}$$
+- **不可逆情形**：右边是多项之和， 于是**没有**逆元。此时称 **不可逆对称性**（non-invertible symmetry）。 典型例子（第 9.1 小节）： 
+
+$$
+\mathcal N\times\mathcal N=\mathbf 1+\eta .
+$$
 
 **要点。**
 
@@ -743,16 +1007,24 @@ $$U_a(\mathcal{M}_k)\times U_b(\mathcal{M}_k)
 
 #### 图像一：包围（测量荷）。
 
-把 $U_\alpha(\Sigma_{d-1})$ 收缩成一个包围 $\mathcal{O}(y)$ 的小球面。 由 [eq:chargebylinking]， $$U_\alpha\big(S^{d-1}\text{ 包围 }y\big)\;\mathcal{O}(y)
+把 $U_\alpha(\Sigma_{d-1})$ 收缩成一个包围 $\mathcal{O}(y)$ 的小球面。 由 [eq:chargebylinking]， 
+
+$$
+U_\alpha\big(S^{d-1}\text{ 包围 }y\big)\;\mathcal{O}(y)
   = e^{iq\alpha}\,\mathcal{O}(y) .
-  \label{eq:surround}$$ 若 $\Sigma$ 不包围任何算符，可以收缩到一点并消失（$=1$）。
+$$
+
+ 若 $\Sigma$ 不包围任何算符，可以收缩到一点并消失（$=1$）。
 
 #### 图像二：穿过（作用于态）。
 
-在正则量子化图像中，取 $\Sigma$ 为等时面， 则 $U_\alpha$ 是作用在 Hilbert 空间上的算符。 把 $\Sigma$ 从 $\mathcal{O}$ 的“过去”移动到“未来”， 就相当于让 $U$ **穿过** $\mathcal{O}$： $$U_\alpha\;\mathcal{O}(y)\;U_\alpha^{-1}=e^{iq\alpha}\,\mathcal{O}(y)
+在正则量子化图像中，取 $\Sigma$ 为等时面， 则 $U_\alpha$ 是作用在 Hilbert 空间上的算符。 把 $\Sigma$ 从 $\mathcal{O}$ 的“过去”移动到“未来”， 就相当于让 $U$ **穿过** $\mathcal{O}$： 
+
+$$
+U_\alpha\;\mathcal{O}(y)\;U_\alpha^{-1}=e^{iq\alpha}\,\mathcal{O}(y)
   \qquad\Longleftrightarrow\qquad
   U_\alpha\,\mathcal{O}(y)=e^{iq\alpha}\,\mathcal{O}(y)\,U_\alpha .
-  \label{eq:passthrough}$$
+$$
 
 两个图像的等价性：把 [eq:passthrough] 里“穿过前”减“穿过后”， 两张等时面拼成一个包围 $\mathcal{O}$ 的闭曲面，就回到 [eq:surround]。 下面这个“图”值得自己画一遍：
 
@@ -805,21 +1077,32 @@ $$U_a(\mathcal{M}_k)\times U_b(\mathcal{M}_k)
 
 4.  作用在**$q$ 维带荷算符**上，通过连接数给出相位／作用。
 
-对连续 $G=\mathrm{U}(1)$，存在守恒的 $(q+1)$-形式电流 $J$： $$\boxed{\ \mathrm{d}\star J=0,
+对连续 $G=\mathrm{U}(1)$，存在守恒的 $(q+1)$-形式电流 $J$： 
+
+$$
+\boxed{\ \mathrm{d}\star J=0,
   \qquad
   U_\alpha(\mathcal{M}_{d-q-1})
   =\exp\!\left[i\alpha\!\int_{\mathcal{M}_{d-q-1}}\star J\right]\ }
-  \label{eq:qformop}$$ 其中 $\star J\in\Omega^{d-q-1}$，次数与支撑维数匹配。$\checkmark$
+$$
+
+ 其中 $\star J\in\Omega^{d-q-1}$，次数与支撑维数匹配。$\checkmark$
 
 **要点。**
 
- **维数自查三连**。看到任何 $q$-form 对称性的陈述， 立刻检查： $$\begin{aligned}
+ **维数自查三连**。看到任何 $q$-form 对称性的陈述， 立刻检查： 
+
+$$
+\begin{aligned}
   \text{电流次数}&=q+1, \\
   \text{对称算符维数}&=d-q-1
   \quad(\text{余维 } q+1), \\
   \text{带荷对象维数}&=q,
   \qquad (d-q-1)+q+1=d\ \checkmark
-\end{aligned}$$ 三者必须同时对上。这条自查能挡掉初学阶段 90% 的错误。
+\end{aligned}
+$$
+
+ 三者必须同时对上。这条自查能挡掉初学阶段 90% 的错误。
 
 ## 字典表
 
@@ -848,9 +1131,13 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 对 $q\ge1$，对称算符支撑在维数 $d-q-1\le d-2$ 的子流形上， 即**余维至少 2**。余维 $\ge2$ 的两个子流形在 $d$ 维空间中 可以**互相绕过而不相交**：想象 $d=3$ 中两条直线（余维 2）， 它们可以平移错开。
 
-因此对任意两个对称算符 $U_g(\mathcal{M})$、$U_h(\mathcal{M}')$， 总能连续地把它们交换位置而不让支撑集相交； 由拓扑性，关联函数在此过程中不变，故 $$U_g\,U_h=U_h\,U_g
+因此对任意两个对称算符 $U_g(\mathcal{M})$、$U_h(\mathcal{M}')$， 总能连续地把它们交换位置而不让支撑集相交； 由拓扑性，关联函数在此过程中不变，故 
+
+$$
+U_g\,U_h=U_h\,U_g
   \qquad\Longrightarrow\qquad
-  gh=hg .$$
+  gh=hg .
+$$
 
 对比 $q=0$：对称算符是余维 1 的（等时面）， 两张等时面**无法**互相绕过——它们有确定的时间先后顺序， 所以乘法可以不交换，允许非阿贝尔群。
 
@@ -860,9 +1147,15 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 ## 离散情形与 $\mathbb{Z}_N$
 
-对离散群没有流，但定义 [def:qform] 的 (1)(2)(3)(4) 仍然成立。 最常见的是 $\mathbb{Z}_N$ 的 $q$-form 对称性： 算符 $U_k(\mathcal{M}_{d-q-1})$，$k\in\mathbb{Z}_N$，满足 $$U_k\times U_l=U_{k+l\ \mathrm{mod}\ N},
+对离散群没有流，但定义 [def:qform] 的 (1)(2)(3)(4) 仍然成立。 最常见的是 $\mathbb{Z}_N$ 的 $q$-form 对称性： 算符 $U_k(\mathcal{M}_{d-q-1})$，$k\in\mathbb{Z}_N$，满足 
+
+$$
+U_k\times U_l=U_{k+l\ \mathrm{mod}\ N},
   \qquad
-  \big(U_1\big)^N=\mathbf 1 .$$ 作用在带荷 $n$ 的 $q$ 维算符上给相位 $e^{2\pi i kn/N}$。 第 9.2.6 小节的 $\mathrm{SU}(N)$ 中心对称性正是此类。
+  \big(U_1\big)^N=\mathbf 1 .
+$$
+
+ 作用在带荷 $n$ 的 $q$ 维算符上给相位 $e^{2\pi i kn/N}$。 第 9.2.6 小节的 $\mathrm{SU}(N)$ 中心对称性正是此类。
 
 ## 不可逆与高群：概念地图
 
@@ -900,11 +1193,14 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 **定义（$q$-form 荷）。**
 
-设 $\mathcal{O}(\mathcal{M}_q)$ 是 $q$ 维算符，$U_\alpha(\mathcal{M}_{d-q-1})$ 是 $q$-form 对称算符。称 $\mathcal{O}$ 带荷 $n$，若 $$\boxed{\
+设 $\mathcal{O}(\mathcal{M}_q)$ 是 $q$ 维算符，$U_\alpha(\mathcal{M}_{d-q-1})$ 是 $q$-form 对称算符。称 $\mathcal{O}$ 带荷 $n$，若 
+
+$$
+\boxed{\
   \big\langle U_\alpha(\mathcal{M}_{d-q-1})\;\mathcal{O}(\mathcal{M}_q)\;\cdots\big\rangle
   = e^{\,i\alpha\,n\,\mathrm{Link}(\mathcal{M}_{d-q-1},\,\mathcal{M}_q)}\;
   \big\langle \mathcal{O}(\mathcal{M}_q)\cdots\big\rangle \ }
-  \label{eq:chargedef-q}$$
+$$
 
 这是 [eq:surround] 的直接推广：$q=0$ 时“连接”就是“包围”。
 
@@ -920,9 +1216,21 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 **例（Ising 畴壁：最直观的缺陷）。**
 
- 1$+$<!-- -->1 维 Ising 链（第 9.1 小节）的 $\mathbb{Z}_2$ 对称算符是 $$U=\prod_{j=-\infty}^{+\infty}\sigma^x_j
-  \qquad(\text{支撑在整条空间切片上，闭合}).$$ 把乘积**截断**到半无穷区间： $$U_{\text{半}}=\prod_{j\le 0}\sigma^x_j
-  \qquad(\text{不闭合}) .$$ $U_{\text{半}}$ **不再**与 $H$ 交换： 它在 $j=0$ 与 $j=1$ 之间的键上留下一个**畴壁** （domain wall）。这个畴壁就是缺陷的端点， 它是一个真实的、局域的激发（有能量代价 $\sim J$）。
+ 1$+$<!-- -->1 维 Ising 链（第 9.1 小节）的 $\mathbb{Z}_2$ 对称算符是 
+
+$$
+U=\prod_{j=-\infty}^{+\infty}\sigma^x_j
+  \qquad(\text{支撑在整条空间切片上，闭合}).
+$$
+
+ 把乘积**截断**到半无穷区间： 
+
+$$
+U_{\text{半}}=\prod_{j\le 0}\sigma^x_j
+  \qquad(\text{不闭合}) .
+$$
+
+ $U_{\text{半}}$ **不再**与 $H$ 交换： 它在 $j=0$ 与 $j=1$ 之间的键上留下一个**畴壁** （domain wall）。这个畴壁就是缺陷的端点， 它是一个真实的、局域的激发（有能量代价 $\sim J$）。
 
 **要点。**
 
@@ -930,28 +1238,48 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 ## 扭曲边界条件与扭曲扇区
 
-缺陷的另一个用途：定义**扭曲扇区**（twisted sector）。 把对称缺陷沿**时间**方向插入（即支撑在 “空间的一部分 $\times$ 全部时间”上），等价于对场施加 **扭曲边界条件**（twisted boundary condition）： $$\phi(x+L)=g\cdot\phi(x)
+缺陷的另一个用途：定义**扭曲扇区**（twisted sector）。 把对称缺陷沿**时间**方向插入（即支撑在 “空间的一部分 $\times$ 全部时间”上），等价于对场施加 **扭曲边界条件**（twisted boundary condition）： 
+
+$$
+\phi(x+L)=g\cdot\phi(x)
   \qquad(g\in G).
-  \label{eq:twisted}$$ 在配分函数语言中， $$Z_g=\mathrm{Tr}\!\left[g\,e^{-\beta H}\right]
+$$
+
+ 在配分函数语言中， 
+
+$$
+Z_g=\mathrm{Tr}\!\left[g\,e^{-\beta H}\right]
   \quad\text{（把 }g\text{ 插在时间圈上）},
-  \label{eq:Zg}$$ 而**把 $g$ 插在空间圈上**给出扭曲扇区的 Hilbert 空间 $\mathcal{H}_g$。两者由**模变换**（modular transformation）联系 ——这在 2 维 CFT 中是标准工具，也是判断不可逆对称性的实用手段。
+$$
+
+ 而**把 $g$ 插在空间圈上**给出扭曲扇区的 Hilbert 空间 $\mathcal{H}_g$。两者由**模变换**（modular transformation）联系 ——这在 2 维 CFT 中是标准工具，也是判断不可逆对称性的实用手段。
 
 ## 规范化：把全局对称性“求和掉”
 
 **定义（规范化）。**
 
-**规范化**（gauging）一个（有限）$q$-form 对称性 $G$， 指在路径积分中**对所有可能的对称缺陷网络求和**： $$Z_{\text{gauged}}
+**规范化**（gauging）一个（有限）$q$-form 对称性 $G$， 指在路径积分中**对所有可能的对称缺陷网络求和**： 
+
+$$
+Z_{\text{gauged}}
   =\frac{1}{|G|^{\#}}\sum_{\text{网络}}\;Z\big[\text{缺陷网络}\big].
-  \label{eq:gauge-sum}$$ 等价地：引入 $G$ 的 $(q+1)$-形式规范场并对其求和。
+$$
+
+ 等价地：引入 $G$ 的 $(q+1)$-形式规范场并对其求和。
 
 规范化的三条重要后果：
 
 1.  **原来的带荷算符被投影掉**。求和把非中性算符的 期望值平均为零，于是它们不再是好算符。
 
-2.  **出现新的“对偶”对称性**。 规范化 $d$ 维中的 $q$-form 群 $G$（阿贝尔）， 得到一个新的 $(d-q-2)$-form 对称性，群为 $\hat G$（对偶群）。 $$\text{gauge } q\text{-form } G
+2.  **出现新的“对偶”对称性**。 规范化 $d$ 维中的 $q$-form 群 $G$（阿贝尔）， 得到一个新的 $(d-q-2)$-form 对称性，群为 $\hat G$（对偶群）。 
+
+$$
+\text{gauge } q\text{-form } G
               \;\Longrightarrow\;
               \text{新的 } (d-q-2)\text{-form } \hat G .
-              \label{eq:dualsym}$$ *检查 $q=0$、$d=2$、$G=\mathbb{Z}_2$*：新对称性是 $(2-0-2)=0$-form 的 $\mathbb{Z}_2$——正是 Ising 的 Kramers–Wannier 对偶对称性。$\checkmark$ （第 9.1 小节）
+$$
+
+ *检查 $q=0$、$d=2$、$G=\mathbb{Z}_2$*：新对称性是 $(2-0-2)=0$-form 的 $\mathbb{Z}_2$——正是 Ising 的 Kramers–Wannier 对偶对称性。$\checkmark$ （第 9.1 小节）
 
 3.  **存在反常时无法规范化**。这就是 ’t Hooft 反常的定义 （第 10.2 小节）。
 
@@ -969,22 +1297,32 @@ $d=4$ 中的 1-form 对称性： 电流是 2-形式，对称算符支撑在 $4-1
 
 ### 模型与对称算符
 
-取 1$+$<!-- -->1 维横场量子 Ising 链，格点 $j$ 上是自旋 $1/2$： $$H=-J\sum_j \sigma^z_j\sigma^z_{j+1}-h\sum_j\sigma^x_j,
+取 1$+$<!-- -->1 维横场量子 Ising 链，格点 $j$ 上是自旋 $1/2$： 
+
+$$
+H=-J\sum_j \sigma^z_j\sigma^z_{j+1}-h\sum_j\sigma^x_j,
   \qquad J,h>0 .
-  \label{eq:ising}$$
+$$
 
 **命题（$\mathbb{Z}_2$ 对称性）。**
 
-算符 $$\boxed{\ U=\prod_j\sigma^x_j\ }
+算符 
+
+$$
+\boxed{\ U=\prod_j\sigma^x_j\ }
   \qquad\text{满足}\qquad
   U^2=1,\qquad [U,H]=0 .
-  \label{eq:isingU}$$
+$$
 
 **证明。**
 
-$U^2=\prod_j(\sigma^x_j)^2=1$。$\checkmark$ 与 $H$ 交换：$\sigma^x_j$ 与自身交换，故第二项显然不变。 对第一项，用 $\sigma^x\sigma^z\sigma^x=-\sigma^z$ 得 $$U\,\sigma^z_j\sigma^z_{j+1}\,U^{-1}
+$U^2=\prod_j(\sigma^x_j)^2=1$。$\checkmark$ 与 $H$ 交换：$\sigma^x_j$ 与自身交换，故第二项显然不变。 对第一项，用 $\sigma^x\sigma^z\sigma^x=-\sigma^z$ 得 
+
+$$
+U\,\sigma^z_j\sigma^z_{j+1}\,U^{-1}
   =\big(-\sigma^z_j\big)\big(-\sigma^z_{j+1}\big)
-  =\sigma^z_j\sigma^z_{j+1} . \checkmark$$
+  =\sigma^z_j\sigma^z_{j+1} . \checkmark
+$$
 
 #### 维数记账。
 
@@ -1004,7 +1342,13 @@ $d=2$（一维空间 $+$ 时间），$q=0$。 对称算符应支撑在 $d-q-1=1$
 
 ### 缺陷：畴壁
 
-按第 8.3 小节，把 [eq:isingU] 截断： $$U_{\le0}=\prod_{j\le 0}\sigma^x_j .$$ 它在 $j=0,1$ 之间制造一个**畴壁**。在有序相中， 畴壁是一个真实的、可局域化的激发（能量 $\sim 2J$）， 它**就是缺陷的端点**。
+按第 8.3 小节，把 [eq:isingU] 截断： 
+
+$$
+U_{\le0}=\prod_{j\le 0}\sigma^x_j .
+$$
+
+ 它在 $j=0,1$ 之间制造一个**畴壁**。在有序相中， 畴壁是一个真实的、可局域化的激发（能量 $\sim 2J$）， 它**就是缺陷的端点**。
 
 这个例子清楚展示要点 [kp:defect-vs-operator]：
 
@@ -1014,12 +1358,22 @@ $d=2$（一维空间 $+$ 时间），$q=0$。 对称算符应支撑在 $d-q-1=1$
 
 ### Kramers–Wannier 对偶与规范化
 
-定义**对偶变量**，住在链的**键**（即 $j+\tfrac12$）上： $$\mu^x_{j+\frac12}\equiv\sigma^z_j\sigma^z_{j+1},
+定义**对偶变量**，住在链的**键**（即 $j+\tfrac12$）上： 
+
+$$
+\mu^x_{j+\frac12}\equiv\sigma^z_j\sigma^z_{j+1},
   \qquad
   \mu^z_{j+\frac12}\equiv\prod_{k\le j}\sigma^x_k .
-  \label{eq:KWvars}$$ 可以验证 $\mu^{x,z}$ 满足同样的 Pauli 代数。代入 [eq:ising]： $$H=-J\sum \mu^x_{j+\frac12}
+$$
+
+ 可以验证 $\mu^{x,z}$ 满足同样的 Pauli 代数。代入 [eq:ising]： 
+
+$$
+H=-J\sum \mu^x_{j+\frac12}
     -h\sum \mu^z_{j-\frac12}\mu^z_{j+\frac12} ,
-  \label{eq:isingdual}$$ 即**同一个模型，但 $J\leftrightarrow h$ 互换**。
+$$
+
+ 即**同一个模型，但 $J\leftrightarrow h$ 互换**。
 
 **要点。**
 
@@ -1035,17 +1389,26 @@ $d=2$（一维空间 $+$ 时间），$q=0$。 对称算符应支撑在 $d-q-1=1$
 
 ### 不可逆对称性：Ising 临界点的三条拓扑线
 
-在临界点（Ising CFT）上，$d=2$ 中的 0-form 对称算符支撑在 1 维流形上， 即**拓扑缺陷线**（(topological defect line), TDL）。 Ising CFT 恰好有**三条**： $$\mathbf 1\ (\text{恒等}),
+在临界点（Ising CFT）上，$d=2$ 中的 0-form 对称算符支撑在 1 维流形上， 即**拓扑缺陷线**（(topological defect line), TDL）。 Ising CFT 恰好有**三条**： 
+
+$$
+\mathbf 1\ (\text{恒等}),
   \qquad
   \eta\ (\mathbb{Z}_2\ \text{对称线}),
   \qquad
-  \mathcal N\ (\text{KW 对偶线}) .$$ 它们的融合规则（[eq:fusion] 的具体实现）为 $$\boxed{\
+  \mathcal N\ (\text{KW 对偶线}) .
+$$
+
+ 它们的融合规则（[eq:fusion] 的具体实现）为 
+
+$$
+\boxed{\
   \eta\times\eta=\mathbf 1,
   \qquad
   \eta\times\mathcal N=\mathcal N\times\eta=\mathcal N,
   \qquad
   \mathcal N\times\mathcal N=\mathbf 1+\eta\ }
-  \label{eq:isingfusion}$$
+$$
 
 **要点。**
 
@@ -1077,21 +1440,25 @@ $\eta$ 在 $\sigma$ 上取 $-1$ 说明 $\sigma$ 是 $\mathbb{Z}_2$ 奇的 （对
 
 ### 设定与两个方程
 
-考虑 4 维（$d=4$）**纯** $\mathrm{U}(1)$ 规范理论， 即 Maxwell 理论，**没有任何带电物质场**： $$S=-\frac{1}{4e^2}\int \mathrm{d}^4x\;F_{\mu\nu}F^{\mu\nu}
+考虑 4 维（$d=4$）**纯** $\mathrm{U}(1)$ 规范理论， 即 Maxwell 理论，**没有任何带电物质场**： 
+
+$$
+S=-\frac{1}{4e^2}\int \mathrm{d}^4x\;F_{\mu\nu}F^{\mu\nu}
    =-\frac{1}{2e^2}\int F\wedge\star F ,
   \qquad F=\mathrm{d}A .
-  \label{eq:maxwellaction}$$
+$$
 
 理论满足两个方程，来源截然不同：
 
-$$\boxed{
+$$
+\boxed{
   \begin{aligned}
     \text{运动方程：}&\quad \partial_\mu F^{\mu\nu}=0
       &&\Longleftrightarrow&&\ \mathrm{d}\star F=0 ,\\
     \text{Bianchi 恒等式：}&\quad \partial_{[\rho}F_{\mu\nu]}=0
       &&\Longleftrightarrow&&\ \mathrm{d}F=0 .
   \end{aligned}}
-  \label{eq:twoequations}$$
+$$
 
 **要点。**
 
@@ -1109,12 +1476,21 @@ $$\boxed{
 
 **命题（电与磁 1-form 对称性）。**
 
-定义 $$\star J_e\equiv\frac{1}{e^2}\,\star F
+定义 
+
+$$
+\star J_e\equiv\frac{1}{e^2}\,\star F
   \qquad\text{与}\qquad
   \star J_m\equiv\frac{1}{2\pi}\,F ,
-  \label{eq:twocurrents}$$ 两者都是 2-形式且都闭： $$\mathrm{d}\star J_e=\frac{1}{e^2}\mathrm{d}\star F=0\ (\text{运动方程}),
+$$
+
+ 两者都是 2-形式且都闭： 
+
+$$
+\mathrm{d}\star J_e=\frac{1}{e^2}\mathrm{d}\star F=0\ (\text{运动方程}),
   \qquad
-  \mathrm{d}\star J_m=\frac{1}{2\pi}\mathrm{d}F=0\ (\text{Bianchi}) .$$
+  \mathrm{d}\star J_m=\frac{1}{2\pi}\mathrm{d}F=0\ (\text{Bianchi}) .
+$$
 
 #### 维数自查（要点 [kp:dimensioncheck]）。
 
@@ -1122,13 +1498,18 @@ $q=1$，$d=4$：电流是 $q+1=2$-形式 $\checkmark$； $\star J$ 是 $d-q-1=2$
 
 **定义（Maxwell 的两个对称算符）。**
 
-对任意 2 维闭曲面 $\Sigma_2\subset\mathcal{M}_4$： $$\boxed{\
+对任意 2 维闭曲面 $\Sigma_2\subset\mathcal{M}_4$： 
+
+$$
+\boxed{\
   U_e^{(\alpha)}(\Sigma_2)
   =\exp\!\left[\frac{i\alpha}{e^2}\oint_{\Sigma_2}\star F\right],
   \qquad
   U_m^{(\beta)}(\Sigma_2)
   =\exp\!\left[\frac{i\beta}{2\pi}\oint_{\Sigma_2}F\right] \ }
-  \label{eq:maxwellops}$$ 由定理 [thm:topological]，两者都是**拓扑算符**。
+$$
+
+ 由定理 [thm:topological]，两者都是**拓扑算符**。
 
 ### 推导：电对称性作用在 Wilson 线上
 
@@ -1136,17 +1517,30 @@ $q=1$，$d=4$：电流是 $q+1=2$-形式 $\checkmark$； $\star J$ 是 $d-q-1=2$
 
 #### 第 1 步：把 Wilson 线插入作用量。
 
-插入 $W_n(C)=\exp[in\oint_C A]$ 等价于在作用量中加一项 $n\oint_C A$。用 Poincaré 对偶 [eq:poincare] 把线积分写成时空积分： $$n\oint_C A=n\int_{\mathcal{M}_4}\delta_C\wedge A ,
-  \label{eq:wilsonsource}$$ 其中 $\delta_C$ 是支撑在 $C$ 上的 **3-形式** （$d-k=4-1=3$ $\checkmark$）。
+插入 $W_n(C)=\exp[in\oint_C A]$ 等价于在作用量中加一项 $n\oint_C A$。用 Poincaré 对偶 [eq:poincare] 把线积分写成时空积分： 
+
+$$
+n\oint_C A=n\int_{\mathcal{M}_4}\delta_C\wedge A ,
+$$
+
+ 其中 $\delta_C$ 是支撑在 $C$ 上的 **3-形式** （$d-k=4-1=3$ $\checkmark$）。
 
 #### 第 2 步：变分。
 
-对 $A\to A+\delta A$ 变分总作用量 $S_{\rm tot}=-\frac{1}{2e^2}\int F\wedge\star F+n\int\delta_C\wedge A$。 动能项给出 $\propto\frac{1}{e^2}\mathrm{d}\star F$，源项给出 $n\,\delta_C$， 于是运动方程被修改为 $$\boxed{\ \frac{1}{e^2}\,\mathrm{d}\star F=n\,\delta_C\ }
-  \label{eq:modifiedEOM}$$ （整体符号取决于定向与号差约定；下面只用它的*绝对*效果。）
+对 $A\to A+\delta A$ 变分总作用量 $S_{\rm tot}=-\frac{1}{2e^2}\int F\wedge\star F+n\int\delta_C\wedge A$。 动能项给出 $\propto\frac{1}{e^2}\mathrm{d}\star F$，源项给出 $n\,\delta_C$， 于是运动方程被修改为 
+
+$$
+\boxed{\ \frac{1}{e^2}\,\mathrm{d}\star F=n\,\delta_C\ }
+$$
+
+ （整体符号取决于定向与号差约定；下面只用它的*绝对*效果。）
 
 #### 第 3 步：用 Stokes 定理算荷。
 
-取 $\Sigma_2=\partial V_3$，其中 $V_3$ 是一个 3 维区域， 与 $C$ **恰好相交一次**（即 $\Sigma_2$ 与 $C$ 的连接数为 1）。则 $$\begin{aligned}
+取 $\Sigma_2=\partial V_3$，其中 $V_3$ 是一个 3 维区域， 与 $C$ **恰好相交一次**（即 $\Sigma_2$ 与 $C$ 的连接数为 1）。则 
+
+$$
+\begin{aligned}
   \frac{1}{e^2}\oint_{\Sigma_2}\star F
   &\overset{\text{Stokes}}{=}
    \frac{1}{e^2}\int_{V_3}\mathrm{d}\star F
@@ -1157,19 +1551,25 @@ $q=1$，$d=4$：电流是 $q+1=2$-形式 $\checkmark$； $\star J$ 是 $d-q-1=2$
   &\overset{\text{Poincaré 对偶}}{=}
    n\cdot\#\big(V_3\cap C\big)
   \;=\;n .
-  \label{eq:fluxisn}
-\end{aligned}$$
+  
+\end{aligned}
+$$
 
 #### 第 4 步：结论。
 
-代入 [eq:maxwellops]： $$\boxed{\
+代入 [eq:maxwellops]： 
+
+$$
+\boxed{\
   U_e^{(\alpha)}(\Sigma_2)\;W_n(C)
   = e^{\,i\alpha n\,\mathrm{Link}(\Sigma_2,C)}\;W_n(C)\ }
-  \label{eq:UeonW}$$ 这正是 [eq:chargedef-q] 的形式： **Wilson 线 $W_n$ 在电 1-form 对称性下带荷 $n$**。$\blacksquare$
+$$
+
+ 这正是 [eq:chargedef-q] 的形式： **Wilson 线 $W_n$ 在电 1-form 对称性下带荷 $n$**。$\blacksquare$
 
 **注（Gauss 律图像）。**
 
- [eq:fluxisn] 的物理内容就是高中电磁学的 Gauss 律。 取 $\Sigma_2$ 为固定时刻包围电荷的球面 $S^2$， 则 $\frac{1}{e^2}\oint_{S^2}\star F$ 恰为**电通量** $\oint_{S^2}\bm E\cdot \mathrm{d}\bm S$，而 Gauss 律说它等于所包围的电荷 $n$。
+ [eq:fluxisn] 的物理内容就是高中电磁学的 Gauss 律。 取 $\Sigma_2$ 为固定时刻包围电荷的球面 $S^2$， 则 $\frac{1}{e^2}\oint_{S^2}\star F$ 恰为**电通量** $\oint_{S^2}\boldsymbol{E}\cdot \mathrm{d}\boldsymbol{S}$，而 Gauss 律说它等于所包围的电荷 $n$。
 
 于是 [eq:UeonW] 的意思是：
 
@@ -1179,11 +1579,20 @@ $q=1$，$d=4$：电流是 $q+1=2$-形式 $\checkmark$； $\star J$ 是 $d-q-1=2$
 
 ### 磁对称性与 ’t Hooft 线
 
-对磁对称性，带荷对象是 **’t Hooft 线** $T_m(C)$（例 [ex:thooft]）。 按定义 [eq:thooftdef]，环绕 $C$ 的小球面上磁通为 $m$： $$\frac{1}{2\pi}\oint_{\Sigma_2}F=m\qquad
-  \big(\mathrm{Link}(\Sigma_2,C)=1\big),$$ 于是直接由 [eq:maxwellops] $$\boxed{\
+对磁对称性，带荷对象是 **’t Hooft 线** $T_m(C)$（例 [ex:thooft]）。 按定义 [eq:thooftdef]，环绕 $C$ 的小球面上磁通为 $m$： 
+
+$$
+\frac{1}{2\pi}\oint_{\Sigma_2}F=m\qquad
+  \big(\mathrm{Link}(\Sigma_2,C)=1\big),
+$$
+
+ 于是直接由 [eq:maxwellops] 
+
+$$
+\boxed{\
   U_m^{(\beta)}(\Sigma_2)\;T_m(C)
   =e^{\,i\beta m\,\mathrm{Link}(\Sigma_2,C)}\;T_m(C)\ }
-  \label{eq:UmonT}$$
+$$
 
 注意这里**不需要**修改运动方程：$m$ 的整数性来自 第 2.4 小节 $S^2$ 上 $H^2\ne0$ 的拓扑论证 （Dirac 量子化），而非来自动力学。 这与要点 [kp:two-sources] 完全吻合。$\checkmark$
 
@@ -1193,17 +1602,33 @@ $\frac{1}{2\pi}\oint_{\Sigma_2}F\in\mathbb{Z}$ 对任意闭 $\Sigma_2$ 成立 �
 
 ### 加入物质场：对称性如何被破坏
 
-现在检验要点 [kp:two-sources]。加入一个电荷为 $q$ 的 **动力学**物质场 $\psi$，则运动方程变为 $$\frac{1}{e^2}\mathrm{d}\star F=\star j_\psi\ne0
+现在检验要点 [kp:two-sources]。加入一个电荷为 $q$ 的 **动力学**物质场 $\psi$，则运动方程变为 
+
+$$
+\frac{1}{e^2}\mathrm{d}\star F=\star j_\psi\ne0
   \qquad\Longrightarrow\qquad
   \mathrm{d}\star J_e\ne0 .
-  \label{eq:brokenEOM}$$ $\star J_e$ 不再闭 $\Rightarrow$ $U_e(\Sigma_2)$ **不再是拓扑算符** $\Rightarrow$ 连续的电 1-form 对称性**被破坏**。
+$$
+
+ $\star J_e$ 不再闭 $\Rightarrow$ $U_e(\Sigma_2)$ **不再是拓扑算符** $\Rightarrow$ 连续的电 1-form 对称性**被破坏**。
 
 #### 但残留一个 $\mathbb{Z}_q$。
 
-物质场电荷为 $q$，因此它能**屏蔽**（例 [ex:screening]） 电荷为 $q$ 整数倍的 Wilson 线： $$W_n\ \sim\ W_{n+q}
+物质场电荷为 $q$，因此它能**屏蔽**（例 [ex:screening]） 电荷为 $q$ 整数倍的 Wilson 线： 
+
+$$
+W_n\ \sim\ W_{n+q}
   \qquad\Longrightarrow\qquad
-  \text{线算符按}\ n\ \mathrm{mod}\ q\ \text{分类}.$$ 于是剩下的 1-form 对称群是 $$\boxed{\ \mathrm{U}(1)_e^{(1)}\ \longrightarrow\ \mathbb{Z}_q^{(1)}\ }
-  \label{eq:UtoZq}$$ 特别地，若存在电荷 $1$ 的物质场（如普通 QED 中的电子，$q=1$）， 则 $\mathbb{Z}_1=$ 平凡群，**电 1-form 对称性被完全破坏**。
+  \text{线算符按}\ n\ \mathrm{mod}\ q\ \text{分类}.
+$$
+
+ 于是剩下的 1-form 对称群是 
+
+$$
+\boxed{\ \mathrm{U}(1)_e^{(1)}\ \longrightarrow\ \mathbb{Z}_q^{(1)}\ }
+$$
+
+ 特别地，若存在电荷 $1$ 的物质场（如普通 QED 中的电子，$q=1$）， 则 $\mathbb{Z}_1=$ 平凡群，**电 1-form 对称性被完全破坏**。
 
 #### 磁对称性则依然存活。
 
@@ -1217,10 +1642,15 @@ $\mathrm{d}F=0$ 是恒等式， 加入*电*荷物质不影响它。只有引入*
 
 把上面的逻辑搬到非阿贝尔理论。取 4 维纯 $\mathrm{SU}(N)$ Yang–Mills （只有胶子，无基本表示物质）。
 
-由 [eq:center]，$Z(\mathrm{SU}(N))=\mathbb{Z}_N$。定义对称算符 $U_k(\Sigma_2)$，$k\in\mathbb{Z}_N$，作用在表示 $R$ 的 Wilson 线上： $$\boxed{\
+由 [eq:center]，$Z(\mathrm{SU}(N))=\mathbb{Z}_N$。定义对称算符 $U_k(\Sigma_2)$，$k\in\mathbb{Z}_N$，作用在表示 $R$ 的 Wilson 线上： 
+
+$$
+\boxed{\
   U_k(\Sigma_2)\;W_R(C)
   =\exp\!\left[\frac{2\pi i\,k\,n_R}{N}\mathrm{Link}(\Sigma_2,C)\right] W_R(C)\ }
-  \label{eq:centeraction}$$ 其中 $n_R$ 是表示 $R$ 的 $N$ 度（例 [ex:Nality]）。
+$$
+
+ 其中 $n_R$ 是表示 $R$ 的 $N$ 度（例 [ex:Nality]）。
 
 - 基本表示：$n_R=1$，荷非零 $\Rightarrow$ 是好的序参量。
 
@@ -1234,14 +1664,15 @@ $\mathrm{d}F=0$ 是恒等式， 加入*电*荷物质不影响它。只有引入*
 
 按要点 [kp:ssb-0form]，判断对称性是否自发破缺要看 **带荷算符的期望值**。对 1-form 对称性， 带荷算符是 Wilson 线，于是序参量是 $\langle W(C)\rangle$。 取 $C$ 为边长 $L$、$T$ 的大矩形圈，两种可能行为：
 
-$$\big\langle W(C)\big\rangle\ \sim\
+$$
+\big\langle W(C)\big\rangle\ \sim\
   \begin{cases}
     e^{-\sigma\,\mathrm{Area}(C)}
       & \text{面积律（\textup{(area law)}）}\\[4pt]
     e^{-c\,\mathrm{Perimeter}(C)}
       & \text{周长律（\textup{(perimeter law)}）}
   \end{cases}
-  \label{eq:arealaw}$$
+$$
 
 **要点。**
 
@@ -1270,9 +1701,14 @@ $$\big\langle W(C)\big\rangle\ \sim\
 
 ### 4 维电磁对偶
 
-Maxwell 方程 [eq:twoequations] 在替换 $$F\ \longrightarrow\ \star F,
+Maxwell 方程 [eq:twoequations] 在替换 
+
+$$
+F\ \longrightarrow\ \star F,
   \qquad \star F\ \longrightarrow\ -F
-  \label{eq:EMduality}$$ 下**互换**：运动方程 $\mathrm{d}\star F=0$ 变成 Bianchi $\mathrm{d}F=0$， 反之亦然。这就是**电磁对偶**（electromagnetic duality）。
+$$
+
+ 下**互换**：运动方程 $\mathrm{d}\star F=0$ 变成 Bianchi $\mathrm{d}F=0$， 反之亦然。这就是**电磁对偶**（electromagnetic duality）。
 
 **要点。**
 
@@ -1289,7 +1725,13 @@ Maxwell 方程 [eq:twoequations] 在替换 $$F\ \longrightarrow\ \star F,
 
 ### 更简单的类比：2 维紧致标量与 T 对偶
 
-4 维电磁对偶的“最小模型”是 2 维紧致标量场 $\varphi\sim\varphi+2\pi$，作用量（示意） $$S=\frac{R^2}{4\pi}\int \mathrm{d}\varphi\wedge\star\mathrm{d}\varphi .$$ 它有**两个** 0-form $\mathrm{U}(1)$ 对称性，来源与 Maxwell 完全平行：
+4 维电磁对偶的“最小模型”是 2 维紧致标量场 $\varphi\sim\varphi+2\pi$，作用量（示意） 
+
+$$
+S=\frac{R^2}{4\pi}\int \mathrm{d}\varphi\wedge\star\mathrm{d}\varphi .
+$$
+
+ 它有**两个** 0-form $\mathrm{U}(1)$ 对称性，来源与 Maxwell 完全平行：
 
 |                                              | 电流                                                | 守恒的原因                                    |
 |:---------------------------------------------|:----------------------------------------------------|:----------------------------------------------|
@@ -1308,10 +1750,15 @@ Maxwell 方程 [eq:twoequations] 在替换 $$F\ \longrightarrow\ \star F,
 
 #### T 对偶。
 
-变换 $$R\ \longrightarrow\ \frac{1}{R},
+变换 
+
+$$
+R\ \longrightarrow\ \frac{1}{R},
   \qquad
   n\ \longleftrightarrow\ w
-  \label{eq:Tduality}$$ 是理论的同构，**交换两个 $\mathrm{U}(1)$ 对称性**。 这与 [eq:EMduality] 交换 $\mathrm{U}(1)_e^{(1)}\leftrightarrow\mathrm{U}(1)_m^{(1)}$ 是同一个故事的低维版本。
+$$
+
+ 是理论的同构，**交换两个 $\mathrm{U}(1)$ 对称性**。 这与 [eq:EMduality] 交换 $\mathrm{U}(1)_e^{(1)}\leftrightarrow\mathrm{U}(1)_m^{(1)}$ 是同一个故事的低维版本。
 
 ### 全局结构：同一个局域理论，不同的线算符谱
 
@@ -1335,11 +1782,16 @@ Maxwell 方程 [eq:twoequations] 在替换 $$F\ \longrightarrow\ \star F,
 
 **定义（广义自发破缺）。**
 
-一个 $q$-form 对称性称为**自发破缺**的 （spontaneously broken），若存在带荷的 $q$ 维算符 $\mathcal{O}(\mathcal{M}_q)$，其期望值在“去掉与 $\mathcal{M}_q$ 体积成正比的 局域重整化因子”后仍非零： $$\big\langle \mathcal{O}(\mathcal{M}_q)\big\rangle
+一个 $q$-form 对称性称为**自发破缺**的 （spontaneously broken），若存在带荷的 $q$ 维算符 $\mathcal{O}(\mathcal{M}_q)$，其期望值在“去掉与 $\mathcal{M}_q$ 体积成正比的 局域重整化因子”后仍非零： 
+
+$$
+\big\langle \mathcal{O}(\mathcal{M}_q)\big\rangle
   \ \sim\ e^{-c\cdot\mathrm{Vol}(\partial\mathcal{M}_q)}
   \times(\text{非零})
   \qquad\text{（“周长律”）} .
-  \label{eq:ssb-general}$$ 若衰减比这更快（如“面积律”$e^{-\sigma\mathrm{Vol}(\mathcal{M}_q)}$）， 则**未破缺**。
+$$
+
+ 若衰减比这更快（如“面积律”$e^{-\sigma\mathrm{Vol}(\mathcal{M}_q)}$）， 则**未破缺**。
 
 检查两个特例：
 
@@ -1376,19 +1828,36 @@ $q=0$ 给出普通的无质量标量； $q=1$ 给出无质量的 1-form 规范�
 
 ### 定义：背景场语言
 
-规范化一个对称性的第一步是**打开背景场** （background field）。对 $q$-form 对称性 $G$， 背景场是一个 $(q+1)$-形式规范场 $B$： $$q=0:\ \text{1-形式 }A;\qquad
+规范化一个对称性的第一步是**打开背景场** （background field）。对 $q$-form 对称性 $G$， 背景场是一个 $(q+1)$-形式规范场 $B$： 
+
+$$
+q=0:\ \text{1-形式 }A;\qquad
   q=1:\ \text{2-形式 }B;\qquad
-  \text{一般 } q:\ (q+1)\text{-形式} .$$ 配分函数变成 $Z[B]$。
+  \text{一般 } q:\ (q+1)\text{-形式} .
+$$
+
+ 配分函数变成 $Z[B]$。
 
 **定义（’t Hooft 反常）。**
 
- 若不存在任何**局域反项**（local counterterm）使 $Z[B]$ 在背景规范变换 $B\to B+\mathrm{d}\lambda$ 下不变， 即总有 $$Z[B+\mathrm{d}\lambda]=e^{\,i\,\mathcal A[B,\lambda]}\;Z[B],
+ 若不存在任何**局域反项**（local counterterm）使 $Z[B]$ 在背景规范变换 $B\to B+\mathrm{d}\lambda$ 下不变， 即总有 
+
+$$
+Z[B+\mathrm{d}\lambda]=e^{\,i\,\mathcal A[B,\lambda]}\;Z[B],
   \qquad \mathcal A\ne0\ (\text{模局域反项}),
-  \label{eq:anomalyphase}$$ 则称该对称性有 **’t Hooft 反常**。
+$$
+
+ 则称该对称性有 **’t Hooft 反常**。
 
 **注（反常流入与 SPT 项）。**
 
-[eq:anomalyphase] 的相位可以被“吸收”到 高一维的**拓扑项**中：存在 $(d+1)$ 维的 SPT／Chern–Simons 型作用量 $S_{d+1}[B]$，使得 $$Z_d[B]\times e^{iS_{d+1}[B]}$$ 整体规范不变。这叫**反常流入**（anomaly inflow）。 因此“反常”被 $(d+1)$ 维拓扑项完全分类—— 这是现代处理反常的标准方式。
+[eq:anomalyphase] 的相位可以被“吸收”到 高一维的**拓扑项**中：存在 $(d+1)$ 维的 SPT／Chern–Simons 型作用量 $S_{d+1}[B]$，使得 
+
+$$
+Z_d[B]\times e^{iS_{d+1}[B]}
+$$
+
+ 整体规范不变。这叫**反常流入**（anomaly inflow）。 因此“反常”被 $(d+1)$ 维拓扑项完全分类—— 这是现代处理反常的标准方式。
 
 ### 最重要的推论：反常匹配
 
@@ -1416,8 +1885,13 @@ $q=0$ 给出普通的无质量标量； $q=1$ 给出无质量的 1-form 规范�
 
 ### 最初等的例子：Dirac 量子化就是一种“互不相容”
 
-考虑 4 维 Maxwell 的 Wilson 线 $W_n$ 与 ’t Hooft 线 $T_m$。 把 $W_n$ 绕着 $T_m$ 走一圈（其世界线扫出一个包围 $T_m$ 的曲面）， 得到 Aharonov–Bohm 型相位 $$e^{2\pi i\,n m} .
-  \label{eq:diracphase}$$ 要求单值性给出 **Dirac 量子化条件** $nm\in\mathbb{Z}$。
+考虑 4 维 Maxwell 的 Wilson 线 $W_n$ 与 ’t Hooft 线 $T_m$。 把 $W_n$ 绕着 $T_m$ 走一圈（其世界线扫出一个包围 $T_m$ 的曲面）， 得到 Aharonov–Bohm 型相位 
+
+$$
+e^{2\pi i\,n m} .
+$$
+
+ 要求单值性给出 **Dirac 量子化条件** $nm\in\mathbb{Z}$。
 
 **要点。**
 
@@ -1425,8 +1899,13 @@ $q=0$ 给出普通的无质量标量； $q=1$ 给出无质量的 1-form 规范�
 
 ### 4 维 Maxwell 的混合反常
 
-把电与磁 1-form 对称性的背景场记为 2-形式 $B_e$、$B_m$。 两者的混合反常由 5 维拓扑项刻画，其结构为 $$S_5\ \propto\ \int_{\mathcal{M}_5} B_e\wedge \mathrm{d}B_m
-  \label{eq:5danomaly}$$ （具体的 $2\pi$ 归一化因作者而异，请以课上约定为准）。
+把电与磁 1-form 对称性的背景场记为 2-形式 $B_e$、$B_m$。 两者的混合反常由 5 维拓扑项刻画，其结构为 
+
+$$
+S_5\ \propto\ \int_{\mathcal{M}_5} B_e\wedge \mathrm{d}B_m
+$$
+
+ （具体的 $2\pi$ 归一化因作者而异，请以课上约定为准）。
 
 #### 物理翻译。
 
@@ -1468,7 +1947,8 @@ $q=0$ 给出普通的无质量标量； $q=1$ 给出无质量的 1-form 规范�
 
 #### （一）守恒与拓扑。
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   \partial_\mu j^\mu=0
   &\ \Longleftrightarrow\ \mathrm{d}\star j=0
   && \text{（\eqref{eq:conservation}）}\\
@@ -1477,11 +1957,13 @@ $$\begin{aligned}
   && \text{（定理 \ref{thm:topological}）}\\
   U_\alpha(\Sigma)&=\exp\!\Big[i\alpha\!\int_\Sigma\star j\Big]
   && \text{（\eqref{eq:Qsurface}）}
-\end{aligned}$$
+\end{aligned}
+$$
 
 #### （二）Noether。
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   j^\mu&=\frac{\partial \mathcal{L}}{\partial (\partial_\mu\phi^a)}\Delta^a-K^\mu
   && \text{（\eqref{eq:noethercurrent}）}\\
   j^\mu_{\mathrm{U}(1)}&=i\big(\phi^*\partial^\mu\phi-\phi\,\partial^\mu\phi^*\big)
@@ -1492,11 +1974,13 @@ $$\begin{aligned}
   \partial_\mu\langle j^\mu(x)\mathcal{O}(y)\rangle
   &=q\,\delta^d(x-y)\langle\mathcal{O}(y)\rangle
   && \text{（\eqref{eq:ward}）}
-\end{aligned}$$
+\end{aligned}
+$$
 
 #### （三）$q$-form 对称性。
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   \mathrm{d}\star J&=0,\qquad J\in\Omega^{q+1},\quad \star J\in\Omega^{d-q-1}
   && \text{（\eqref{eq:qformop}）}\\
   U_\alpha(\mathcal{M}_{d-q-1})
@@ -1507,11 +1991,13 @@ $$\begin{aligned}
   && \text{（\eqref{eq:chargedef-q}）}\\
   \dim\mathcal{M}_{\rm sym}+\dim\mathcal{M}_{\rm charge}+1&=d
   && \text{（\eqref{eq:linkdim}）}
-\end{aligned}$$
+\end{aligned}
+$$
 
 #### （四）Maxwell 的两个对称性。
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   U_e^{(\alpha)}(\Sigma_2)
   &=\exp\!\Big[\tfrac{i\alpha}{e^2}\oint_{\Sigma_2}\star F\Big],
   & U_e\,W_n&=e^{i\alpha n\mathrm{Link}}W_n
@@ -1520,21 +2006,28 @@ $$\begin{aligned}
   &=\exp\!\Big[\tfrac{i\beta}{2\pi}\oint_{\Sigma_2}F\Big],
   & U_m\,T_m&=e^{i\beta m\mathrm{Link}}T_m
   && \text{（\eqref{eq:UmonT}）}
-\end{aligned}$$ 加入电荷 $q$ 的动力学物质：$\mathrm{U}(1)_e^{(1)}\to\mathbb{Z}_q^{(1)}$ （[eq:UtoZq]）。
+\end{aligned}
+$$
+
+ 加入电荷 $q$ 的动力学物质：$\mathrm{U}(1)_e^{(1)}\to\mathbb{Z}_q^{(1)}$ （[eq:UtoZq]）。
 
 #### （五）Ising 的融合规则。
 
-$$\eta^2=\mathbf 1,\qquad
+$$
+\eta^2=\mathbf 1,\qquad
   \eta\,\mathcal N=\mathcal N,\qquad
   \mathcal N^2=\mathbf 1+\eta
-  \qquad \text{（\eqref{eq:isingfusion}）}$$
+  \qquad \text{（\eqref{eq:isingfusion}）}
+$$
 
 #### （六）规范化与对偶。
 
-$$\text{gauge }q\text{-form }G\ \text{in }d\text{ dims}
+$$
+\text{gauge }q\text{-form }G\ \text{in }d\text{ dims}
   \ \Longrightarrow\
   (d-q-2)\text{-form }\hat G
-  \qquad \text{（\eqref{eq:dualsym}）}$$
+  \qquad \text{（\eqref{eq:dualsym}）}
+$$
 
 ## 英汉术语表
 
@@ -1874,7 +2367,8 @@ $$\text{gauge }q\text{-form }G\ \text{in }d\text{ dims}
 
 ## 常用恒等式
 
-$$\begin{aligned}
+$$
+\begin{aligned}
   \mathrm{d}^2&=0 \\
   \mathrm{d}(\omega_{(p)}\wedge\eta_{(q)})
     &=\mathrm{d}\omega_{(p)}\wedge\eta_{(q)}
@@ -1893,7 +2387,8 @@ $$\begin{aligned}
   \int_{V_{k}}\delta_{\mathcal{M}_{d-k}}
     &=\#\big(V_k\cap \mathcal{M}_{d-k}\big)
     &&\text{(相交数)}
-\end{aligned}$$
+\end{aligned}
+$$
 
 ## 维数自查流程
 
