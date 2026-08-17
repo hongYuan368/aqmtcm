@@ -158,7 +158,7 @@ def preprocess(tex: str) -> tuple[str, str, str]:
     body = re.sub(r"\\texorpdfstring\{([^{}]*)\}\{[^{}]*\}", r"\1", body)
     # GitHub MathJax: prefer \boldsymbol over ams \bm
     body = body.replace(r"\bm{", r"\boldsymbol{")
-    body = re.sub(r"\\bm\s+([A-Za-z])", r"\\boldsymbol{\1}", body)
+    body = re.sub(r"\\bm\s+([A-Za-z0-9])", r"\\boldsymbol{\1}", body)
     body = replace_theorem_envs(body)
 
     # abstract -> quote
@@ -253,7 +253,7 @@ def fix_github_math(md: str) -> str:
     md = _replace_cmd_one_arg(md, "abs", r"\left\lvert ", r"\right\rvert")
     md = md.replace(r"\qedhere", "")
     md = md.replace(r"\bm{", r"\boldsymbol{")
-    md = re.sub(r"\\bm\s+([A-Za-z])", r"\\boldsymbol{\1}", md)
+    md = re.sub(r"\\bm\s+([A-Za-z0-9])", r"\\boldsymbol{\1}", md)
     # strip labels inside math (GitHub ignores them; they can confuse parsers)
     md = re.sub(r"\\label\{[^}]*\}", "", md)
     # \text{\emph{...}} -> \textit{...} for MathJax
